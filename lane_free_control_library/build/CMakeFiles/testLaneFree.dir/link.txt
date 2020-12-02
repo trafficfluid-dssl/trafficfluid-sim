@@ -1,0 +1,1 @@
+/usr/bin/c++ -fPIC -O3 -DNDEBUG  -shared -Wl,-soname,libtestLaneFree.so -o libtestLaneFree.so CMakeFiles/testLaneFree.dir/src/LaneFree.o 

@@ -165,10 +165,10 @@ MSBaseVehicle::initDevices() {
 }
 
 
-void
-MSBaseVehicle::setID(const std::string& /*newID*/) {
-    throw ProcessError("Changing a vehicle ID is not permitted");
-}
+// void
+// MSBaseVehicle::setID(const std::string& /*newID*/) {
+//     throw ProcessError("Changing a vehicle ID is not permitted");
+// }
 
 const SUMOVehicleParameter&
 MSBaseVehicle::getParameter() const {

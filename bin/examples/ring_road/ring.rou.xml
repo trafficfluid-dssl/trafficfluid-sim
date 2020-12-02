@@ -1,0 +1,15 @@
+<routes>
+    
+    <vType id="lane_free_car" vClass="passenger" carFollowModel="LaneFree" maxSpeed="35" length="3.4"  arrivalSpeed="35" minGap="1"/>
+    
+    
+    
+    
+    
+    <flow id="flow_up" type="lane_free_car" begin="0" end="0" number="200" from="edge_up" to="edge_down" departPos="random_free" departLane="best" departSpeed="15" />
+    <flow id="flow_down" type="lane_free_car" begin="0" end="0" number="200" from="edge_down" to="edge_up" departPos="random_free" departLane="best" departSpeed="15" />
+    
+    
+    
+    
+</routes>

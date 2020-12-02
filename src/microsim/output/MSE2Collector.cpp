@@ -839,7 +839,6 @@ MSE2Collector::makeVehicleInfo(const SUMOVehicle& veh, const MSLane* enteredLane
 
 void
 MSE2Collector::detectorUpdate(const SUMOTime /* step */) {
-
 #ifdef DEBUG_E2_DETECTOR_UPDATE
     if (DEBUG_COND) {
         std::cout << "\n" << SIMTIME << " detectorUpdate() for detector '" << myID << "'"

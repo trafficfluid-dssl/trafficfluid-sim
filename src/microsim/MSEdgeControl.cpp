@@ -82,6 +82,17 @@ MSEdgeControl::MSEdgeControl(const std::vector< MSEdge* >& edges)
     }
 #endif
 #endif
+    // LFPlugin Begin
+    // std::cout << "Initialization" << "\n";
+    // std::cout << "Edges: " << "\n";
+    
+    // for (MSEdge* const edge : myEdges) {
+        
+    //     std::cout << edge->getID() << "\n";
+    //     std::cout << edge->getNumericalID() << "\n";
+        
+    // }
+    // LFPlugin End
 }
 
 

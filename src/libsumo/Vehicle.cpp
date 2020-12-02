@@ -1043,6 +1043,126 @@ Vehicle::changeSublane(const std::string& vehicleID, double latDist) {
     veh->getInfluencer().setSublaneChange(latDist);
 }
 
+// LFPlugin Begin
+NumericalID
+Vehicle::addR(const std::string& vehicleID,
+             const std::string& routeID,
+             const std::string& typeID,
+             const std::string& depart,
+             const std::string& departLane,
+             const std::string& departPos,
+             const std::string& departSpeed,
+             const std::string& arrivalLane,
+             const std::string& arrivalPos,
+             const std::string& arrivalSpeed,
+             const std::string& fromTaz,
+             const std::string& toTaz,
+             const std::string& line,
+             int /*personCapacity*/,
+             int personNumber) {
+    SUMOVehicle* veh = MSNet::getInstance()->getVehicleControl().getVehicle(vehicleID);
+    if (veh != nullptr) {
+        throw TraCIException("The vehicle '" + vehicleID + "' to add already exists.");
+    }
+    SUMOVehicleParameter vehicleParams;
+    vehicleParams.id = vehicleID;
+    MSVehicleType* vehicleType = MSNet::getInstance()->getVehicleControl().getVType(typeID);
+    if (!vehicleType) {
+        throw TraCIException("Invalid type '" + typeID + "' for vehicle '" + vehicleID + "'.");
+    }
+    const MSRoute* route = MSRoute::dictionary(routeID);
+    if (!route) {
+        if (routeID == "") {
+            // assume, route was intentionally left blank because the caller
+            // intends to control the vehicle remotely
+            SUMOVehicleClass vclass = vehicleType->getVehicleClass();
+            const std::string dummyRouteID = "DUMMY_ROUTE_" + SumoVehicleClassStrings.getString(vclass);
+            route = MSRoute::dictionary(dummyRouteID);
+            if (route == nullptr) {
+                for (MSEdge* e : MSEdge::getAllEdges()) {
+                    if (e->getFunction() == SumoXMLEdgeFunc::NORMAL && (e->getPermissions() & vclass) == vclass) {
+                        std::vector<std::string>  edges;
+                        edges.push_back(e->getID());
+                        libsumo::Route::add(dummyRouteID, edges);
+                        break;
+                    }
+                }
+            }
+            route = MSRoute::dictionary(dummyRouteID);
+            if (!route) {
+                throw TraCIException("Could not build dummy route for vehicle class: '" + SumoVehicleClassStrings.getString(vehicleType->getVehicleClass()) + "'");
+            }
+        } else {
+            throw TraCIException("Invalid route '" + routeID + "' for vehicle '" + vehicleID + "'.");
+        }
+    }
+    // check if the route implies a trip
+    if (route->getEdges().size() == 2) {
+        const MSEdgeVector& succ = route->getEdges().front()->getSuccessors();
+        if (std::find(succ.begin(), succ.end(), route->getEdges().back()) == succ.end()) {
+            vehicleParams.parametersSet |= VEHPARS_FORCE_REROUTE;
+        }
+    }
+    if (fromTaz != "" || toTaz != "") {
+        vehicleParams.parametersSet |= VEHPARS_FORCE_REROUTE;
+    }
+    std::string error;
+    if (!SUMOVehicleParameter::parseDepart(depart, "vehicle", vehicleID, vehicleParams.depart, vehicleParams.departProcedure, error)) {
+        throw TraCIException(error);
+    }
+    if (vehicleParams.departProcedure == DEPART_GIVEN && vehicleParams.depart < MSNet::getInstance()->getCurrentTimeStep()) {
+        vehicleParams.depart = MSNet::getInstance()->getCurrentTimeStep();
+        WRITE_WARNING("Departure time for vehicle '" + vehicleID + "' is in the past; using current time instead.");
+    } else if (vehicleParams.departProcedure == DEPART_NOW) {
+        vehicleParams.depart = MSNet::getInstance()->getCurrentTimeStep();
+    }
+    if (!SUMOVehicleParameter::parseDepartLane(departLane, "vehicle", vehicleID, vehicleParams.departLane, vehicleParams.departLaneProcedure, error)) {
+        throw TraCIException(error);
+    }
+    if (!SUMOVehicleParameter::parseDepartPos(departPos, "vehicle", vehicleID, vehicleParams.departPos, vehicleParams.departPosProcedure, error)) {
+        throw TraCIException(error);
+    }
+    if (!SUMOVehicleParameter::parseDepartSpeed(departSpeed, "vehicle", vehicleID, vehicleParams.departSpeed, vehicleParams.departSpeedProcedure, error)) {
+        throw TraCIException(error);
+    }
+    if (!SUMOVehicleParameter::parseArrivalLane(arrivalLane, "vehicle", vehicleID, vehicleParams.arrivalLane, vehicleParams.arrivalLaneProcedure, error)) {
+        throw TraCIException(error);
+    }
+    if (!SUMOVehicleParameter::parseArrivalPos(arrivalPos, "vehicle", vehicleID, vehicleParams.arrivalPos, vehicleParams.arrivalPosProcedure, error)) {
+        throw TraCIException(error);
+    }
+    if (!SUMOVehicleParameter::parseArrivalSpeed(arrivalSpeed, "vehicle", vehicleID, vehicleParams.arrivalSpeed, vehicleParams.arrivalSpeedProcedure, error)) {
+        throw TraCIException(error);
+    }
+    vehicleParams.fromTaz = fromTaz;
+    vehicleParams.toTaz = toTaz;
+    vehicleParams.line = line;
+    //vehicleParams.personCapacity = personCapacity;
+    vehicleParams.personNumber = personNumber;
+    SUMOVehicleParameter* params = new SUMOVehicleParameter(vehicleParams);
+    try {
+        SUMOVehicle* vehicle = MSNet::getInstance()->getVehicleControl().buildVehicle(params, route, vehicleType, true, false);
+        if (fromTaz == "" && !route->getEdges().front()->validateDepartSpeed(*vehicle)) {
+            MSNet::getInstance()->getVehicleControl().deleteVehicle(vehicle, true);
+            throw TraCIException("Departure speed for vehicle '" + vehicleID + "' is too high for the departure edge '" + route->getEdges().front()->getID() + "'.");
+        }
+        std::string msg;
+        if (vehicle->getRouteValidity(true, true) != MSBaseVehicle::ROUTE_VALID) {
+            MSNet::getInstance()->getVehicleControl().deleteVehicle(vehicle, true);
+            throw TraCIException("Vehicle '" + vehicleID + "' has no valid route. ");
+        }
+        MSNet::getInstance()->getVehicleControl().addVehicle(vehicleParams.id, vehicle);
+        if (vehicleParams.departProcedure != DEPART_TRIGGERED && vehicleParams.departProcedure != DEPART_CONTAINER_TRIGGERED) {
+            MSNet::getInstance()->getInsertionControl().add(vehicle);
+        }
+        return vehicle->getNumericalID();
+    } catch (ProcessError& e) {
+        throw TraCIException(e.what());
+    }
+
+}
+
+// LFPlugin End
 
 void
 Vehicle::add(const std::string& vehicleID,

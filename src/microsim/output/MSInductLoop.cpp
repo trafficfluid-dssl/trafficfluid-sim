@@ -57,6 +57,9 @@ MSInductLoop::MSInductLoop(const std::string& id, MSLane* const lane,
     myVehiclesOnDet() {
     assert(myPosition >= 0 && myPosition <= myLane->getLength());
     reset();
+    // LFPlugin Begin
+    myTotalEnteredVehicleNumber = 0;
+    // LFPlugin End
 }
 
 
@@ -90,6 +93,9 @@ MSInductLoop::notifyEnter(SUMOTrafficObject& veh, Notification reason, const MSL
 #endif
             myVehiclesOnDet[&veh] = SIMTIME;
             myEnteredVehicleNumber++;
+            // LFPlugin Begin
+            myTotalEnteredVehicleNumber++;
+            // LFPlugin End
         }
     }
     return true;
@@ -112,6 +118,9 @@ MSInductLoop::notifyMove(SUMOTrafficObject& veh, double oldPos,
         const double timeBeforeEnter = MSCFModel::passingTime(oldPos, myPosition, newPos, oldSpeed, newSpeed);
         myVehiclesOnDet[&veh] = SIMTIME + timeBeforeEnter;
         myEnteredVehicleNumber++;
+        // LFPlugin Begin
+        myTotalEnteredVehicleNumber++;
+        // LFPlugin End
     }
     double oldBackPos = oldPos - veh.getVehicleType().getLength();
     double newBackPos = newPos - veh.getVehicleType().getLength();

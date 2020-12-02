@@ -381,6 +381,9 @@ endif (CHECK_OPTIONAL_LIBS)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/src)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 
+#Link directory for controller
+link_directories(lane_free_control_library/build)
+
 set(commonlibs
         utils_distribution utils_shapes utils_options
         utils_xml utils_geom utils_common utils_importio utils_iodevices utils_traction_wire foreign_tcpip

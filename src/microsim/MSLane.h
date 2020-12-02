@@ -42,7 +42,7 @@
 #include "MSLeaderInfo.h"
 #include "MSMoveReminder.h"
 #include <libsumo/Helper.h>
-
+#include "MSEdge.h"
 #include <utils/foxtools/FXSynchQue.h>
 #ifdef HAVE_FOX
 #include <utils/foxtools/FXWorkerThread.h>

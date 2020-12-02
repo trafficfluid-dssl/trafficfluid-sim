@@ -640,6 +640,11 @@ MSLane::insertVehicle(MSVehicle& veh) {
 
 bool
 MSLane::checkFailure(const MSVehicle* aVehicle, double& speed, double& dist, const double nspeed, const bool patchSpeed, const std::string errorMsg) const {
+    // LFPlugin Begin
+    if(aVehicle->getCarFollowModel().getModelID()==SUMO_TAG_CF_LANEFREE){        
+        return false;
+    }
+    // LFPlugin End
     if (nspeed < speed) {
         if (patchSpeed) {
             speed = MIN2(nspeed, speed);
@@ -688,6 +693,12 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
 
     aVehicle->setTentativeLaneAndPosition(this, pos, posLat);
     aVehicle->updateBestLanes(false, this);
+    // LFPlugin Begin
+    if(aVehicle->getCarFollowModel().getModelID()==SUMO_TAG_CF_LANEFREE){
+        incorporateVehicle(aVehicle, pos, speed, posLat, find_if(myVehicles.begin(), myVehicles.end(), [&](MSVehicle* const v) {return v->getPositionOnLane() >= pos;}), notification);
+        return true;
+    }
+    // LFPlugin End
     const MSCFModel& cfModel = aVehicle->getCarFollowModel();
     const std::vector<MSLane*>& bestLaneConts = aVehicle->getBestLanesContinuation(this);
     std::vector<MSLane*>::const_iterator ri = bestLaneConts.begin();

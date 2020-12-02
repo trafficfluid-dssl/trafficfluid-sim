@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on Τετ 02 Δεκ 2020 08:08:41 μμ EET by Eclipse SUMO GUI Version v1_7_0+0660-6c09f092b4
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
+
+    <input>
+        <net-file value="highway/autobahn5kmf_sl.net.xml"/>
+        <route-files value="highway/autobahnma1800.rou.xml"/>
+        <additional-files value="highway/detector.add.xml"/>
+    </input>
+
+    <output>
+        <netstate-dump value="highway/statistics5kmma1800.xml"/>
+    </output>
+
+    <time>
+        <step-length value="0.2"/>
+    </time>
+
+    <processing>
+        <step-method.ballistic value="true"/>
+        <collision.action value="none"/>
+    </processing>
+
+    <gui_only>
+        <gui-settings-file value="highway/gui-settings.cfg"/>
+        <tracker-interval value="0.2"/>
+    </gui_only>
+
+</configuration>
+-->
+
+<detector xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/det_e1_file.xsd">
+    <interval begin="0.00" end="0.20" id="e1Detector_long_edge_0_0" nVehContrib="0" flow="0.00" occupancy="0.00" speed="-1.00" harmonicMeanSpeed="-1.00" length="-1.00" nVehEntered="0"/>
+</detector>

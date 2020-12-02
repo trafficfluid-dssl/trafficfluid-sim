@@ -27,7 +27,9 @@
 #include <libsumo/VehicleType.h>
 #include <libsumo/TraCIConstants.h>
 #include <utils/vehicle/SUMOVehicleParameter.h>
-
+// LFPlugin Begin
+typedef long long int NumericalID;
+// LFPlugin End
 
 // ===========================================================================
 // class declarations
@@ -141,7 +143,23 @@ public:
                                    const std::string& parkingAreaID);
 
     static void resume(const std::string& vehicleID);
-
+    // LFPlugin Begin
+    static NumericalID addR(const std::string& vehID,
+                            const std::string& routeID,
+                            const std::string& typeID = "DEFAULT_VEHTYPE",
+                            const std::string& depart = "now",
+                            const std::string& departLane = "first",
+                            const std::string& departPos = "base",
+                            const std::string& departSpeed = "0",
+                            const std::string& arrivalLane = "current",
+                            const std::string& arrivalPos = "max",
+                            const std::string& arrivalSpeed = "current",
+                            const std::string& fromTaz = "",
+                            const std::string& toTaz = "",
+                            const std::string& line = "",
+                            int personCapacity = 4,
+                            int personNumber = 0);
+    // LFPlugin End
     static void add(const std::string& vehID,
                     const std::string& routeID,
                     const std::string& typeID = "DEFAULT_VEHTYPE",

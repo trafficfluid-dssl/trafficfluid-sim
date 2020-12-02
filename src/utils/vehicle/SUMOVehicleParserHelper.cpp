@@ -1084,6 +1084,17 @@ SUMOVehicleParserHelper::getAllowedCFModelAttrs() {
         allowedCFModelAttrs[SUMO_TAG_CF_IDM] = idmParams;
         allParams.insert(idmParams.begin(), idmParams.end());
 
+        std::set<SumoXMLAttr> laneFreeParams;
+        laneFreeParams.insert(SUMO_ATTR_ACCEL);
+        laneFreeParams.insert(SUMO_ATTR_DECEL);
+        laneFreeParams.insert(SUMO_ATTR_EMERGENCYDECEL);
+        laneFreeParams.insert(SUMO_ATTR_COLLISION_MINGAP_FACTOR);
+        laneFreeParams.insert(SUMO_ATTR_TAU);
+        laneFreeParams.insert(SUMO_ATTR_CF_IDM_DELTA);
+        laneFreeParams.insert(SUMO_ATTR_CF_IDM_STEPPING);
+        allowedCFModelAttrs[SUMO_TAG_CF_LANEFREE] = laneFreeParams;
+        allParams.insert(laneFreeParams.begin(), laneFreeParams.end());
+
         std::set<SumoXMLAttr> idmmParams;
         idmmParams.insert(SUMO_ATTR_ACCEL);
         idmmParams.insert(SUMO_ATTR_DECEL);

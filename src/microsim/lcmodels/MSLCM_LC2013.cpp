@@ -184,7 +184,12 @@ MSLCM_LC2013::wantsChange(
         std::cout << SIMTIME << " veh=" << myVehicle.getID() << " result=" << toString((LaneChangeAction)result) << " blocked=" << toString((LaneChangeAction)blocked) << "\n\n\n";
     }
 #endif
-
+    // LFPlugin Begin
+    // In case of LaneFree vehicles, we disable the lane changing operation
+    if(result && ((myVehicle.getCarFollowModel().getModelID())==SUMO_TAG_CF_LANEFREE)){
+        return 0;
+    }
+    // LFPlugin End    
     return result;
 }
 

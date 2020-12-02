@@ -292,6 +292,12 @@ public:
     /** @brief Remove all vehicles before quick-loading state */
     virtual void clearState();
 
+    // LFPlugin Begin
+    int getVehiclesCount(){
+        // TODO consider reseting the value
+        return myTotalEnteredVehicleNumber;
+    }
+    // LFPlugin End
 protected:
     /// @name Function for summing up values
     ///@{
@@ -320,6 +326,10 @@ protected:
 
     /// @brief The number of entered vehicles
     int myEnteredVehicleNumber;
+
+    // LFPlugin Begin
+    int myTotalEnteredVehicleNumber;
+    // LFPlugin End
 
     /// @brief Type of myVehicleDataCont.
     typedef std::deque< VehicleData > VehicleDataCont;

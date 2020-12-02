@@ -116,6 +116,9 @@
 #include "MSStoppingPlace.h"
 #include "MSNet.h"
 
+// LFPlugin Begin
+#include <microsim/cfmodels/MSCFModel_LaneFree.h>
+// LFPlugin End
 
 // ===========================================================================
 // debug constants
@@ -236,6 +239,9 @@ MSNet::MSNet(MSVehicleControl* vc, MSEventControl* beginOfTimestepEvents,
     }
     myInstance = this;
     initStatic();
+    // LFPlugin Begin
+    new LaneFreeSimulationPlugin();
+    // LFPlugin End
 }
 
 
@@ -320,6 +326,9 @@ MSNet::~MSNet() {
         delete MSGlobals::gMesoNet;
     }
     myInstance = nullptr;
+    // LFPlugin Begin
+    delete LaneFreeSimulationPlugin::getInstance();
+    // LFPlugin End
 }
 
 
@@ -513,6 +522,12 @@ MSNet::closeSimulation(SUMOTime start, const std::string& reason) {
 
 void
 MSNet::simulationStep() {
+    // LFPlugin Begin
+    if(!myStep){
+        LaneFreeSimulationPlugin::getInstance()->initialize_lib();
+    }
+    LaneFreeSimulationPlugin::getInstance()->lf_simulation_step();
+    // LFPlugin End
 #ifdef DEBUG_SIMSTEP
     std::cout << SIMTIME << ": MSNet::simulationStep() called"
               << ", myStep = " << myStep

@@ -191,7 +191,9 @@ public:
     }
     /// @}
 
-
+    long long int loadedVehSize() const{
+        return myVehicleDict.size();
+    }
 
     /// @name Setting vehicle statistics
     /// @{

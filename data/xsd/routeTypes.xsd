@@ -13,6 +13,7 @@
                     <xsd:element name="carFollowing-Krauss" type="cfKraussType"/>
                     <xsd:element name="carFollowing-KraussPS" type="cfKraussType"/>
                     <xsd:element name="carFollowing-KraussOrig1" type="cfKraussType"/>
+                    <xsd:element name="carFollowing-LaneFree" type="cfLaneFreeType"/>
                     <xsd:element name="carFollowing-SmartSK" type="cfSmartType"/>
                     <xsd:element name="carFollowing-Daniel1" type="cfSmartType"/>
                     <xsd:element name="carFollowing-PWagner2009" type="cfPWagType"/>

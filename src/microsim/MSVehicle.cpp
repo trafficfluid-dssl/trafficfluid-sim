@@ -83,6 +83,11 @@
 #include "MSLeaderInfo.h"
 #include "MSDriverState.h"
 
+// LFPlugin Begin
+#include <microsim/cfmodels/MSCFModel_LaneFree.h>
+// LFPlugin End
+
+
 //#define DEBUG_PLAN_MOVE
 //#define DEBUG_PLAN_MOVE_LEADERINFO
 //#define DEBUG_CHECKREWINDLINKLANES
@@ -934,6 +939,9 @@ MSVehicle::MSVehicle(SUMOVehicleParameter* pars, const MSRoute* route,
 
 
 MSVehicle::~MSVehicle() {
+    // LFPlugin Begin
+    LaneFreeSimulationPlugin::getInstance()->remove_vehicle(this);
+    // LFPlugin End
     for (std::vector<MSLane*>::iterator i = myFurtherLanes.begin(); i != myFurtherLanes.end(); ++i) {
         (*i)->resetPartialOccupation(this);
     }
@@ -3944,7 +3952,9 @@ MSVehicle::updateState(double vNext) {
             // vehicle brakes beyond wished maximum deceleration (only warn at the start of the braking manoeuvre)
             decelPlus += 2 * NUMERICAL_EPS;
             const double emergencyFraction = decelPlus / MAX2(NUMERICAL_EPS, getCarFollowModel().getEmergencyDecel() - getCarFollowModel().getMaxDecel());
-            if (emergencyFraction >= MSGlobals::gEmergencyDecelWarningThreshold) {
+            if (emergencyFraction >= MSGlobals::gEmergencyDecelWarningThreshold ) {
+                // LFPlugin Begin
+                if((getCarFollowModel().getModelID())!=SUMO_TAG_CF_LANEFREE){
                 WRITE_WARNING("Vehicle '" + getID()
                               + "' performs emergency braking with decel=" + toString(myAcceleration)
                               + " wished=" + toString(getCarFollowModel().getMaxDecel())
@@ -3953,6 +3963,8 @@ MSVehicle::updateState(double vNext) {
                               //+ " prevAccel=" + toString(previousAcceleration)
                               //+ " reserve=" + toString(MAX2(NUMERICAL_EPS, getCarFollowModel().getEmergencyDecel() - getCarFollowModel().getMaxDecel()))
                               + ", time=" + time2string(MSNet::getInstance()->getCurrentTimeStep()) + ".");
+                }
+                // LFPlugin End
             }
         }
     }
@@ -4482,6 +4494,10 @@ MSVehicle::enterLaneAtMove(MSLane* enteredLane, bool onTeleporting) {
     myLane = enteredLane;
     myLastBestLanesEdge = nullptr;
 
+    // LFPlugin Begin
+    LaneFreeSimulationPlugin::getInstance()->change_edge(this);
+    // LFPlugin End
+
     // internal edges are not a part of the route...
     if (!enteredLane->getEdge().isInternal()) {
         ++myCurrEdge;
@@ -4572,6 +4588,9 @@ void
 MSVehicle::enterLaneAtInsertion(MSLane* enteredLane, double pos, double speed, double posLat, MSMoveReminder::Notification notification) {
     myState = State(pos, speed, posLat, pos - getVehicleType().getLength());
     if (myDeparture == NOT_YET_DEPARTED) {
+        // LFPlugin Begin
+        LaneFreeSimulationPlugin::getInstance()->insert_vehicle(this);
+        // LFPlugin End        
         onDepart();
     }
     myCachedPosition = Position::INVALID;

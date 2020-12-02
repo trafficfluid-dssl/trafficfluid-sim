@@ -112,7 +112,9 @@ public:
         double speed() const {
             return mySpeed;
         };
-
+        void setSpeed(double newspeed){
+            mySpeed = newspeed;
+        }
         /// Lateral Position of this state (m relative to the centerline of the lane).
         double posLat() const {
             return myPosLat;
@@ -397,6 +399,13 @@ public:
         return myState.myPos;
     }
 
+    // LFPlugin Begin
+    // Add setter on position x
+    void setPositionOnLane(double newPos){
+        myState.myPos = newPos;
+    }
+    // LFPlugin End
+
     /** @brief Get the distance the vehicle covered in the previous timestep
      * @return The distance covered in the last timestep (in m)
      */
@@ -480,7 +489,9 @@ public:
     double getSpeed() const {
         return myState.mySpeed;
     }
-
+    void setSpeed(double newspeed) {
+        myState.setSpeed(newspeed);
+    }
 
     /** @brief Returns the vehicle's speed before the previous time step
      * @return The vehicle's speed before the previous time step

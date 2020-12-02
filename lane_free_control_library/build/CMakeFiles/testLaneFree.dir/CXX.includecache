@@ -1,0 +1,18 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/dtrou/github/sumo/lane_free_control_library/src/LaneFree.cpp
+stdio.h
+-
+math.h
+/home/dtrou/github/sumo/lane_free_control_library/src/math.h
+LaneFree.h
+/home/dtrou/github/sumo/lane_free_control_library/src/LaneFree.h
+
+/home/dtrou/github/sumo/lane_free_control_library/src/LaneFree.h
+

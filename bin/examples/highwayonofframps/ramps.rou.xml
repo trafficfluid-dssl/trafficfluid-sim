@@ -1,0 +1,44 @@
+<routes>
+    <!-- <vType id="normal_car_35" vClass="passenger" maxSpeed="35" length="3.2"  arrivalSpeed="35"/> -->
+    <!-- <vType id="normal_car_34" vClass="passenger" maxSpeed="34" length="3.2"  arrivalSpeed="34"/> -->
+    <!-- <vType id="normal_car_33" vClass="passenger" maxSpeed="33" length="3.2"  arrivalSpeed="33"/> -->
+    <!-- <vType id="normal_car_35" vClass="passenger"  carFollowModel="LaneFree" maxSpeed="35" length="3.2"  arrivalSpeed="35" minGap="1"/> -->
+    <vType id="normal_car_35" vClass="passenger" maxSpeed="35" carFollowModel="LaneFree" length="3.2"  arrivalSpeed="35" minGap="1"/>
+    <vType id="normal_car_31" vClass="passenger" maxSpeed="31" length="3.2"  arrivalSpeed="31"/>
+    <!-- <vType id="normal_car_30" vClass="passenger" maxSpeed="30" length="3.2"  arrivalSpeed="30"/> -->
+    <!-- <vType id="normal_car_29" vClass="passenger" maxSpeed="29" length="3.2"  arrivalSpeed="29"/> -->
+    <!-- <vType id="normal_car_28" vClass="passenger" maxSpeed="28" length="3.2"  arrivalSpeed="28"/> -->
+    <!-- <vType id="normal_car_27" vClass="passenger" maxSpeed="27" length="3.2"  arrivalSpeed="27"/> -->
+    <!-- <vType id="normal_car_26" vClass="passenger" maxSpeed="26" length="3.2"  arrivalSpeed="26"/> -->
+    <!-- <vType id="normal_car_25" vClass="passenger" maxSpeed="25" length="3.2"  arrivalSpeed="25"/> -->
+    
+    
+    <!-- <flow id="normal_35" type="normal_car_35" begin="0" end="3600" number="180" from="entry" to="exit" departPos="last" departLane="best" departSpeed="25" /> -->
+    <!-- <flow id="normal_34" type="normal_car_34" begin="0" end="3600" number="180" from="entry" to="exit" departPos="last" departLane="best" departSpeed="25" /> -->
+    <!-- <flow id="normal_33" type="normal_car_33" begin="0" end="3600" number="180" from="entry" to="exit" departPos="last" departLane="best" departSpeed="25" /> -->
+    <!-- <flow id="normal_35me" type="normal_car_35" begin="0" end="2500" probability="0.7" from="entry" to="exit" departPos="random_free" departLane="best" departSpeed="25" /> -->
+    <!-- <flow id="normal_35one" type="normal_car_35" begin="0" end="2500" probability="0.2" from="on_ramp" to="exit" departPos="random_free" departLane="best" departSpeed="25" /> -->
+    <flow id="normal_35enex" type="normal_car_35" begin="0" end="2500" number="1700"  departPos="random_free" departLane="best" departSpeed="5">
+        <route edges="entry entry_2 long_edge exit"/>
+    </flow>
+    <flow id="normal_35enoff" type="normal_car_35" begin="0" end="2500" number="500" departPos="random_free" departLane="best" departSpeed="5">
+        <route edges="entry entry_2 long_edge off_ramp"/>
+    </flow>
+    <flow id="normal_35onoff" type="normal_car_35" begin="0" end="2500" number="500" departPos="random_free" departLane="best" departSpeed="5">
+        <route edges="on_ramp on_ramp_2 long_edge off_ramp"/>
+    </flow>
+    <flow id="normal_35onex" type="normal_car_35" begin="0" end="2500" number="1000" departPos="random_free" departLane="best" departSpeed="5">
+        <route edges="on_ramp on_ramp_2 long_edge exit"/>
+    </flow>
+    <!-- <flow id="normal_35onoff" type="normal_car_35" begin="0" end="2500" probability="0.1" from="on_ramp" to="off_ramp" departPos="random_free" departLane="best" departSpeed="25" /> -->
+    <!-- <flow id="normal_31" type="normal_car_31" begin="0" end="3600" number="800" from="entry" to="exit" departPos="last" departLane="best" departSpeed="25" /> -->
+    <!-- <flow id="normal_30" type="normal_car_30" begin="0" end="3600" number="180" from="entry" to="exit" departPos="last" departLane="best" departSpeed="25" /> -->
+    <!-- <flow id="normal_29" type="normal_car_29" begin="0" end="3600" number="180" from="entry" to="exit" departPos="last" departLane="best" departSpeed="25" /> -->
+    <!-- <flow id="normal_28" type="normal_car_28" begin="0" end="3600" number="180" from="entry" to="exit" departPos="last" departLane="best" departSpeed="25" /> -->
+    <!-- <flow id="normal_27" type="normal_car_27" begin="0" end="3600" number="900" from="entry" to="exit" departPos="last" departLane="best" departSpeed="25" /> -->
+    <!-- <flow id="normal_26" type="normal_car_26" begin="0" end="3600" number="180" from="entry" to="exit" departPos="last" departLane="best" departSpeed="25" /> -->
+    <!-- <flow id="normal_25" type="normal_car_25" begin="0" end="3600" number="180" from="entry" to="exit" departPos="last" departLane="best" departSpeed="25" /> -->
+    
+    
+    
+</routes>
