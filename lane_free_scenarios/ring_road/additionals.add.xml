@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on Τρι 24 Νοε 2020 04:26:53 μμ EET by Eclipse SUMO netedit Version 1.7.0
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netconvertConfiguration.xsd">
+
+    <output>
+        <output-file value="/home/dtrou/github/sumo/bin/rings2.net.xml"/>
+    </output>
+
+    <processing>
+        <offset.disable-normalization value="true"/>
+    </processing>
+
+    <junctions>
+        <no-turnarounds value="true"/>
+    </junctions>
+
+    <netedit>
+        <additional-files value="/home/dtrou/github/sumo/bin/additionals.add.xml"/>
+    </netedit>
+
+    <report>
+        <aggregate-warnings value="5"/>
+    </report>
+
+</configuration>
+-->
+
+<additionals>
+    <e1Detector id="e1Detector_edge_down_0_1" lane="edge_down_0" pos="437.67" freq="20.00" file="e1Detector_edge_down_0_1.xml"/>
+    <e1Detector id="e1Detector_edge_up_0_0" lane="edge_up_0" pos="503.38" freq="20.00" file="e1Detector_edge_up_0_0.xml"/>
+    <rerouter id="rerouter_0" edges="edge_up" pos="477.14,16.53">
+        <interval end="1e9">
+           <destProbReroute id="edge_down"/>
+        </interval>
+    </rerouter>
+    <rerouter id="rerouter_1" edges="edge_down" pos="15.64,-9.39">
+        <interval end="1e9">
+           <destProbReroute id="edge_up"/>
+        </interval>
+    </rerouter>
+</additionals>

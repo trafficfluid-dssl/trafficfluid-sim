@@ -12,10 +12,8 @@
 #define MIN_DESIRED_SPEED 25
 #define MAX_DESIRED_SPEED 35
 
-void simulation_initialize() {
 
-}
-void simulation_initialize2(){
+void simulation_initialize(){
 	// printf("hey\n");
 	srand(get_seed());
 
@@ -28,15 +26,15 @@ void simulation_initialize2(){
 
 	char veh_name[40];
 	char route_id[20]="route0";
-	char type_id[20]="normal_car_35";
+	char type_id[20]="lane_free_car";
 	NumericalID v_id;
 	for(int i=0;i<n_init;i++){
 
 		
 		sprintf(veh_name, "%s_plugin_%d", type_id,(i+1));
-		//printf("%s\n",veh_name);
+		
 		v_id = insert_new_vehicle(veh_name, route_id, type_id, x_val, y_val, vx_val,0);
-		//set_desired_speed(v_id,35);
+		print_message("%s inserted", veh_name);
 		y_val = y_val + y_incr;
 		if(i%virtual_lanes==(virtual_lanes-1)){
 			x_val += x_incr;
@@ -74,7 +72,7 @@ void simulation_step() {
 		ux = erfc(speed-des_speed)-1;
 		apply_acceleration(myids[i], ux, uy);
 		vname = get_vehicle_name(myids[i]);
-		print_message("%s\n",vname);
+		//print_message("%s\n",vname);
 
 		//Check if the positions follow the equations of motion
 		// print_message("vehid: %s in pos: %f, %f \n",vname, pos_x, pos_y );
@@ -94,7 +92,7 @@ void simulation_step() {
 	char* detector_name;
 	for (int j = 0; j < detectors_size; j++) {
 		detector_name = get_detector_name(detector_ids[j]);
-		print_message("detector:%lld count:%d\n", detector_ids[j], detector_values[j]);
+		print_message("detector:%s count:%d\n", detector_name, detector_values[j]);
 	}
 
 	//Check the density per road per segment
@@ -125,14 +123,16 @@ void simulation_step() {
 	double vx, accel;
 	
 	for(i=0;i<n_myedges;i++){
-	 	print_message("edge id: %lld\n", myedges[i]);
+	 	//print_message("edge id: %lld\n", myedges[i]);
 	 	n_edge_ids = get_all_ids_in_edge_size(myedges[i]);
 	 	if(n_edge_ids>0){
 	 		ids_in_edge = get_all_ids_in_edge(myedges[i]);
+			print_message("Vehicles in edge with id %lld:", myedges[i]);
 			for (j = 0; j < n_edge_ids; j++) {
 				vname = get_vehicle_name(ids_in_edge[j]);
-				print_message("%s in edge\n",vname);
+				print_message("%s\t",vname);
 			}
+			print_message("\n");
 	 	}
 	 }
 	
@@ -150,25 +150,20 @@ void event_vehicle_enter(NumericalID veh_id){
 	set_desired_speed(veh_id, (double)(rand() % (int)(MAX_DESIRED_SPEED - MIN_DESIRED_SPEED + 1) + MIN_DESIRED_SPEED));
 	//char* vname1 = get_vehicle_name(veh_id);
 	// printf("Vehicle %s entered with speed %f.\n",vname1,get_speed_x(veh_id));
-	// if(count<n_init){
-	// 	*init_pos_x = x_init[count];
-	// 	*init_pos_y = y_init[count];
-	// 	*init_speed_x = vx_init[count];
-	// 	count++;
-	// }
-	//free(vname1);
+	
 }
 
 void event_vehicle_exit(NumericalID veh_id){
 	//char* vname1 = get_vehicle_name(veh_id);
 	// printf("Vehicle %s exited.\n",vname1);
-	//free(vname1);
+	
 }
 
 void event_vehicles_collide(NumericalID veh_id1, NumericalID veh_id2){
-	//char* vname1 = get_vehicle_name(veh_id1);
+	//char vname1[40];
+	//sprintf(vname1,"%s",get_vehicle_name(veh_id1));
+	//
 	//char* vname2 = get_vehicle_name(veh_id2);
 	// printf("Collision between %s and %s at timestep: %d, and time: %.1f.\n",vname1, vname2, get_current_time_step(), get_current_time_step()*get_time_step_length());
-	//free(vname1);
-	//free(vname2);
+	
 }

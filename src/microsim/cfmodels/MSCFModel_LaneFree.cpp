@@ -702,7 +702,8 @@ char* lf_plugin_get_detector_name(NumericalID d_id){
             	d_name = ((MSInductLoop*)j.second)->getID();
             	found = true;
             	break;
-            }         
+            } 
+			count++;
         }
         if(found){
         	break;
@@ -825,7 +826,7 @@ int lf_plugin_get_density_per_segment_per_edge_size(NumericalID edge_id, double 
 		}
 		vehs_in_edge = edge->getVehicles();
 		if(vehs_in_edge.size()==0){
-			std::cout<<"Edge with id "<< edge_id << " is empty!\n";
+			//std::cout<<"Edge with id "<< edge_id << " is empty!\n";
 			return -1;
 		}
 		size_segments =  (int)std::ceil(edge->getLength()/segment_length);		
