@@ -90,17 +90,11 @@ void update_arraymemory_size(arrayMemStruct* s, size_t requested_size) {
 		s->asize = requested_size;
 	}
 	else if (requested_size > s->asize) {
-		std::cout << "Try to update size!\n";
+		//std::cout << "Try to update size!\n";
 		size_t allocated_blocks = std::max(requested_size, 2 * s->asize);
 		void* tmp = s->ptr;
 		s->ptr = realloc(s->ptr, allocated_blocks * block_size);
-		if (s->ptr == NULL) {
-			free(tmp);			
-		}
-		if (s->ptr != tmp) {
-			std::cout << "tmp changed!\n";
-			free(tmp);
-		}
+		
 		s->asize = allocated_blocks;
 	}
 

@@ -15,9 +15,14 @@ file(GLOB SOURCES "src/*.cpp")
 #output macro definitions include file
 if(WIN32)
 	include (GenerateExportHeader)
+	#Generate the shared library from the sources
+	add_library(libLaneFreePlugin SHARED ${SOURCES})
+else()
+	#Generate the shared library from the sources (linux automatically assigns a lib at the beginning of the library)
+	add_library(LaneFreePlugin SHARED ${SOURCES})
 endif()
-#Generate the shared library from the sources
-add_library(libLaneFreePlugin SHARED ${SOURCES})
+
+
 if(WIN32)
 
 
