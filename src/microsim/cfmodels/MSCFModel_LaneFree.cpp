@@ -23,10 +23,10 @@
 #include "MSCFModel_LaneFree.h"
 #include <microsim/MSVehicle.h>
 
-#if defined(WIN32)
-#include "LaneFree_win.h"
-#elif defined(UNIX)
+#ifdef __unix__
 #include "LaneFree_linux.h"
+#elif defined(WIN32)
+#include "LaneFree_win.h"
 #endif
 
 #include <microsim/MSNet.h>

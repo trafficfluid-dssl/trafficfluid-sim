@@ -1,12 +1,12 @@
 #include <stdio.h>
 #include "math.h"
 
-#if defined(WIN32)
+#ifdef __unix__
+#include "LaneFree_linux.h"
+#elif defined(WIN32)
 #include <stdlib.h>
 #include "LaneFree_win.h"
 #include "libLaneFreePlugin_Export.h"
-#elif defined(UNIX)
-#include "LaneFree_linux.h"
 #endif
 
 #define MIN_DESIRED_SPEED 25
