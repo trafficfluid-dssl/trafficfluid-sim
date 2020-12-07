@@ -1,4 +1,4 @@
-
+#include <stdarg.h>
 
 typedef long long int NumericalID;
 
@@ -55,6 +55,15 @@ int* (* get_density_per_segment_per_edge)(NumericalID edge_id, double segment_le
 int (* get_density_per_segment_per_edge_size)(NumericalID edge_id, double segment_length);
 
 NumericalID (*insert_new_vehicle)(char* veh_name, char* route_id, char* type_id, double pos_x, double pos_y, double speed_x, double speed_y);
+void (*print_to_sumo)(char* msg);
+void print_message(const char* format, ...) {
+	va_list args;
+	va_start(args, format);
+	char buffer[256];
+	vsprintf(buffer, format, args);
+	print_to_sumo(buffer);
+	va_end(args);
+}
 
 void simulation_initialize();
 void simulation_step();

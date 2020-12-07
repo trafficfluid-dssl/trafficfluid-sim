@@ -15,14 +15,19 @@
 /// @author  
 /// @date    Thu, 29 Oct 2020
 ///
-// LaneFree model.
+// LaneFree Plugin model.
 /****************************************************************************/
-#include <config.h>
-#include <bits/stdc++.h>
+//#include <config.h>
+//#include <bits/stdc++.h>
 
 #include "MSCFModel_LaneFree.h"
 #include <microsim/MSVehicle.h>
-#include "LaneFree.h"
+
+#if defined(WIN32)
+#include "LaneFree_win.h"
+#elif defined(UNIX)
+#include "LaneFree_linux.h"
+#endif
 
 #include <microsim/MSNet.h>
 #include <microsim/MSVehicleControl.h>
@@ -44,6 +49,68 @@ double fRand(double fMin, double fMax)
     double f = (double)rand() / RAND_MAX;
     return fMin + f * (fMax - fMin);
 }
+
+
+
+void initialise_arraymemory(arrayMemStruct* s, ARRAYTYPE atype) {
+	s->ptr = NULL;
+	s->asize = 0;
+	s->usize = 0;
+	s->updated = false;
+	s->type = atype;
+
+}
+
+void update_arraymemory_size(arrayMemStruct* s, size_t requested_size) {
+	if (requested_size <= s->asize) {
+		return;
+	}
+	size_t block_size = 0;
+	switch (s->type) {
+	case NUMID_M:
+		block_size = sizeof(NumericalID);
+		break;
+	case INT_M:
+		block_size = sizeof(int);
+		break;
+	case CHAR_M:
+		block_size = sizeof(char);
+		break;
+	case DOUBLE_M:
+		block_size = sizeof(double);
+		break;
+	default:
+		std::cout << "Type of array memory structure not recognized!\n";
+		return;
+	}
+
+
+	if (s->ptr == NULL) {
+		s->ptr = malloc(requested_size * block_size);
+		s->asize = requested_size;
+	}
+	else if (requested_size > s->asize) {
+		std::cout << "Try to update size!\n";
+		size_t allocated_blocks = std::max(requested_size, 2 * s->asize);
+		void* tmp = s->ptr;
+		s->ptr = realloc(s->ptr, allocated_blocks * block_size);
+		if (s->ptr == NULL) {
+			free(tmp);			
+		}
+		if (s->ptr != tmp) {
+			std::cout << "tmp changed!\n";
+			free(tmp);
+		}
+		s->asize = allocated_blocks;
+	}
+
+	if (s->ptr == NULL) {
+		std::cout << "Memory could not be allocated!\n";
+	}
+
+}
+
+
 //implementation of every provided function from the API
 
 // get all vehicles' ids inside the network
@@ -53,17 +120,20 @@ NumericalID* lf_plugin_get_all_ids(){
 
     MSVehicleControl& c = MSNet::getInstance()->getVehicleControl();
     NumericalID ids_size = c.loadedVehSize();
-
-    NumericalID* all_ids = (NumericalID*) malloc(ids_size*(sizeof(NumericalID)));
+	arrayMemStruct* all_ids_ams = LaneFreeSimulationPlugin::getInstance()->get_all_ids_mem();
+	update_arraymemory_size(all_ids_ams, (size_t)ids_size);
+    NumericalID* all_ids_array = (NumericalID*) all_ids_ams->ptr;
     int id_index = 0;
     for (MSVehicleControl::constVehIt i = c.loadedVehBegin(); i != c.loadedVehEnd(); ++i) {
         if ((*i).second->isOnRoad()) {
-        	all_ids[id_index] = ((*i).second)->getNumericalID();
+			all_ids_array[id_index] = ((*i).second)->getNumericalID();
         	id_index++;                
         }
         
     }
-    return all_ids;
+	all_ids_ams->updated = true;
+	all_ids_ams->usize = (size_t)id_index;
+    return all_ids_array;
 
 
 
@@ -71,6 +141,10 @@ NumericalID* lf_plugin_get_all_ids(){
 
 // get the number of all vehicles inside the network
 NumericalID lf_plugin_get_all_ids_size(){
+	arrayMemStruct* all_ids_ams = LaneFreeSimulationPlugin::getInstance()->get_all_ids_mem();
+	if (all_ids_ams->updated) {
+		return all_ids_ams->usize;
+	}
 
 	MSVehicleControl& c = MSNet::getInstance()->getVehicleControl();
     NumericalID ids_size = c.loadedVehSize();
@@ -94,26 +168,33 @@ NumericalID* lf_plugin_get_lane_free_ids(){
 	// std::vector<std::string> ids;
 	
 
-    MSVehicleControl& c = MSNet::getInstance()->getVehicleControl();
-    NumericalID ids_size = c.loadedVehSize();
+	MSVehicleControl& c = MSNet::getInstance()->getVehicleControl();
+	NumericalID ids_size = c.loadedVehSize();
+	arrayMemStruct* lane_free_ids_ams = LaneFreeSimulationPlugin::getInstance()->get_lane_free_ids_mem();
+	update_arraymemory_size(lane_free_ids_ams, (size_t)ids_size);
 
-    NumericalID* all_ids = (NumericalID*) malloc(ids_size*(sizeof(NumericalID)));
-    int id_index = 0;
+	NumericalID* lf_ids_array = (NumericalID*)lane_free_ids_ams->ptr;
+	int id_index = 0;
+	for (MSVehicleControl::constVehIt i = c.loadedVehBegin(); i != c.loadedVehEnd(); ++i) {
+		if ((*i).second->isOnRoad() && ((*i).second->getVehicleType().getCarFollowModel().getModelID()) == SUMO_TAG_CF_LANEFREE) {
+			lf_ids_array[id_index] = ((*i).second)->getNumericalID();
+			id_index++;
+		}
 
-    for (MSVehicleControl::constVehIt i = c.loadedVehBegin(); i != c.loadedVehEnd(); ++i) {
-        if ((*i).second->isOnRoad() && ((*i).second->getVehicleType().getCarFollowModel().getModelID())==SUMO_TAG_CF_LANEFREE){
-        	all_ids[id_index] = ((*i).second)->getNumericalID();	
-        	id_index++;
-        }
-    }
-    all_ids = (NumericalID*)realloc(all_ids, id_index * sizeof(NumericalID));
+	}
+	lane_free_ids_ams->updated = true;
+	lane_free_ids_ams->usize = (size_t)id_index;
 
-    return all_ids;
+	return lf_ids_array;
 
 }
 
 // get the number of all lanefree vehicles inside the network
 NumericalID lf_plugin_get_lane_free_ids_size(){
+	arrayMemStruct* lane_free_ids_ams = LaneFreeSimulationPlugin::getInstance()->get_lane_free_ids_mem();
+	if (lane_free_ids_ams->updated) {
+		return lane_free_ids_ams->usize;
+	}
 
 	MSVehicleControl& c = MSNet::getInstance()->getVehicleControl();
 	NumericalID id_cnt = 0;
@@ -133,11 +214,16 @@ char* lf_plugin_get_vehicle_name(NumericalID veh_id){
 	}
 	
 	std::string vname =  lfveh->get_vehicle()->getID();
-	int l = vname.length();
-	char* vn = (char*) malloc(l*sizeof(char));
+	int l = vname.length()+1;
+
+	arrayMemStruct* vehicle_name_ams = LaneFreeSimulationPlugin::getInstance()->get_vehicle_name_mem();
+	update_arraymemory_size(vehicle_name_ams, (size_t)l);
+
+	char* vn = (char*) vehicle_name_ams->ptr;
+	if (vn != NULL) {
+		strcpy(vn, vname.c_str());
+	}
 	
-	strcpy(vn,vname.c_str());
-    
 	return vn;
 }
 // get the ids of all roads inside the network
@@ -145,19 +231,30 @@ NumericalID* lf_plugin_get_all_edges(){
 	
 	MSEdgeVector edges_v = MSNet::getInstance()->getEdgeControl().getEdges();
 	NumericalID edges_size = edges_v.size();
-	NumericalID* edge_ids = (NumericalID*) malloc(edges_size*(sizeof(NumericalID)));
-	int i = 0;
-	for (MSEdge* edge : edges_v) {
-		edge_ids[i] = edge->getNumericalID();
-		i++;
-	}
 
-	return edge_ids;
+	arrayMemStruct* all_edges_ams = LaneFreeSimulationPlugin::getInstance()->get_all_edges_mem();
+	update_arraymemory_size(all_edges_ams, (size_t)edges_size);
+
+	NumericalID* edge_ids_array = (NumericalID*)all_edges_ams->ptr;
+	int i = 0;
+	if (edge_ids_array != NULL) {
+		for (MSEdge* edge : edges_v) {
+			edge_ids_array[i] = edge->getNumericalID();
+			i++;
+		}
+	}
+	all_edges_ams->updated = true;
+	all_edges_ams->usize = (size_t)edges_size;
+	return edge_ids_array;
     
 }
 
 // get the number of all roads inside the network
 NumericalID lf_plugin_get_all_edges_size(){
+	arrayMemStruct* all_edges_ams = LaneFreeSimulationPlugin::getInstance()->get_all_edges_mem();
+	if (all_edges_ams->updated) {
+		return all_edges_ams->usize;
+	}
 	MSEdgeVector edges_v = MSNet::getInstance()->getEdgeControl().getEdges();
 	return edges_v.size();
 	
@@ -184,18 +281,21 @@ char* lf_plugin_get_edge_name(NumericalID edge_id){
 
 	
 	
-	int l = ename.length();
-	char* en = (char*) malloc(l*sizeof(char));
-	
-	strcpy(en,ename.c_str());
-    
+	int l = ename.length()+1;
+	arrayMemStruct* edge_name_ams = LaneFreeSimulationPlugin::getInstance()->get_edge_name_mem();
+	update_arraymemory_size(edge_name_ams, (size_t)(l));
+	char* en = (char*) edge_name_ams->ptr;
+	if (en != NULL) {
+		strcpy(en, ename.c_str());
+	}
+
 	return en;
 }
 
 
 // get the vehicles' ids that reside in a given road
 NumericalID* lf_plugin_get_all_ids_in_edge(NumericalID edge_id){
-	// std::vector<const SUMOVehicle*> vehs_in_edge = MSNet::getInstance()->getEdgeControl().getEdges().getVehicles()
+	
 	MSEdgeVector edges_v = MSNet::getInstance()->getEdgeControl().getEdges();
 	if( edges_v.size()<=edge_id){
 		std::cout<< "Edge_id " << edge_id << "too large!\n";
@@ -217,15 +317,24 @@ NumericalID* lf_plugin_get_all_ids_in_edge(NumericalID edge_id){
 	}
 
 	std::vector<const SUMOVehicle*> vehs = thisedge->getVehicles();
-	NumericalID veh_size = vehs.size();
+	size_t veh_size = vehs.size();
+	arrayMemStruct* all_ids_in_edge_ams = LaneFreeSimulationPlugin::getInstance()->get_all_ids_in_edge_mem();
+	update_arraymemory_size(all_ids_in_edge_ams, veh_size);
+
 	int i = 0;
-	NumericalID* all_ids = (NumericalID*) malloc(veh_size*sizeof(NumericalID));
-	for (const SUMOVehicle* veh : vehs){
-		all_ids[i] = veh->getNumericalID();
-		i++;
+	NumericalID* all_ids_in_edge_array = (NumericalID*)	all_ids_in_edge_ams->ptr;
+	if(all_ids_in_edge_array != NULL){
+		for (const SUMOVehicle* veh : vehs){
+			
+			all_ids_in_edge_array[i] = veh->getNumericalID();
+			i++;
+			
+		}
 	}
 
-	return all_ids;
+	all_ids_in_edge_ams->updated = true;
+	all_ids_in_edge_ams->usize = veh_size;
+	return all_ids_in_edge_array;
 
 
 
@@ -239,7 +348,10 @@ NumericalID lf_plugin_get_edge_of_vehicle(NumericalID veh_id){
 
 // get the number of vehicles that reside in a given road
 NumericalID lf_plugin_get_all_ids_in_edge_size(NumericalID edge_id){
-
+	arrayMemStruct* all_ids_in_edge_ams = LaneFreeSimulationPlugin::getInstance()->get_all_ids_in_edge_mem();
+	if (all_ids_in_edge_ams->updated) {
+		return all_ids_in_edge_ams->usize;
+	}
 	MSEdgeVector edges_v = MSNet::getInstance()->getEdgeControl().getEdges();
 	if( edges_v.size()<=edge_id){
 		std::cout<< "Edge_id " << edge_id << "too large!\n";
@@ -398,23 +510,23 @@ double lf_plugin_get_road_width(NumericalID edge_id){
 
 }
 
-
+/*
 //set the color of zero speed
-double lf_plugin_set_zero_speed_color(double r, double g, double b){
+void lf_plugin_set_zero_speed_color(double r, double g, double b){
 
 }
 
 
 //set the color of desired speed
-double lf_plugin_set_desired_speed_color(double r, double g, double b){
+void lf_plugin_set_desired_speed_color(double r, double g, double b){
 	
 }
 
 // set the color of max_speed
-double lf_plugin_set_max_speed_color(double r, double g, double b, double max_speed){
+void lf_plugin_set_max_speed_color(double r, double g, double b, double max_speed){
 	
 }
-
+*/
 // get the width of the veh_id vehicle
 double lf_plugin_get_veh_length(NumericalID veh_id){
 	MSLaneFreeVehicle* lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(veh_id);
@@ -472,10 +584,15 @@ char* lf_plugin_get_veh_type_name(NumericalID veh_id){
 	std::string vtname =  lfveh->get_vehicle()->getVehicleType().getID();
 
 
-	int l = vtname.length();
-	char* vtn = (char*) malloc(l*sizeof(char));
+	int l = vtname.length()+1;
+	arrayMemStruct* veh_type_name_ams = LaneFreeSimulationPlugin::getInstance()->get_veh_type_name_mem();
+	update_arraymemory_size(veh_type_name_ams, (size_t)l);
+
+	char* vtn = (char*)veh_type_name_ams->ptr;
+	if (vtn != NULL) {
+		strcpy(vtn, vtname.c_str());
+	}
 	
-	strcpy(vtn,vtname.c_str());
     
 	return vtn;
 }
@@ -497,7 +614,6 @@ NumericalID lf_plugin_insert_new_vehicle(char* veh_name, char* route_id, char* t
 	std::string departLane("best");
 	std::string departPos = std::to_string(pos_x);
 	std::string departSpeed = std::to_string(speed_x);
-	
 	NumericalID new_vid = libsumo::Vehicle::addR(id, routeID, vTypeID, depart, departLane, departPos, departSpeed);
 	LaneFreeSimulationPlugin::getInstance()->add_new_lat_stats(new_vid, pos_y, speed_y);
 	// MSLaneFreeVehicle* lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(new_vid);
@@ -531,11 +647,19 @@ NumericalID* lf_plugin_get_detectors_ids(){
 	if(d_ids.empty()){
 		return NULL;	
 	}
+	
+	int l = d_ids.size();
+	arrayMemStruct* detectors_ids_ams = LaneFreeSimulationPlugin::getInstance()->get_detector_ids_mem();
+	update_arraymemory_size(detectors_ids_ams, (size_t)l);
 
 
-	NumericalID* c_ids = (NumericalID*)malloc(d_ids.size()*sizeof(NumericalID));
+	NumericalID* c_ids = (NumericalID*)detectors_ids_ams->ptr;
 	
 	std::copy(d_ids.begin(), d_ids.end(), c_ids);
+
+	detectors_ids_ams->updated = true;
+	detectors_ids_ams->usize = (size_t)l;
+
 	return c_ids;
 
 
@@ -543,6 +667,10 @@ NumericalID* lf_plugin_get_detectors_ids(){
 
 
 NumericalID lf_plugin_get_detectors_size(){
+	arrayMemStruct* detectors_ids_ams = LaneFreeSimulationPlugin::getInstance()->get_detector_ids_mem();
+	if (detectors_ids_ams->updated) {
+		return detectors_ids_ams->usize;
+	}
 
 	MSDetectorControl* detectorControl = &MSNet::getInstance()->getDetectorControl();
 	NumericalID count = 0;
@@ -560,9 +688,15 @@ NumericalID lf_plugin_get_detectors_size(){
 
 }
 
-
+void lf_plugin_print_to_sumo(char* msg) {
+	std::string string_msg(msg);
+	LaneFreeSimulationPlugin::getInstance()->append_message_step(string_msg);
+	
+	
+}
 
 char* lf_plugin_get_detector_name(NumericalID d_id){
+
 	MSDetectorControl* detectorControl = &MSNet::getInstance()->getDetectorControl();
 	NumericalID count = 0;
 	std::string d_name;
@@ -587,10 +721,18 @@ char* lf_plugin_get_detector_name(NumericalID d_id){
 	}
 
 
-	int l = d_name.length();
-	char* vtn = (char*)malloc(l*sizeof(char));
+	int l = d_name.length()+1;
+
+	arrayMemStruct* detector_name_ams = LaneFreeSimulationPlugin::getInstance()->get_detector_name_mem();
+	update_arraymemory_size(detector_name_ams, (size_t)l);
+
+	char* vtn = (char*) detector_name_ams->ptr;
 	
-	strcpy(vtn,d_name.c_str());
+	if (vtn != NULL) {
+		strcpy(vtn, d_name.c_str());
+	}	
+
+
 	return vtn;
 }
 
@@ -610,15 +752,16 @@ int* lf_plugin_get_detectors_values(){
 	if(values.empty()){
 		return NULL;	
 	}
+	size_t l = values.size();
+	arrayMemStruct* detector_values_ams = LaneFreeSimulationPlugin::getInstance()->get_detector_values_mem();
+	update_arraymemory_size(detector_values_ams,l);
 
-	int* c_values = (int*)malloc(values.size()*sizeof(int));	
-	// int i=0;
-	// for(int v : values){
-	// 	c_values[i] = v;
-	// 	i++;
-	// }
+	int* c_values = (int*)detector_values_ams->ptr;	
+	
 	std::copy(values.begin(), values.end(), c_values);
 
+	detector_values_ams->updated = true;
+	detector_values_ams->usize = l;
 
 	return c_values;
 	
@@ -649,14 +792,20 @@ int* lf_plugin_get_density_per_segment_per_edge(NumericalID edge_id, double segm
 		}
 		size_segments =  (int)std::ceil(edge->getLength()/segment_length);		
 		dens_per_segment = (int*)calloc(size_segments,sizeof(int));
+		
+		if (dens_per_segment != NULL) {
+			for (i = 0; i < n_v; i++) {
+				veh = (MSVehicle*)vehs_in_edge[i];
+				x_v = veh->getPositionOnLane();
+				segment_i = std::min((int)std::floor(x_v / segment_length), size_segments - 1);
+				dens_per_segment[segment_i] += 1;
 
-		for(i=0;i<n_v;i++){
-			veh = (MSVehicle*)vehs_in_edge[i];			
-			x_v = veh->getPositionOnLane();
-			segment_i = std::min((int)std::floor(x_v/segment_length),size_segments-1);
-			dens_per_segment[segment_i] += 1;
-			
+			}
 		}
+		else {
+			std::cout << "Could not allocate memory!\n";
+		}
+		
 		return dens_per_segment;
 	}
 	std::cout<<"Edge with id "<< edge_id << " not found!\n";
@@ -674,7 +823,7 @@ int lf_plugin_get_density_per_segment_per_edge_size(NumericalID edge_id, double 
 	
 
 	// int* dens_per_segment;
-	int size_segments, segment_i;
+	int size_segments;
 	// double x_v;
 	for (MSEdge* edge : edges_v) {
 		if(edge_id!=edge->getNumericalID()){
@@ -691,6 +840,7 @@ int lf_plugin_get_density_per_segment_per_edge_size(NumericalID edge_id, double 
 	std::cout<<"Edge with id "<< edge_id << " not found!\n";
 	return -1;
 }
+
 
 LaneFreeSimulationPlugin::LaneFreeSimulationPlugin(){
 
@@ -725,7 +875,24 @@ LaneFreeSimulationPlugin::LaneFreeSimulationPlugin(){
 	get_density_per_segment_per_edge = &lf_plugin_get_density_per_segment_per_edge;
 	get_density_per_segment_per_edge_size = &lf_plugin_get_density_per_segment_per_edge_size;
 	insert_new_vehicle = &lf_plugin_insert_new_vehicle;
+	print_to_sumo = &lf_plugin_print_to_sumo;
 	srand(lf_plugin_get_seed());
+	max_vehicle_length = 0;
+	
+	// Initialize all pointers, and set corresponding counters to zero, counters reflect the allocated memory blocks
+	
+	initialise_arraymemory(&all_ids,NUMID_M);	
+	initialise_arraymemory(&lane_free_ids, NUMID_M);
+	initialise_arraymemory(&vehicle_name,CHAR_M);
+	initialise_arraymemory(&all_edges, NUMID_M);
+	initialise_arraymemory(&edge_name, CHAR_M);
+	initialise_arraymemory(&all_ids_in_edge, NUMID_M);
+	initialise_arraymemory(&veh_type_name, CHAR_M);
+	initialise_arraymemory(&detector_ids, NUMID_M);
+	initialise_arraymemory(&detector_name, CHAR_M);
+	initialise_arraymemory(&detector_values,DOUBLE_M);
+	initialise_arraymemory(&density_per_segment_per_edge,INT_M);
+	
 	
 	myInstance = this;
 }
@@ -734,6 +901,17 @@ LaneFreeSimulationPlugin::LaneFreeSimulationPlugin(){
 LaneFreeSimulationPlugin::~LaneFreeSimulationPlugin() {
 	simulation_finalize();
 	free_hashmap();
+	
+	free(all_ids.ptr);
+	free(lane_free_ids.ptr);
+	free(vehicle_name.ptr);
+	free(all_edges.ptr);
+	free(all_ids_in_edge.ptr);
+	free(veh_type_name.ptr);
+	free(detector_ids.ptr);
+	free(detector_name.ptr);
+	free(detector_values.ptr);
+	free(density_per_segment_per_edge.ptr);
 	myInstance = nullptr;
 }
 
@@ -745,10 +923,30 @@ LaneFreeSimulationPlugin::initialize_lib(){
 void
 LaneFreeSimulationPlugin::lf_simulation_step(){
 	
+	//check wtf why is this here?
 	lf_plugin_get_detectors_ids();
+
+	all_ids.updated = false;
+	
+	lane_free_ids.updated = false;
+	
+	all_edges.updated = false;
+	
+	all_ids_in_edge.updated = false;
+	
+	detector_ids.updated = false;
+	
+	detector_values.updated = false;
+
+	density_per_segment_per_edge.updated = false;
+	
 	
 	simulation_step();
 	
+	std::string msg = get_message_step();
+	if (msg != "") {
+		WRITE_MESSAGE(msg);
+	}
 	lf_simulation_checkCollisions();
 	
 
@@ -827,7 +1025,9 @@ LaneFreeSimulationPlugin::free_hashmap(){
 			delete lf_veh;
 		}
 		delete vm_edge;
+		
 	}
+	allVehiclesMapEdges.clear();
 }
 
 void

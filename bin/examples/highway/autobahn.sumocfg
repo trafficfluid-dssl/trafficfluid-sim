@@ -10,5 +10,8 @@
 	</output>
 	<processing>
 		   <step-method.ballistic value="true"/>
+		   <collision.action value="none"/>
+		   <step-length value="0.2"/>
+		   <no-step-log value="false"/>
 	</processing>
 </configuration>

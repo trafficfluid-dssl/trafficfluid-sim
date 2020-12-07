@@ -26,11 +26,30 @@
 #include <microsim/MSVehicle.h>
 #include <microsim/MSVehicleType.h>
 #include <utils/xml/SUMOXMLDefinitions.h>
-#include <tgmath.h> 
+//#include <tgmath.h> 
 #define MAX_ITERS 5
 // TODO check consistency with https://sumo.dlr.de/docs/Developer/CodeStyle.html (use the suggested object instead of unordered_map & modify for loops with iterators)
-// TODO check if we can just include LaneFree.h file, so as to not define NumericalID
+// TODO check if we can just include LaneFree.h file, so as to not define NumericalID again here
+
+//TODO convert enum to enum class
+typedef enum {
+    CHAR_M,
+    INT_M,
+    DOUBLE_M,
+    NUMID_M
+} ARRAYTYPE;
+
+struct ArrayMem {
+    void* ptr;
+    size_t asize;
+    size_t usize;
+    bool updated;
+    ARRAYTYPE type;
+};
 typedef long long int NumericalID;
+typedef struct ArrayMem arrayMemStruct;
+
+
 
 double fRand(double fMin, double fMax);
 
@@ -249,6 +268,59 @@ public:
     NumericalID find_edge(NumericalID veh_id);
 
     void add_new_lat_stats(NumericalID veh_id, double pos_y, double speed_y);
+
+    arrayMemStruct* get_all_ids_mem() {
+        return &all_ids;
+    }
+
+    arrayMemStruct* get_lane_free_ids_mem() {
+        return &lane_free_ids;
+    }
+
+    arrayMemStruct* get_vehicle_name_mem() {
+        return &vehicle_name;
+    }
+
+    arrayMemStruct* get_all_edges_mem() {
+        return &all_edges;
+    }
+
+    arrayMemStruct* get_edge_name_mem() {
+        return &edge_name;
+    }
+
+    arrayMemStruct* get_all_ids_in_edge_mem(){
+        return &all_ids_in_edge;
+    }
+    arrayMemStruct* get_veh_type_name_mem(){
+        return &veh_type_name;
+    }
+    arrayMemStruct* get_detector_ids_mem(){
+        return &detector_ids;
+    }
+    arrayMemStruct* get_detector_name_mem(){
+        return &detector_name;
+    }
+    arrayMemStruct* get_detector_values_mem(){
+        return &detector_values;
+    }
+    arrayMemStruct* get_density_per_segment_per_edge_mem(){
+        return &density_per_segment_per_edge;
+    } 
+
+    std::string get_message_step() {
+        if (msgBufferVector.empty()) {
+            return "";
+        }
+        std::string tot_msg = std::accumulate(msgBufferVector.begin(), msgBufferVector.end(), std::string(""));
+        msgBufferVector.clear();
+        return tot_msg;
+    }
+
+    void append_message_step(std::string msg) {
+        msgBufferVector.push_back(msg);
+    }
+
     
 protected:
     NumericalID find_stored_edge(MSVehicle* veh);
@@ -262,9 +334,19 @@ protected:
 
     double max_vehicle_length;
 
-    // function pointers to connect this api with the dynamic library
-
-    // methods are based on Numerical ids for vehicles, since they are unique for all vehicles
+    arrayMemStruct all_ids;
+    arrayMemStruct lane_free_ids;
+    arrayMemStruct vehicle_name;
+    arrayMemStruct all_edges;
+    arrayMemStruct edge_name;
+    arrayMemStruct all_ids_in_edge;
+    arrayMemStruct veh_type_name;
+    arrayMemStruct detector_ids;
+    arrayMemStruct detector_name;
+    arrayMemStruct detector_values;
+    arrayMemStruct density_per_segment_per_edge;
+    
+    std::vector<std::string> msgBufferVector;
 };
 
 

@@ -18,6 +18,10 @@ set(TCMALLOC ON CACHE BOOL "Use tcmalloc if installed")
 # Set a default build type if none was specified
 # you may use -DCMAKE_BUILD_TYPE:STRING=Debug from the command line
 set(default_build_type "Release")
+if(WIN32)
+
+	set(BUILD_SHARED_LIBS  TRUE)
+endif()
 
 if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   message(STATUS "Setting build type to '${default_build_type}' as none was specified.")

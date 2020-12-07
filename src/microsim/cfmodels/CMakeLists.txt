@@ -1,6 +1,17 @@
-set (PROJECT_LINK_LIBS_LF libtestLaneFree.so)
+
+if(WIN32)
+	set (PROJECT_LINK_LIBS_LF libLaneFreePlugin.dll)
+
+else()
+
+	set (PROJECT_LINK_LIBS_LF libLaneFreePlugin.so)
+endif()
 #include_directories( ../../../lane_free_control_library/build )
 include_directories( ../../../lane_free_control_library/src)
+if(WIN32)
+	include_directories( ../../../lane_free_control_library/include)
+endif()
+
 set(microsim_cf_lf
    MSCFModel_LaneFree.cpp
    MSCFModel_LaneFree.h
@@ -24,8 +35,7 @@ set(microsim_cfmodels_STAT_SRCS
    MSCFModel_KraussPS.h
    MSCFModel_KraussX.cpp
    MSCFModel_KraussX.h
-   MSCFModel_LaneFree.cpp
-   MSCFModel_LaneFree.h
+
    MSCFModel_PWag2009.cpp
    MSCFModel_PWag2009.h
    MSCFModel_SmartSK.cpp
@@ -49,5 +59,5 @@ set(microsim_cfmodels_STAT_SRCS
 )
 
 add_library(microsim_cfmodels STATIC ${microsim_cfmodels_STAT_SRCS})
-target_link_libraries(microsim_cfmodels PUBLIC microsim_cfmodelslf)
+target_link_libraries(microsim_cfmodels microsim_cfmodelslf)
 set_property(TARGET microsim_cfmodels PROPERTY PROJECT_LABEL "z_microsim_cfmodels")

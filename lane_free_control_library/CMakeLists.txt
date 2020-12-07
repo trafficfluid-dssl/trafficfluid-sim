@@ -1,12 +1,30 @@
-project(lanefree_control)
-set(CMAKE_BUILD_TYPE Release)
 
-#Bring the headers, such as Student.h into the project
-include_directories(src)
+cmake_minimum_required(VERSION 2.8.6)
+project(lanefreeplugin)
+set(CMAKE_BUILD_TYPE Debug)
+
+#Bring the headers into the project
+include_directories(src  ${PROJECT_BINARY_DIR})
 
 #However, the file(GLOB...) allows for wildcard additions:
 file(GLOB SOURCES "src/*.cpp")
 
-#Generate the shared library from the sources
-add_library(testLaneFree SHARED ${SOURCES})
 
+
+#output library export file *.lib and
+#output macro definitions include file
+if(WIN32)
+	include (GenerateExportHeader)
+endif()
+#Generate the shared library from the sources
+add_library(libLaneFreePlugin SHARED ${SOURCES})
+if(WIN32)
+
+
+	GENERATE_EXPORT_HEADER (libLaneFreePlugin
+	    BASE_NAME libLaneFreePlugin
+	    EXPORT_MACRO_NAME libLaneFreePlugin_EXPORT    
+	    EXPORT_FILE_NAME libLaneFreePlugin_Export.h
+	    STATIC_DEFINE libLaneFreePlugin_BUILT_AS_STATIC
+	)
+endif()
