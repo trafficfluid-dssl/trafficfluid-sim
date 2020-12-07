@@ -782,7 +782,7 @@ int* lf_plugin_get_density_per_segment_per_edge(NumericalID edge_id, double segm
 		vehs_in_edge = edge->getVehicles();
 		n_v = vehs_in_edge.size();
 		if(n_v==0){
-			std::cout<<"Edge with id "<< edge_id << " is empty!\n";
+			//std::cout<<"Edge with id "<< edge_id << " is empty!\n";
 			return NULL;
 		}
 		size_segments =  (int)std::ceil(edge->getLength()/segment_length);		
