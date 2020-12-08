@@ -14,9 +14,11 @@
 
 
 void simulation_initialize(){
-	// printf("hey\n");
+
+	//initialize srand with the same seed as sumo
 	srand(get_seed());
 
+	//insert 20 vehicles
 	int n_init = 20;
 		
 	double x_incr=5, y_incr=2.5, vx_incr=5;
@@ -24,13 +26,14 @@ void simulation_initialize(){
 	int virtual_lanes = 3;
 	double width=10;
 
+
 	char veh_name[40];
+	//route_id and type_id should be defined in the scenario we are running
 	char route_id[20]="route0";
 	char type_id[20]="lane_free_car";
 	NumericalID v_id;
 	for(int i=0;i<n_init;i++){
-
-		
+				
 		sprintf(veh_name, "%s_plugin_%d", type_id,(i+1));
 		
 		v_id = insert_new_vehicle(veh_name, route_id, type_id, x_val, y_val, vx_val,0);
@@ -51,7 +54,7 @@ void simulation_initialize(){
 void simulation_step() {
 	NumericalID* myids = get_lane_free_ids();
 	NumericalID n_myids = get_lane_free_ids_size();
-	double pos_x, pos_y, speed, speed_y, des_speed, ux, uy, TS = get_time_step_length();
+	double pos_x, pos_y, speed, speed_y, des_speed, ux, uy, length, width, TS = get_time_step_length();
 	int t = get_current_time_step();
 	
 	char* vname;
@@ -64,7 +67,8 @@ void simulation_step() {
 		pos_x = get_position_x(myids[i]);
 		pos_y = get_position_y(myids[i]);
 		speed = get_speed_x(myids[i]);
-		
+		length = get_veh_length(myids[i]);
+		width = get_veh_width(myids[i]);
 		des_speed = get_desired_speed(myids[i]);
 		
 		speed_y = get_speed_y(myids[i]);
@@ -106,9 +110,9 @@ void simulation_step() {
 		if (density_per_edge != NULL) {
 			size = get_density_per_segment_per_edge_size(myedges[i], segment_length);
 			print_message("Edge id %lld\nDensity per segment:", myedges[i]);
-			for (int j = 0; j < size; j++) {
-				print_message("\t%d", density_per_edge[j]);
-			}
+			//for (int j = 0; j < size; j++) {
+			//	print_message("\t%d", density_per_edge[j]);
+			//}
 			print_message("\n");
 
 			
@@ -125,6 +129,8 @@ void simulation_step() {
 	for(i=0;i<n_myedges;i++){
 	 	//print_message("edge id: %lld\n", myedges[i]);
 	 	n_edge_ids = get_all_ids_in_edge_size(myedges[i]);
+		length = get_edge_length(myedges[i]);
+		width = get_edge_width(myedges[i]);
 	 	if(n_edge_ids>0){
 	 		ids_in_edge = get_all_ids_in_edge(myedges[i]);
 			print_message("Vehicles in edge with id %lld:", myedges[i]);

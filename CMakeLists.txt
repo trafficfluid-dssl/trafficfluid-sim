@@ -386,7 +386,11 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}/src)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 #Link directory for controller
-link_directories(lane_free_control_library/build)
+if(WIN32)
+    link_directories(lane_free_control_library/build)
+else()
+    link_directories(/usr/local/lib)
+endif()
 
 set(commonlibs
         utils_distribution utils_shapes utils_options

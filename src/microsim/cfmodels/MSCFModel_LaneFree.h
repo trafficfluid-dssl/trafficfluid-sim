@@ -28,6 +28,7 @@
 #include <utils/xml/SUMOXMLDefinitions.h>
 //#include <tgmath.h> 
 #define MAX_ITERS 5
+#define UPDATE_PRINT_MS 5
 // TODO check consistency with https://sumo.dlr.de/docs/Developer/CodeStyle.html (use the suggested object instead of unordered_map & modify for loops with iterators)
 // TODO check if we can just include LaneFree.h file, so as to not define NumericalID again here
 
@@ -308,18 +309,14 @@ public:
         return &density_per_segment_per_edge;
     } 
 
-    std::string get_message_step() {
-        if (msgBufferVector.empty()) {
-            return "";
-        }
-        std::string tot_msg = std::accumulate(msgBufferVector.begin(), msgBufferVector.end(), std::string(""));
-        msgBufferVector.clear();
-        return tot_msg;
+    bool is_message_empty() {
+        return msgBufferVector.empty();
     }
 
-    void append_message_step(std::string msg) {
-        msgBufferVector.push_back(msg);
-    }
+    std::string get_message_step();
+
+
+    void append_message_step(std::string msg);
 
     
 protected:
@@ -347,6 +344,8 @@ protected:
     arrayMemStruct density_per_segment_per_edge;
     
     std::vector<std::string> msgBufferVector;
+
+    long printMessageTimer;
 };
 
 

@@ -22,7 +22,6 @@
 
 #include "MSCFModel_LaneFree.h"
 #include <microsim/MSVehicle.h>
-
 #ifdef __unix__
 #include "LaneFree_linux.h"
 #elif defined(WIN32)
@@ -37,7 +36,7 @@
 #include <microsim/MSVehicle.h>
 #include <microsim/output/MSDetectorControl.h>
 #include <microsim/lcmodels/MSLCM_LC2013.h>
-
+#include <utils/common/SysUtils.h>
 #include <microsim/output/MSMeanData_Net.h>
 
 #include <libsumo/Vehicle.h>
@@ -450,7 +449,7 @@ void lf_plugin_apply_acceleration(NumericalID veh_id, double accel_x, double acc
 
 
 // get the length of a given road
-double lf_plugin_get_road_length(NumericalID edge_id){
+double lf_plugin_get_edge_length(NumericalID edge_id){
 	MSEdgeVector edges_v = MSNet::getInstance()->getEdgeControl().getEdges();
 	
 	bool found = false;
@@ -478,7 +477,7 @@ double lf_plugin_get_road_length(NumericalID edge_id){
 
 
 // get the width of a given road
-double lf_plugin_get_road_width(NumericalID edge_id){
+double lf_plugin_get_edge_width(NumericalID edge_id){
 	MSEdgeVector edges_v = MSNet::getInstance()->getEdgeControl().getEdges();
 	
 	bool found = false;
@@ -871,9 +870,13 @@ LaneFreeSimulationPlugin::LaneFreeSimulationPlugin(){
 	get_density_per_segment_per_edge_size = &lf_plugin_get_density_per_segment_per_edge_size;
 	insert_new_vehicle = &lf_plugin_insert_new_vehicle;
 	print_to_sumo = &lf_plugin_print_to_sumo;
+	get_veh_length = &lf_plugin_get_veh_length;
+	get_veh_width = &lf_plugin_get_veh_width;
+	get_edge_length = &lf_plugin_get_edge_length;
+	get_edge_width = &lf_plugin_get_edge_width;
 	srand(lf_plugin_get_seed());
 	max_vehicle_length = 0;
-	
+	printMessageTimer = SysUtils::getCurrentMillis();
 	// Initialize all pointers, and set corresponding counters to zero, counters reflect the allocated memory blocks
 	
 	initialise_arraymemory(&all_ids,NUMID_M);	
@@ -915,11 +918,30 @@ LaneFreeSimulationPlugin::initialize_lib(){
 	simulation_initialize();
 }
 
+void 
+LaneFreeSimulationPlugin::append_message_step(std::string msg){
+	msgBufferVector.push_back(msg);
+}
+
+std::string
+LaneFreeSimulationPlugin::get_message_step(){
+	if (msgBufferVector.empty()) {
+		return "";
+	}
+	std::string tot_msg;
+	for (const auto& str_i : msgBufferVector) {
+		tot_msg += str_i;
+	}
+	
+	msgBufferVector.clear();
+	return tot_msg;
+}
+
 void
 LaneFreeSimulationPlugin::lf_simulation_step(){
 	
 	//check wtf why is this here?
-	lf_plugin_get_detectors_ids();
+	//lf_plugin_get_detectors_ids();
 
 	all_ids.updated = false;
 	
@@ -937,12 +959,32 @@ LaneFreeSimulationPlugin::lf_simulation_step(){
 	
 	
 	simulation_step();
-	
-	std::string msg = get_message_step();
-	if (msg != "") {
-		WRITE_MESSAGE(msg);
-	}
 	lf_simulation_checkCollisions();
+	bool is_empty = is_message_empty();
+	long timer = SysUtils::getCurrentMillis() - printMessageTimer;
+	bool update_time;
+	
+	update_time = true ? timer > UPDATE_PRINT_MS : false;
+	
+	if ((!is_empty) && update_time) {
+		std::string msg = get_message_step();
+		
+		
+		
+		if (MSNet::getInstance()->isGUINet()) {
+			
+			WRITE_MESSAGE(msg);
+		}
+		else{
+			std::cout << msg << "\n";
+		}
+
+
+		if (update_time) {
+			printMessageTimer = SysUtils::getCurrentMillis();
+		}
+	}
+
 	
 
 }
