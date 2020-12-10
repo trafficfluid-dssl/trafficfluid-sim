@@ -56,12 +56,12 @@ void simulation_step() {
 	NumericalID n_myids = get_lane_free_ids_size();
 	double pos_x, pos_y, speed, speed_y, des_speed, ux, uy, length, width, TS = get_time_step_length();
 	int t = get_current_time_step();
-	
+	int i, j;
 	char* vname;
 	
 	print_message("timestep:%d\n", get_current_time_step());
 	
-	for (int i = 0; i < n_myids; i++) {
+	for (i = 0; i < n_myids; i++) {
 		
 
 		pos_x = get_position_x(myids[i]);
@@ -94,7 +94,7 @@ void simulation_step() {
 	NumericalID detectors_size = get_detectors_size();
 
 	char* detector_name;
-	for (int j = 0; j < detectors_size; j++) {
+	for (j = 0; j < detectors_size; j++) {
 		detector_name = get_detector_name(detector_ids[j]);
 		print_message("detector:%s count:%d\n", detector_name, detector_values[j]);
 	}
@@ -105,14 +105,14 @@ void simulation_step() {
 	int* density_per_edge;
 	int size;
 	double segment_length = 100; //in meters
-	for (int i = 0; i < n_myedges; i++) {
+	for (i = 0; i < n_myedges; i++) {
 		density_per_edge = get_density_per_segment_per_edge(myedges[i], segment_length);
 		if (density_per_edge != NULL) {
 			size = get_density_per_segment_per_edge_size(myedges[i], segment_length);
 			print_message("Edge id %lld\nDensity per segment:", myedges[i]);
-			//for (int j = 0; j < size; j++) {
-			//	print_message("\t%d", density_per_edge[j]);
-			//}
+			for (j = 0; j < size; j++) {
+				print_message("%d,", density_per_edge[j]);
+			}
 			print_message("\n");
 
 			
@@ -123,11 +123,11 @@ void simulation_step() {
 	//For larger networks, you may control vehicles based on the road edge they are in
 	NumericalID* ids_in_edge;
 	NumericalID n_edge_ids;
-	int i,j;
+	
 	double vx, accel;
 	
 	for(i=0;i<n_myedges;i++){
-	 	//print_message("edge id: %lld\n", myedges[i]);
+	 	print_message("edge id: %lld\n", myedges[i]);
 	 	n_edge_ids = get_all_ids_in_edge_size(myedges[i]);
 		length = get_edge_length(myedges[i]);
 		width = get_edge_width(myedges[i]);

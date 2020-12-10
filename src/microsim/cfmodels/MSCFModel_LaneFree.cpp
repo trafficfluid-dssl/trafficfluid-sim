@@ -341,10 +341,10 @@ NumericalID lf_plugin_get_edge_of_vehicle(NumericalID veh_id){
 
 // get the number of vehicles that reside in a given road
 NumericalID lf_plugin_get_all_ids_in_edge_size(NumericalID edge_id){
-	arrayMemStruct* all_ids_in_edge_ams = LaneFreeSimulationPlugin::getInstance()->get_all_ids_in_edge_mem();
-	if (all_ids_in_edge_ams->updated) {
-		return all_ids_in_edge_ams->usize;
-	}
+	//arrayMemStruct* all_ids_in_edge_ams = LaneFreeSimulationPlugin::getInstance()->get_all_ids_in_edge_mem();
+	//if (all_ids_in_edge_ams->updated) {
+	//	return all_ids_in_edge_ams->usize;
+	//}
 	MSEdgeVector edges_v = MSNet::getInstance()->getEdgeControl().getEdges();
 	if( edges_v.size()<=edge_id){
 		std::cout<< "Edge_id " << edge_id << "too large!\n";
@@ -364,8 +364,9 @@ NumericalID lf_plugin_get_all_ids_in_edge_size(NumericalID edge_id){
 		std::cout<< "Edge_id " << edge_id << "not found!\n";
 		return -1;
 	}
-
-	return thisedge->getVehicleNumber();
+	std::vector<const SUMOVehicle*> vehs = thisedge->getVehicles();
+	return (NumericalID)vehs.size();
+	
 
 }
 
