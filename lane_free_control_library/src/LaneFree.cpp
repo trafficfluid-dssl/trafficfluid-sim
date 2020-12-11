@@ -37,7 +37,7 @@ void simulation_initialize(){
 		sprintf(veh_name, "%s_plugin_%d", type_id,(i+1));
 		
 		v_id = insert_new_vehicle(veh_name, route_id, type_id, x_val, y_val, vx_val,0);
-		print_message("%s inserted", veh_name);
+		printf("%s inserted", veh_name);
 		y_val = y_val + y_incr;
 		if(i%virtual_lanes==(virtual_lanes-1)){
 			x_val += x_incr;
@@ -59,7 +59,7 @@ void simulation_step() {
 	int i, j;
 	char* vname;
 	
-	print_message("timestep:%d\n", get_current_time_step());
+	printf("timestep:%d\n", get_current_time_step());
 	
 	for (i = 0; i < n_myids; i++) {
 		
@@ -76,13 +76,13 @@ void simulation_step() {
 		ux = erfc(speed-des_speed)-1;
 		apply_acceleration(myids[i], ux, uy);
 		vname = get_vehicle_name(myids[i]);
-		//print_message("%s\n",vname);
+		//printf("%s\n",vname);
 
 		//Check if the positions follow the equations of motion
-		// print_message("vehid: %s in pos: %f, %f \n",vname, pos_x, pos_y );
+		// printf("vehid: %s in pos: %f, %f \n",vname, pos_x, pos_y );
 		// pos_x = pos_x + speed*TS + 0.5*ux*TS*TS;
 		// pos_y = pos_y + speed_y*TS + 0.5*uy*TS*TS;
-		// print_message("next pos: %f, %f \n", pos_x, pos_y );
+		// printf("next pos: %f, %f \n", pos_x, pos_y );
 
 	}
 
@@ -96,7 +96,7 @@ void simulation_step() {
 	char* detector_name;
 	for (j = 0; j < detectors_size; j++) {
 		detector_name = get_detector_name(detector_ids[j]);
-		print_message("detector:%s count:%d\n", detector_name, detector_values[j]);
+		printf("detector:%s count:%d\n", detector_name, detector_values[j]);
 	}
 
 	//Check the density per road per segment
@@ -109,11 +109,11 @@ void simulation_step() {
 		density_per_edge = get_density_per_segment_per_edge(myedges[i], segment_length);
 		if (density_per_edge != NULL) {
 			size = get_density_per_segment_per_edge_size(myedges[i], segment_length);
-			print_message("Edge id %lld\nDensity per segment:", myedges[i]);
+			printf("Edge id %lld\nDensity per segment:", myedges[i]);
 			for (j = 0; j < size; j++) {
-				print_message("%d,", density_per_edge[j]);
+				printf("%d,", density_per_edge[j]);
 			}
-			print_message("\n");
+			printf("\n");
 
 			
 		}
@@ -127,18 +127,18 @@ void simulation_step() {
 	double vx, accel;
 	
 	for(i=0;i<n_myedges;i++){
-	 	print_message("edge id: %lld\n", myedges[i]);
+	 	//printf("edge id: %lld\n", myedges[i]);
 	 	n_edge_ids = get_all_ids_in_edge_size(myedges[i]);
 		length = get_edge_length(myedges[i]);
 		width = get_edge_width(myedges[i]);
 	 	if(n_edge_ids>0){
 	 		ids_in_edge = get_all_ids_in_edge(myedges[i]);
-			print_message("Vehicles in edge with id %lld:", myedges[i]);
-			for (j = 0; j < n_edge_ids; j++) {
-				vname = get_vehicle_name(ids_in_edge[j]);
-				print_message("%s\t",vname);
-			}
-			print_message("\n");
+			//printf("Vehicles in edge with id %lld:", myedges[i]);
+			//for (j = 0; j < n_edge_ids; j++) {
+			//	vname = get_vehicle_name(ids_in_edge[j]);
+			//	printf("%s\t",vname);
+			//}
+			//printf("\n");
 	 	}
 	 }
 	

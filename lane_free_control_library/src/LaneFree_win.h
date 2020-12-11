@@ -130,9 +130,6 @@ libLaneFreePlugin_EXPORT int (* get_density_per_segment_per_edge_size)(Numerical
 libLaneFreePlugin_EXPORT NumericalID (*insert_new_vehicle)(char* veh_name, char* route_id, char* type_id, double pos_x, double pos_y, double speed_x, double speed_y);
 
 
-//use this function to print messages to sumo only if you want to print a specific string, otherwise, refer to print_message
-libLaneFreePlugin_EXPORT void (*print_to_sumo)(char* msg);
-
 
 //is called once before the first time-step
 libLaneFreePlugin_EXPORT void simulation_initialize();
@@ -154,13 +151,3 @@ libLaneFreePlugin_EXPORT void event_vehicle_exit(NumericalID veh_id);
 //is called when two vehicles collide
 libLaneFreePlugin_EXPORT void event_vehicles_collide(NumericalID veh_id1, NumericalID veh_id2);
 
-
-//print a message, as you would with a printf() function. Note that the size of the resulting string should not exceed the MESSAGE_BUFFER_SIZE in length
-void print_message(const char* format, ...) {
-	va_list args;
-	va_start(args, format);
-	char buffer[MESSAGE_BUFFER_SIZE];
-	vsprintf(buffer, format, args);
-	print_to_sumo(buffer);
-	va_end(args);
-}

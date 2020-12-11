@@ -309,14 +309,14 @@ public:
         return &density_per_segment_per_edge;
     } 
 
-    bool is_message_empty() {
-        return msgBufferVector.empty();
-    }
+    //bool is_message_empty() {
+    //    return msgBufferVector.empty();
+    //}
+    //Deprecated print
+    //std::string get_message_step();
 
-    std::string get_message_step();
 
-
-    void append_message_step(std::string msg);
+    //void append_message_step(std::string msg);
 
     
 protected:
@@ -343,9 +343,10 @@ protected:
     arrayMemStruct detector_values;
     arrayMemStruct density_per_segment_per_edge;
     
-    std::vector<std::string> msgBufferVector;
+    //Deprecated print
+    //std::vector<std::string> msgBufferVector;
 
-    long printMessageTimer;
+    //long printMessageTimer;
 };
 
 

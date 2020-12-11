@@ -681,13 +681,13 @@ NumericalID lf_plugin_get_detectors_size(){
 
 
 }
-
+/*
 void lf_plugin_print_to_sumo(char* msg) {
 	std::string string_msg(msg);
 	LaneFreeSimulationPlugin::getInstance()->append_message_step(string_msg);
 	
 	
-}
+}*/
 
 char* lf_plugin_get_detector_name(NumericalID d_id){
 
@@ -870,14 +870,16 @@ LaneFreeSimulationPlugin::LaneFreeSimulationPlugin(){
 	get_density_per_segment_per_edge = &lf_plugin_get_density_per_segment_per_edge;
 	get_density_per_segment_per_edge_size = &lf_plugin_get_density_per_segment_per_edge_size;
 	insert_new_vehicle = &lf_plugin_insert_new_vehicle;
-	print_to_sumo = &lf_plugin_print_to_sumo;
+	//Legacy code, just use printf
+	//print_to_sumo = &lf_plugin_print_to_sumo;
+	//printMessageTimer = SysUtils::getCurrentMillis();
 	get_veh_length = &lf_plugin_get_veh_length;
 	get_veh_width = &lf_plugin_get_veh_width;
 	get_edge_length = &lf_plugin_get_edge_length;
 	get_edge_width = &lf_plugin_get_edge_width;
 	srand(lf_plugin_get_seed());
 	max_vehicle_length = 0;
-	printMessageTimer = SysUtils::getCurrentMillis();
+	
 	// Initialize all pointers, and set corresponding counters to zero, counters reflect the allocated memory blocks
 	
 	initialise_arraymemory(&all_ids,NUMID_M);	
@@ -919,6 +921,8 @@ LaneFreeSimulationPlugin::initialize_lib(){
 	simulation_initialize();
 }
 
+/*
+* Deprecated print
 void 
 LaneFreeSimulationPlugin::append_message_step(std::string msg){
 	msgBufferVector.push_back(msg);
@@ -937,7 +941,7 @@ LaneFreeSimulationPlugin::get_message_step(){
 	msgBufferVector.clear();
 	return tot_msg;
 }
-
+*/
 void
 LaneFreeSimulationPlugin::lf_simulation_step(){
 	
@@ -961,6 +965,8 @@ LaneFreeSimulationPlugin::lf_simulation_step(){
 	
 	simulation_step();
 	lf_simulation_checkCollisions();
+	/*
+	Deprecated print
 	bool is_empty = is_message_empty();
 	long timer = SysUtils::getCurrentMillis() - printMessageTimer;
 	bool update_time;
@@ -985,7 +991,7 @@ LaneFreeSimulationPlugin::lf_simulation_step(){
 			printMessageTimer = SysUtils::getCurrentMillis();
 		}
 	}
-
+	*/
 	
 
 }
