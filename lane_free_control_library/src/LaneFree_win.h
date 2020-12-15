@@ -37,7 +37,7 @@ libLaneFreePlugin_EXPORT NumericalID (* get_all_edges_size)();
 libLaneFreePlugin_EXPORT NumericalID (* get_edge_of_vehicle)(NumericalID veh_id);
 
 
-//returns all ids in a given edge, based on the edge's id
+//returns all ids in a given edge, based on the edge's id, and ordered according to their longitudinal position
 libLaneFreePlugin_EXPORT NumericalID* (* get_all_ids_in_edge)(NumericalID edge_id);
 //returns the size of all ids in a given edge, based on the edge's id
 libLaneFreePlugin_EXPORT NumericalID (* get_all_ids_in_edge_size)(NumericalID edge_id);
@@ -70,6 +70,17 @@ libLaneFreePlugin_EXPORT double (* get_position_x)(NumericalID veh_id);
 //returns the lateral position of a vehicle based on the local coordinates (according to the road the vehicle is now)
 libLaneFreePlugin_EXPORT double (* get_position_y)(NumericalID veh_id);
 
+
+//returns the relative longitudinal position of a vehicle with respect to an ego vehicle
+libLaneFreePlugin_EXPORT double (*get_relative_position_x)(NumericalID ego_id, NumericalID other_id);
+
+
+//returns the relative lateral position of a vehicle with respect to an ego vehicle
+libLaneFreePlugin_EXPORT double (*get_relative_position_y)(NumericalID ego_id, NumericalID other_id);
+
+
+//determines if a given vehicle will be transported at the beginning of the road edge it currently is into, based on the value of circular (true:enables the behavior, false:disables the behavior)
+libLaneFreePlugin_EXPORT void (*set_circular_movement)(NumericalID veh_id, bool circular);
 
 //returns the time-step length
 libLaneFreePlugin_EXPORT double (* get_time_step_length)();

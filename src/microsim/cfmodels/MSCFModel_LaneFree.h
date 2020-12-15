@@ -47,6 +47,16 @@ struct ArrayMem {
     bool updated;
     ARRAYTYPE type;
 };
+
+struct less_than_key
+{
+    inline bool operator() (const SUMOVehicle* v1, const SUMOVehicle* v2)
+    {
+        return ((MSVehicle*)v1)->getPositionOnLane() < ((MSVehicle*)v2)->getPositionOnLane();
+    }
+};
+
+
 typedef long long int NumericalID;
 typedef struct ArrayMem arrayMemStruct;
 
@@ -124,7 +134,7 @@ public:
         ring_road = circular;
     }
 
-    bool get_ring_road(){
+    bool is_circular(){
         return ring_road;
     }
 
@@ -184,6 +194,10 @@ public:
         return ((myveh->getCarFollowModel().getModelID())==SUMO_TAG_CF_LANEFREE);
     }
 
+    NumericalID get_edge_id() {
+        return (myveh->getEdge()->getNumericalID());
+    }
+
 
 protected:
 
@@ -197,10 +211,14 @@ protected:
         if(!ring_road){
             return;
         }
-        double new_pos_x = myveh->getPositionOnLane() + speed_x*TS + 0.5*longitudinal_acceleration*TS*TS;
+
+        //we use myveh->getSpeed() instead of the class variable speed_x, since speed_x already contains the updated value
+        double new_pos_x = myveh->getPositionOnLane() + myveh->getSpeed() * TS + 0.5 * longitudinal_acceleration * TS * TS;
+        
         double edge_length = myveh->getEdge()->getLength();
-        if(new_pos_x>=edge_length){
-            new_pos_x = fmod(new_pos_x, edge_length);
+        double threshold = myveh->getLength() / 2;
+        if(new_pos_x>=edge_length-threshold){
+            new_pos_x = myveh->getPositionOnLane()-edge_length;
             myveh->setPositionOnLane(new_pos_x);
         }
     }
@@ -269,6 +287,8 @@ public:
     NumericalID find_edge(NumericalID veh_id);
 
     void add_new_lat_stats(NumericalID veh_id, double pos_y, double speed_y);
+
+
 
     arrayMemStruct* get_all_ids_mem() {
         return &all_ids;
@@ -343,9 +363,11 @@ protected:
     arrayMemStruct detector_values;
     arrayMemStruct density_per_segment_per_edge;
     
+
+    
     //Deprecated print
     //std::vector<std::string> msgBufferVector;
-
+    
     //long printMessageTimer;
 };
 

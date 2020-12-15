@@ -222,10 +222,14 @@ char* lf_plugin_get_vehicle_name(NumericalID veh_id){
 // get the ids of all roads inside the network
 NumericalID* lf_plugin_get_all_edges(){
 	
+	arrayMemStruct* all_edges_ams = LaneFreeSimulationPlugin::getInstance()->get_all_edges_mem();
+	//will not change dynamically over time
+	if (all_edges_ams->updated) {
+		return (NumericalID*)all_edges_ams->ptr;
+	}
 	MSEdgeVector edges_v = MSNet::getInstance()->getEdgeControl().getEdges();
 	NumericalID edges_size = edges_v.size();
-
-	arrayMemStruct* all_edges_ams = LaneFreeSimulationPlugin::getInstance()->get_all_edges_mem();
+		
 	update_arraymemory_size(all_edges_ams, (size_t)edges_size);
 
 	NumericalID* edge_ids_array = (NumericalID*)all_edges_ams->ptr;
@@ -310,6 +314,8 @@ NumericalID* lf_plugin_get_all_ids_in_edge(NumericalID edge_id){
 	}
 
 	std::vector<const SUMOVehicle*> vehs = thisedge->getVehicles();
+	//TODO: this sort is performed twice (once here, once for collision check)
+	std::sort(vehs.begin(), vehs.end(), less_than_key());
 	size_t veh_size = vehs.size();
 	arrayMemStruct* all_ids_in_edge_ams = LaneFreeSimulationPlugin::getInstance()->get_all_ids_in_edge_mem();
 	update_arraymemory_size(all_ids_in_edge_ams, veh_size);
@@ -374,10 +380,73 @@ NumericalID lf_plugin_get_all_ids_in_edge_size(NumericalID edge_id){
 double lf_plugin_get_position_x(NumericalID veh_id){
 	MSLaneFreeVehicle* lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(veh_id);
 	if(lfveh==nullptr){
+		std::cout << "Vehicle not found!\n";
 		return -1;
 	}
 
 	return lfveh->get_position_x();
+}
+
+double lf_plugin_get_relative_position_x(NumericalID ego_id, NumericalID other_id) {
+	MSLaneFreeVehicle* ego_lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(ego_id);
+	if (ego_lfveh == nullptr) {
+		std::cout << "Ego not found!\n";
+		return -1;
+	}
+	MSLaneFreeVehicle* other_lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(other_id);
+	if (other_lfveh== nullptr) {
+		std::cout << "Other not found!\n";
+		return -1;
+	}
+
+	if (ego_lfveh->get_edge_id() != other_lfveh->get_edge_id()) {
+		std::cout << "Vehicles are not on the same edge! Relative distance betweeen vehicles on different road edges is not currently supported!\n";
+		return -1;
+	}
+	double dx = other_lfveh->get_position_x() - ego_lfveh->get_position_x();
+
+	if (ego_lfveh->is_circular()) {
+		double roadlength = ego_lfveh->get_vehicle()->getEdge()->getLength();
+		
+		if (fabs(dx) <= 0.5 * roadlength)
+			return dx;
+		else
+			return (dx >= 0) ? (dx - roadlength) : (dx + roadlength);
+	}
+
+	return dx;
+}
+
+double lf_plugin_get_relative_position_y(NumericalID ego_id, NumericalID other_id) {
+	MSLaneFreeVehicle* ego_lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(ego_id);
+	if (ego_lfveh == nullptr) {
+		std::cout << "Ego not found!\n";
+		return -1;
+	}
+	MSLaneFreeVehicle* other_lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(other_id);
+	if (other_lfveh == nullptr) {
+		std::cout << "Other not found!\n";
+		return -1;
+	}
+
+	if (ego_lfveh->get_edge_id() != other_lfveh->get_edge_id()) {
+		std::cout << "Vehicles are not on the same edge! Relative distance betweeen vehicles on different road edges is not currently supported!\n";
+		return -1;
+	}
+	double dy = other_lfveh->get_position_y() - ego_lfveh->get_position_y();
+
+	return dy;
+}
+
+
+void lf_plugin_set_circular_movement(NumericalID veh_id, bool circular) {
+	MSLaneFreeVehicle* lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(veh_id);
+	if (lfveh == nullptr) {
+		std::cout << "Vehicle not found!\n";
+		return;
+	}
+
+	lfveh->set_ring_road(circular);
 }
 
 
@@ -606,7 +675,10 @@ NumericalID lf_plugin_insert_new_vehicle(char* veh_name, char* route_id, char* t
 	std::string vTypeID(type_id);
 	std::string depart("now");
 	std::string departLane("best");
-	std::string departPos = std::to_string(pos_x);
+
+	MSVehicleType* vehicleType = MSNet::getInstance()->getVehicleControl().getVType(vTypeID);
+	double depart_pos_front = pos_x + vehicleType->getLength()/2;
+	std::string departPos = std::to_string(depart_pos_front);
 	std::string departSpeed = std::to_string(speed_x);
 	NumericalID new_vid = libsumo::Vehicle::addR(id, routeID, vTypeID, depart, departLane, departPos, departSpeed);
 	LaneFreeSimulationPlugin::getInstance()->add_new_lat_stats(new_vid, pos_y, speed_y);
@@ -627,7 +699,12 @@ NumericalID lf_plugin_insert_new_vehicle(char* veh_name, char* route_id, char* t
 
 
 NumericalID* lf_plugin_get_detectors_ids(){
-
+	
+	arrayMemStruct* detectors_ids_ams = LaneFreeSimulationPlugin::getInstance()->get_detector_ids_mem();
+	//will not change dynamically over time
+	if (detectors_ids_ams->updated) {
+		return (NumericalID*)detectors_ids_ams->ptr;
+	}
 	MSDetectorControl* detectorControl = &MSNet::getInstance()->getDetectorControl();
 	NumericalID count = 0;
 	std::vector<NumericalID> d_ids;
@@ -643,7 +720,7 @@ NumericalID* lf_plugin_get_detectors_ids(){
 	}
 	
 	int l = d_ids.size();
-	arrayMemStruct* detectors_ids_ams = LaneFreeSimulationPlugin::getInstance()->get_detector_ids_mem();
+	
 	update_arraymemory_size(detectors_ids_ams, (size_t)l);
 
 
@@ -853,6 +930,9 @@ LaneFreeSimulationPlugin::LaneFreeSimulationPlugin(){
 	apply_acceleration = &lf_plugin_apply_acceleration;
 	get_position_x = &lf_plugin_get_position_x;
 	get_position_y = &lf_plugin_get_position_y;
+	get_relative_position_x = &lf_plugin_get_relative_position_x;
+	get_relative_position_y = &lf_plugin_get_relative_position_y;
+	set_circular_movement = &lf_plugin_set_circular_movement;
 	get_speed_y = &lf_plugin_get_speed_y;
 	get_speed_x = &lf_plugin_get_speed_x;
 	get_speed_y = &lf_plugin_get_speed_y;
@@ -893,8 +973,6 @@ LaneFreeSimulationPlugin::LaneFreeSimulationPlugin(){
 	initialise_arraymemory(&detector_name, CHAR_M);
 	initialise_arraymemory(&detector_values,DOUBLE_M);
 	initialise_arraymemory(&density_per_segment_per_edge,INT_M);
-	
-	
 	myInstance = this;
 }
 
@@ -945,18 +1023,19 @@ LaneFreeSimulationPlugin::get_message_step(){
 void
 LaneFreeSimulationPlugin::lf_simulation_step(){
 	
-	//check wtf why is this here?
-	//lf_plugin_get_detectors_ids();
+
 
 	all_ids.updated = false;
 	
 	lane_free_ids.updated = false;
 	
-	all_edges.updated = false;
+	//edges do not change dynamically
+	//all_edges.updated = false;
 	
 	all_ids_in_edge.updated = false;
 	
-	detector_ids.updated = false;
+	//similarly for detector ids
+	//detector_ids.updated = false;
 	
 	detector_values.updated = false;
 
@@ -996,13 +1075,6 @@ LaneFreeSimulationPlugin::lf_simulation_step(){
 
 }
 
-struct less_than_key
-{
-    inline bool operator() (const SUMOVehicle* v1, const SUMOVehicle* v2)
-    {
-        return ((MSVehicle*)v1)->getPositionOnLane()<((MSVehicle*)v2)->getPositionOnLane();
-    }
-};
 
 void
 LaneFreeSimulationPlugin::add_new_lat_stats(NumericalID veh_id, double pos_y, double speed_y){
@@ -1011,6 +1083,7 @@ LaneFreeSimulationPlugin::add_new_lat_stats(NumericalID veh_id, double pos_y, do
 	lat_array.push_back(speed_y);
 	insertedLatInitStatus.insert(std::make_pair(veh_id,lat_array));
 }
+
 
 
 void
