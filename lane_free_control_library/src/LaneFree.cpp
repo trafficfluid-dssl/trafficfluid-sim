@@ -58,7 +58,6 @@ void simulation_step() {
 	int t = get_current_time_step();
 	int i, j;
 	char* vname;
-	
 	//printf("timestep:%d\n", get_current_time_step());
 	
 	for (i = 0; i < n_myids; i++) {
@@ -139,7 +138,7 @@ void simulation_step() {
 				vname = get_vehicle_name(ids_in_edge[j]);
 				printf("%s\t",vname);
 			}
-			printf("\n");
+			printf("\n\n");
 	 	}
 	 }
 	
@@ -152,7 +151,7 @@ void simulation_finalize(){
 
 
 void event_vehicle_enter(NumericalID veh_id){
-	int min_speed = 25, max_speed = 35;
+	
 	//set_desired_speed(veh_id, rand()%(MAX_DESIRED_SPEED - MIN_DESIRED_SPEED + 1) + MIN_DESIRED_SPEED);
 	set_desired_speed(veh_id, (double)(rand() % (int)(MAX_DESIRED_SPEED - MIN_DESIRED_SPEED + 1) + MIN_DESIRED_SPEED));
 	//char* vname1 = get_vehicle_name(veh_id);

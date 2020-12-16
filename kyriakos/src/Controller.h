@@ -1,11 +1,6 @@
-#ifdef __unix__
-#include "LaneFree_linux.h"
-#elif defined(WIN32)
-#include <stdlib.h>
-#include "LaneFree_win.h"
-#include "libLaneFreePlugin_Export.h"
-#endif
 
+//NumericalID is used as a data type for ids.
+typedef long long int NumericalID;
 typedef enum {FCA_0, FCA_1, FCA_2, FCA_3} fca_method_t;
 
 typedef	struct {
@@ -77,13 +72,9 @@ typedef struct {
 
 
 void determine_forces(sim_t* sim, NumericalID edge_id, int i, NumericalID* vehs_array, int n, double* fx, double* fy);
-static void regulate_forces(sim_t* sim, NumericalID edge_id, NumericalID veh_id, double* fx, double* fy);
-static void determine_controls(sim_t* sim, double* fx, double* fy);
+void regulate_forces(sim_t* sim, NumericalID edge_id, NumericalID veh_id, double* fx, double* fy);
+void determine_controls(sim_t* sim, double* fx, double* fy);
 
-
-void sim_initialize(sim_t *sim, double *class_l, double *class_w, int types_n, int n_max_size, int ring_network, double road_length, double road_width, double T, int K);
 
 void sim_configure(sim_t *sim);
-
-
 

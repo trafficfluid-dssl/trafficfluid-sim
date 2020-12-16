@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdarg.h>
+#include "Controller.h"
 
 //Define the maximum number of characters to print when calling print_message
 #define MESSAGE_BUFFER_SIZE 256

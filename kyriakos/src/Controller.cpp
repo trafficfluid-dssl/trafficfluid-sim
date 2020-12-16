@@ -9,8 +9,13 @@
 #define PARALLEL_RUN 1
 
 
+#ifdef __unix__
+#include "LaneFree_linux.h"
+#elif defined(WIN32)
+#include <LaneFree_win.h>
+#include "libLaneFreePlugin_Export.h"
+#endif
 #include "Controller.h"
-
 
 
 #define BUS_RATIO 0
@@ -25,8 +30,8 @@ double LANEWIDTH;
 
 
 
-#define WALL_DN(point, safety, v) U_lemma3(sim, -(safety)*v, MAX(0, sim->y[i][t]-0.5*sim->w[i] - (point)), -sim->uymax_hard)
-#define WALL_UP(point, safety, v) U_lemma3(sim, +(safety)*v, MAX(0, (point) - (sim->y[i][t]+0.5*sim->w[i])), -sim->uymax_hard)
+#define WALL_DN(point, safety, v, yi, wi) U_lemma3( -(safety)*v, MAX(0, yi-0.5*wi - (point)), -sim->uymax_hard)
+#define WALL_UP(point, safety, v, yi, wi) U_lemma3( +(safety)*v, MAX(0, (point) - (yi+0.5*wi)), -sim->uymax_hard)
 
 
 
@@ -58,7 +63,7 @@ fmdl(sim_t *sim, NumericalID veh_id) {
 }
 
 static double
-U_lemma3(sim_t *sim, double v, double d, double ubar) {
+U_lemma3(double v, double d, double ubar) {
     double nom, den; 
     double T = get_time_step_length();
     double ret;
@@ -119,7 +124,7 @@ static double
 fca(sim_t *sim, NumericalID veh_i, NumericalID veh_j, double dx_i_to_j, double dy_i_to_j, double *fcax, double *fcay) {
     double mag, ang;
 	double li = get_veh_length(veh_i), lj = get_veh_length(veh_j);
-	doubly wi = get_veh_width(veh_i), wj = get_veh_width(veh_j);
+	double wi = get_veh_width(veh_i), wj = get_veh_width(veh_j);
     double len = 0.5*(li + lj);
     double wid = 0.5*(wi + wj);
 
@@ -160,7 +165,7 @@ fca(sim_t *sim, NumericalID veh_i, NumericalID veh_j, double dx_i_to_j, double d
 
 
 static void
-walls_init(sim_t *sim, NumericalID veh_id, NumericalID edge_id, walls_t *walls) {
+walls_init(sim_t *sim, NumericalID edge_id, NumericalID veh_id, walls_t *walls) {
 	double roadlen_meters = get_edge_length(edge_id), roadwid_meters = get_edge_width(edge_id);
 	double T = get_current_time_step();
 	double vx = get_speed_x(veh_id), vy = get_speed_y(veh_id);
@@ -177,9 +182,9 @@ walls_init(sim_t *sim, NumericalID veh_id, NumericalID edge_id, walls_t *walls) 
     walls->y.up_j = -1;
     walls->y.dn_j = -1;
 
-	
-    walls->y.bound_dn = WALL_DN(0, sim->safety_level_y, vy);
-    walls->y.bound_up = WALL_UP(roadwid_meters, sim->safety_level_y, vy);
+	double yi = get_position_y(veh_id), wi = get_veh_width(veh_id);
+    walls->y.bound_dn = WALL_DN(0, sim->safety_level_y, vy, yi, wi);
+    walls->y.bound_up = WALL_UP(roadwid_meters, sim->safety_level_y, vy, yi, wi);
 
     walls->y.degree_up = 0;
     walls->y.degree_dn = 0;
@@ -187,7 +192,7 @@ walls_init(sim_t *sim, NumericalID veh_id, NumericalID edge_id, walls_t *walls) 
 
 static void
 walls_update(sim_t *sim, NumericalID veh_i, NumericalID veh_j, double fcax, double fcay, walls_t *walls) {
-    if (j == i) 
+    if (veh_i == veh_j)
         return;
     
     // clip forces within [-1, 1]
@@ -210,7 +215,7 @@ walls_update(sim_t *sim, NumericalID veh_i, NumericalID veh_j, double fcax, doub
 
     if (degree_x > walls->x.degree) {
         walls->x.bound = uxbound;
-        walls->x.leader = j;
+        walls->x.leader = veh_j; //this is not the index as before. However it is not used anywhere, thus it should be ok
         walls->x.distance = dx;
         walls->x.position = xj -0.5* lj;
         walls->x.velocity = vxj;
@@ -246,40 +251,52 @@ void
 determine_forces(sim_t *sim, NumericalID edge_id, int i, NumericalID* vehs_array, int n, double* fx, double* fy) {
     int j;
     double fcax = 0, fcay = 0;
-    nbor_t nbors[n];
-    nbor_t nbors_nudge[n];
 
-    memset(nbors, 0, sizeof(nbors));
-    memset(nbors_nudge, 0, sizeof(nbors_nudge));
+	//TODO: this is not efficient, do it like the internal array pointer structure (use global array pointers), also remove the free() at the end once we are done!
+    nbor_t* nbors = (nbor_t*)malloc(n*sizeof(nbor_t));
+    nbor_t* nbors_nudge = (nbor_t*)malloc(n * sizeof(nbor_t));
+    //nbor_t nbors[425];
+    //nbor_t nbors_nudge[425];
+    memset(nbors, 0, sizeof(nbor_t));
+    memset(nbors_nudge, 0, sizeof(nbor_t));
 
     
-    walls_init(sim, edge_id, i, vehs_array, &(sim->walls[i]));
+    walls_init(sim, edge_id, vehs_array[i], &(sim->walls));
+    
     /* initalize forces to zero */
 	
 	double fxi = 0, fyi = 0;
-
+	double half_roadlen_meters = get_edge_length(edge_id) / 2;    
     /* obstacle-related forces */
     double fcax_sum = 0, fcay_sum =0;
     int nbors_added = 0, nbors_added_nudge = 0;
 	NumericalID veh_id = vehs_array[i];
-    for (j=0; j < n; j++) {
-		if (j == i)
-			continue;
-        double dx_i_to_j = get_relative_position_x(veh_id, vehs_array[j]);
-        double dy_i_to_j = get_relative_position_y(veh_id, vehs_array[j]);
-        double fcamag = 0;
+    
+	//one for from i until front_end, where front_end is n-1, and when it reaches n-1 it resets to zero. we break when either the ifluence_radius_meters is exceeded or we have relative distance >roadlength/2
+	double dx_i_to_j, dy_i_to_j, fcamag;
 
+
+	//Downstream vehicles
+    
+    for (j=(i+1); ; j ++) {
+        if (j > n - 1) {
+            j = 0;
+        }    
+		if (j == i)
+			break;
         
-        //TODO fix this, this is O(n^2), we can exploit the ordered vehicles structure
-        if (fabs(dx_i_to_j > sim->influence_radius_meters))
-            continue;
+        dx_i_to_j = get_relative_position_x(veh_id, vehs_array[j]);
+        dy_i_to_j = get_relative_position_y(veh_id, vehs_array[j]);
+        
+        fcamag = 0;
+        //printf("Vehicle id: %lld\n", vehs_array[j]);
+        
+        
+        if ((dx_i_to_j) > MAX(sim->influence_radius_meters,half_roadlen_meters) || dx_i_to_j < 0)
+            break;
         
         fcamag = fca(sim, vehs_array[i], vehs_array[j], dx_i_to_j, dy_i_to_j, &fcax, &fcay);
-        
-#if(PRINT_XY_DEGREES == 2)
-        sim->degree_x[i][t][j] = fcax;
-        sim->degree_y[i][t][j] = fcay;
-#endif
+
 
         if (fcax < 0) {
             nbors[nbors_added].j = j;
@@ -298,6 +315,42 @@ determine_forces(sim_t *sim, NumericalID edge_id, int i, NumericalID* vehs_array
         }
     }
 
+   
+	//Upstream vehicles
+	for (j = i - 1; ; j --) {
+        if (j < 0) {
+            j = n - 1;
+        }
+		if (j == i)
+			break;
+		dx_i_to_j = get_relative_position_x(veh_id, vehs_array[j]);
+		dy_i_to_j = get_relative_position_y(veh_id, vehs_array[j]);
+		fcamag = 0;
+
+
+
+		if ((-dx_i_to_j) > MAX(sim->influence_radius_meters, half_roadlen_meters) || dx_i_to_j > 0)
+			break;
+
+		fcamag = fca(sim, vehs_array[i], vehs_array[j], dx_i_to_j, dy_i_to_j, &fcax, &fcay);
+
+
+		if (fcax < 0) {
+			nbors[nbors_added].j = j;
+			nbors[nbors_added].mag = -fcamag;
+			nbors[nbors_added].fcax = fcax;
+			nbors[nbors_added].fcay = fcay;
+			nbors_added++;
+		}
+
+		if (fcax > 0) {
+			nbors_nudge[nbors_added_nudge].j = j;
+			nbors_nudge[nbors_added_nudge].mag = -fcamag;
+			nbors_nudge[nbors_added_nudge].fcax = fcax;
+			nbors_nudge[nbors_added_nudge].fcay = fcay;
+			nbors_added_nudge++;
+		}
+	}
     // sort neighbors and compute fcax_sum from top sim->nbors
     if (sim->fca_nbors) {
         int x;
@@ -307,7 +360,7 @@ determine_forces(sim_t *sim, NumericalID edge_id, int i, NumericalID* vehs_array
             fcax_sum += nbors[x].fcax;
             fcay_sum += nbors[x].fcay;
 
-            walls_update(sim, vehs_array[i], vehs_array[nbors[x].j], t, nbors[x].fcax, nbors[x].fcay, &(sim.walls));
+            walls_update(sim, vehs_array[i], vehs_array[nbors[x].j], nbors[x].fcax, nbors[x].fcay, &(sim->walls));
         }
     }
 
@@ -328,11 +381,12 @@ determine_forces(sim_t *sim, NumericalID edge_id, int i, NumericalID* vehs_array
     fxi += sim->coeff_fcax * fcax_sum;
     fyi += sim->coeff_fcay * fcay_sum;
 
+	double vxi = get_speed_x(veh_id), vyi = get_speed_y(veh_id), vdi = get_desired_speed(veh_id);
     /* target-speed related forces */
     if (!sim->ftsx_disabled)
-        fxi += ftsx(sim, i, t);
-    fyi += ftsy(sim, i, t);
-    fyi += fmdl(sim, i, t);
+        fxi += ftsx(sim, vxi, vdi);
+    fyi += ftsy(sim, vyi);
+    fyi += fmdl(sim, veh_id);
 
     sim->wall_y_up = sim->walls.y.up;
     sim->wall_y_dn = sim->walls.y.dn;
@@ -342,13 +396,16 @@ determine_forces(sim_t *sim, NumericalID edge_id, int i, NumericalID* vehs_array
 
 	*fx = fxi;
 	*fy = fyi;
+
+	free(nbors);
+	free(nbors_nudge);
 }
 
-static void
+void
 regulate_forces(sim_t *sim, NumericalID edge_id, NumericalID veh_id, double* fx, double* fy) {
     /* y wall */
 	double fxi = *fx, fyi = *fy;
-    if (sim->dynamic_y_walls && i != 0) {
+    if (sim->dynamic_y_walls) {
         double uy_max = sim->walls.y.bound_up;
         double uy_min = sim->walls.y.bound_dn;
         if (uy_max >= -uy_min) {
@@ -358,11 +415,12 @@ regulate_forces(sim_t *sim, NumericalID edge_id, NumericalID veh_id, double* fx,
     }
 
 	double vx = get_speed_x(veh_id), vd = get_desired_speed(veh_id), vy = get_speed_y(veh_id);
+	double yi = get_position_y(veh_id), wi = get_veh_width(veh_id);
 	double roadwid_meters = get_edge_width(edge_id);
 	double T = get_current_time_step();
     /* keeping vehicles within the road */
-	fyi = MAX(fyi, -WALL_DN(0, 1.05, vy));
-	fyi = MIN(fyi, +WALL_UP(roadwid_meters, 1.05, vy));
+	fyi = MAX(fyi, -WALL_DN(0, 1.05, vy, yi, wi));
+	fyi = MIN(fyi, +WALL_UP(roadwid_meters, 1.05, vy, yi, wi));
 
     /* x wall */
     if (sim->dynamic_x_walls && sim->walls.x.leader != -1) {
@@ -399,9 +457,9 @@ regulate_forces(sim_t *sim, NumericalID edge_id, NumericalID veh_id, double* fx,
 	*fy = fyi;
 }
 
-static void
+void
 determine_controls(sim_t *sim, double* fx, double* fy) {
-    if (sim->zero_controls || (sim->lanedrop && i == 0)) {
+    if (sim->zero_controls || (sim->lanedrop)) {//remove the && i==0 in the second term
 		*fx = 0;
 		*fy = 0;
         return;
@@ -409,327 +467,6 @@ determine_controls(sim_t *sim, double* fx, double* fy) {
     *fx = MIN(*fx, sim->uxmax_hard);
     *fx = MAX(*fx, sim->uxmin_hard);
     *fy = (*fy >= 0)? MIN(*fy, sim->uymax_hard): MAX(*fy, -sim->uymax_hard);
-}
-
-
-
-static void
-update_control(sim_t *sim, int t, int n, double *u_x, double *u_y){
-
-	for (int i = 0; i < n; i++){
-		u_x[i] = sim->ux[i][t];
-		u_y[i] = sim->uy[i][t];
-		
-	}
-	
-}
-
-
-
-static void vehicle_lw(sim_t *sim, int i, int choice){
-	
-	sim->l[i] = sim->class_l[choice];	
-	sim->w[i] = sim->class_w[choice];
-	
-	
-}
-
-
-/* initalize dimensions */
-static void
-sim_initialize_lw(sim_t *sim)
-{
-	int i;
-
-	for (i=0; i < sim->n; i++) {
-		if (sim->lanedrop && i == 0) {
-			sim->l[i] = 0.25 * sim->roadlen_meters;
-			sim->w[i] = 3.0;
-		} else if (sim->barrier && i == sim->n-1) {
-			sim->l[i] = 2.5;
-			sim->w[i] = sim->roadwid_meters;
-		} else {
-			if (SAMPLE_UNIFORM(0, 100) < BUS_RATIO)
-				sim->truck[i] = 1;
-			
-			vehicle_lw(sim, i, 0);
-		}
-	}
-}
-
-/* initialize positions */
-static void
-sim_initialize_xy(sim_t *sim)
-{
-	const double lanewidth = LANEWIDTH;
-	//const int numlanes = MIN(3, round(sim->roadwid_meters / lanewidth));
-	const int numlanes = round(sim->roadwid_meters / lanewidth);
-
-	int i, l, j;
-	int *lastcar = calloc(sizeof(int), numlanes);
-	int *numcars = calloc(sizeof(int), numlanes);
-
-	for (l=0; l < numlanes; l++)
-		lastcar[l] = -1;
- 	
-	/* well-structured placement */
-	
-	for (i=0, l=0; i < sim->n; i++, l++) {
-		if (l == numlanes)
-			l = 0;
-		j = lastcar[l];
-		sim->x[i][0] = XBUFFER + 0.5*sim->l[i] + ((j == -1)?0:sim->x[j][0]+0.5*sim->l[j]); 
-		sim->y[i][0] = l*lanewidth + 0.5 + 0.5*sim->w[i];
- 		lastcar[l] = i;
-		numcars[l]++;
-		/*
-		for (j=0; j < i; j++) {
-			if (i == j)
-				continue;
-			if (fabs(circular_dx(sim, sim->x[i][0]-sim->x[j][0])) < 0.5*(sim->l[i]+sim->l[j]) 
-				&& fabs(sim->y[i][0] - sim->y[j][0]) < 0.5*(sim->w[i]+sim->w[j])) {
-				fprintf(stderr, "Overlap while placing %d\n", i);
-				exit(1);
-			}
-		}*/
-	}
-
-	/* determine random distribution of the slack on each lane */
-	double **slack = calloc(sizeof(double*), numlanes);
-	int v;
-	for (l=0; l < numlanes; l++) {
-		if ((j = lastcar[l]) == -1)
-			continue;
-		slack[l] = calloc(sizeof(double), numcars[l]);
-		double total = 0;
-		for (v=0; v < numcars[l]; v++)
-			total += (slack[l][v] = (double)rand()/RAND_MAX);
-
-		for (v=0; v < numcars[l]; v++)
-			slack[l][v] /= total;
-
-		total = sim->roadlen_meters - (sim->x[lastcar[l]][0]+0.5*sim->l[lastcar[l]]);
-		double s = 0;
-		for (v=0; v < numcars[l]; v++) {
-			s += slack[l][v];
-			slack[l][v] = s * total;
-		}
-	}
-
-	/* distribute slack over cars on each lane */
-	double **slackptr = calloc(sizeof(double*), numlanes);
-	for (l=0; l < numlanes; l++)
-			slackptr[l] = &slack[l][0];
-
-	for (j=0; j < sim->n; j++) {
-		l = j % numlanes;
-		sim->x[j][0] += *(slackptr[l]++);
-		sim->y[j][0] += 0.5*(double)rand()/RAND_MAX;
-
-	}
-
-	/* convert trucks that are positioned in the 3/4 of the road to cars */
-	for (i = 0; i < sim->n; i++){
-		if (sim->truck[i] == 1 && sim->y[i][0] < (1.0/3.0)*sim->roadwid_meters){
-			vehicle_lw(sim, i, 0);
-			sim->truck[i] = 0;
-		}
-	}
-	
-
-	for (l=0; l < numlanes; l++)
-		free(slack[l]);
-
-	free(slackptr);
-	free(slack);
-	free(lastcar);
-	free(numcars);
-}
-
-static void
-sim_initialize_xy_duet(sim_t *sim)
-{
-	sim->x[0][0] = 0.5*sim->l[0];
-	sim->x[1][0] = sim->l[0] + 0.5*sim->l[1] + sim->duet;
-
-	sim->y[0][0] = sim->roadwid_meters/2 + sim->duet_dy;
-	sim->y[1][0] = sim->roadwid_meters/2;
-}
-
-/* initalize desired speeds */
-static void
-sim_initialize_vd(sim_t *sim)
-{
-	int i;
-
-	for (i=0; i < sim->n; i++) {
-		if (sim->lanedrop && i == 0) {
-			sim->vx[i][0] = 0;
-			sim->vd[i] = 0;
-		} else {
-
-			double lo = sim->vd_meters_per_sec_lo, hi = sim->vd_meters_per_sec_hi;
-			double lo_truck = sim->vd_meters_per_sec_lo_truck, hi_truck = sim->vd_meters_per_sec_hi_truck;
-			sim->vd[i] = lo + (1. - (sim->y[i][0]/sim->roadwid_meters))*(hi-lo);
-			if (sim->truck[i] == 1){
-				sim->vd[i] = lo_truck+ (1. - ((sim->y[i][0] - (1.0/3.0)*sim->roadwid_meters)/(sim->roadwid_meters*2.0/3.0)))*(hi_truck-lo_truck);
-				//fprintf(stderr, "(%d) truck_vd: %f -- truck_y: %f -- track_x: %f \n", i, sim->vd[i], sim->y[i][0], sim->x[i][0]);
-			}
-			if (sim->zero_initial_speed)
-				sim->vx[i][0] = 0;
-			else
-				sim->vx[i][0] = 0.5*(sim->vd_meters_per_sec_lo + sim->vd_meters_per_sec_hi);
-		}
-	}
-}
-
-static void
-sim_initialize_vd_duet(sim_t *sim)
-{
-	sim->vx[0][0] = sim->duet_v0;	
-	sim->vd[0] = sim->duet_vd;
-	sim->vd[1] = sim->vx[1][0] = sim->duet_vd_slow;
-}
-
-static void
-sim_initialize_xy_single(sim_t *sim)
-{
-	int i;
-	double dx = 0;
-	for (i=0; i < sim->n; i++) {
-		sim->x[i][0] = 0.5*sim->l[i] + dx;
-		dx = sim->x[i][0] + 0.5*sim->l[i] + sim->single_lane_space;
-
-		if (dx > sim->roadlen_meters) {
-			fprintf(stderr, "single-lane mode: unable to fit vehicle nr. %d\n", i);
-			exit(1);
-		}
-
-		sim->y[i][0] = 0.5*sim->roadwid_meters;
-	}
-}
-
-static void
-sim_initialize_vd_single(sim_t *sim)
-{
-	sim_initialize_vd(sim);
-	sim->vdx_effective[sim->n-1] = sim->vd[sim->n-1] = sim->single_lane_front_vd;
-}
-
-
-//we need to remove this!
-void
-sim_initialize(sim_t *sim) {
-	
-
-	assert((sim->walls = calloc(sizeof(walls_t*), sim->n)));
-
-
-	assert((sim->wall_y_up = calloc(sizeof(double*), sim->n)));
-	assert((sim->wall_y_dn = calloc(sizeof(double*), sim->n)));
-	assert((sim->wall_y_up_j = calloc(sizeof(double*), sim->n)));
-	assert((sim->wall_y_dn_j = calloc(sizeof(double*), sim->n)));
-
-	assert((sim->crash = calloc(sizeof(int*), sim->n)));
-	assert((sim->flow = calloc(sizeof(double), sim->K)));
-	assert((sim->reg = calloc(sizeof(int), sim->K)));
-
-	assert((sim->l = calloc(sizeof(double), sim->n)));
-	assert((sim->w = calloc(sizeof(double), sim->n)));
-	assert((sim->vd = calloc(sizeof(double), sim->n)));
-	assert((sim->truck = calloc(sizeof(int), sim->n)));
-	assert((sim->vdx_effective = calloc(sizeof(double), sim->n)));
-	assert((sim->vdy_effective = calloc(sizeof(double), sim->n)));
-
-	assert((sim->degree_x = calloc(sizeof(double**), sim->n)));
-	assert((sim->degree_y = calloc(sizeof(double**), sim->n)));
-
-	for (i=0; i < sim->n; i++) {
-		assert((sim->x[i] = calloc(sizeof(double), sim->K)));
-		assert((sim->y[i] = calloc(sizeof(double), sim->K)));
-
-		assert((sim->vx[i] = calloc(sizeof(double), sim->K)));
-		assert((sim->vy[i] = calloc(sizeof(double), sim->K)));
-
-		assert((sim->ux[i] = calloc(sizeof(double), sim->K)));
-		assert((sim->uy[i] = calloc(sizeof(double), sim->K)));
-
-		assert((sim->fx[i] = calloc(sizeof(double), sim->K)));
-		assert((sim->fy[i] = calloc(sizeof(double), sim->K)));
-
-		assert((sim->walls[i] = calloc(sizeof(walls_t), sim->K)));
-
-		assert((sim->wall_y_up[i] = calloc(sizeof(double), sim->K)));
-		assert((sim->wall_y_dn[i] = calloc(sizeof(double), sim->K)));
-		assert((sim->wall_y_up_j[i] = calloc(sizeof(double), sim->K)));
-		assert((sim->wall_y_dn_j[i] = calloc(sizeof(double), sim->K)));
-
-		assert((sim->crash[i] = calloc(sizeof(int), sim->K)));
-
-#if(PRINT_XY_DEGREES)
-		assert((sim->degree_x[i] = calloc(sizeof(double*), sim->K)));
-		assert((sim->degree_y[i] = calloc(sizeof(double*), sim->K)));
-		int t;
-		for (t=0; t < sim->K; t++) {
-			assert((sim->degree_x[i][t] = calloc(sizeof(double), sim->n)));
-			assert((sim->degree_y[i][t] = calloc(sizeof(double), sim->n)));
-		}
-#endif
-
-	}
-
-	sim_initialize_lw(sim);
-	if (sim->duet > 0) {
-		sim_initialize_xy_duet(sim);
-		sim_initialize_vd_duet(sim);
-	} else if (sim->single_lane) {
-		sim_initialize_xy_single(sim);
-		sim_initialize_vd_single(sim);
-	} else {
-		sim_initialize_xy(sim);
-		sim_initialize_vd(sim);
-	}
-
-#if 0
-
-	// crash resolution period
-	do {
-		int j, crash_found, crash_resolution_round = 0;
-		double ratio_backup = sim->push_repel_ratio;
-
-		sim->warmup = 1;
-		sim->push_repel_ratio = 1.1;
-
- 		do {
-			crash_found = 0;
-			for (i=0; i < sim->n; i++) {
-				for (j=0; j < i; j++) {
-					if (crash(sim, i, j, 0)) {
-						crash_found = 1;
-					}
-				}
-			}
- 			sim_run(sim, 2);
-
-			for (i=0; i < sim->n; i++) {
-				sim->x[i][0] = sim->x[i][1];
-				sim->y[i][0] = sim->y[i][1];
-				sim->vx[i][0] = sim->vy[i][0] = sim->ux[i][0] = sim->uy[i][0] = 0;
-			}
-
-			crash_resolution_round++;
-			fprintf(stderr, "crash resolution rounds: %d\r", crash_resolution_round);
- 		} while(crash_found);
-		fprintf(stderr, "\n");
-
-		for (i=0; i < sim->n; i++)
-			memset(sim->crash[i], 0, sizeof(int)*sim->K);
-
-		sim->warmup = 0;
-		sim->push_repel_ratio = ratio_backup;
-
-	}while(0);
-#endif
 }
 
 
@@ -792,7 +529,7 @@ sim_configure(sim_t *sim) {
 			sim->dynamic_y_walls = input_int;
 
 		if (sscanf(buf, "fca_method:%d", &input_int) == 1)
-			sim->fca_method = input_int;
+			sim->fca_method = (fca_method_t)input_int;
 		if (sscanf(buf, "lanedrop:%d", &input_int) == 1)
 			sim->lanedrop = input_int;
 		if (sscanf(buf, "zero_initial_speed:%d", &input_int) == 1)
@@ -911,79 +648,6 @@ sim_configure(sim_t *sim) {
 	fclose(fp);
 }
 
-void
-sim_run(sim_t *sim, int t, int n, size_t* veh_id, int* class_id, double* v_d, double* pos_x, double* pos_y, double* v_x, double* v_y, double* u_x, double* u_y) {
-    int i;
-    double sensor_location = sim->roadlen_meters / 2;
-    assert(n<=sim->n);
-
-	//example for veh_id usage
-	/*
-	for(i=0;i<n;i++){
-		printf("Vehicle id: %d\n",(int)veh_id[i]);
-	}
-	*/
-	
-    //for (t=0; t < MIN(K, sim->K)-1; t++) {
-    sim->flow[t+1] = sim->flow[t];
-
-    for (i=0; i < n; i++){
-        vehicle_lw(sim, i, class_id[i]);        
-        sim->vd[i] = v_d[i];
-        sim->x[i][t] = pos_x[i];
-        sim->y[i][t] = pos_y[i];
-        sim->vx[i][t] = v_x[i];
-        sim->vy[i][t] = v_y[i];
-    }
-	
-    #if(PARALLEL_RUN)
-    #pragma omp parallel for
-    #endif
-    for (i=0; i < n; i++){    
-        determine_forces(sim, i, t, n);        
-    }
-    
-    #if(PARALLEL_RUN)
-    #pragma omp parallel for
-    #endif
-    for (i=0; i < n; i++) {
-        regulate_forces(sim, i, t);
-		
-        determine_controls(sim, i, t);
-
-        /*
-        double T = sim->alpha * sim->T;
-        sim->vx[i][t+1] = sim->vx[i][t] + sim->ux[i][t]*T; 
-        sim->x[i][t+1] = sim->x[i][t] + sim->vx[i][t]*T + sim->ux[i][t]*0.5*pow(T, 2);
-        sim->x[i][t+1] = fmod(sim->x[i][t+1], sim->roadlen_meters);
-        */
-
-        // update flow
-        if (sim->x[i][t] <= sensor_location && sim->x[i][t+1] > sensor_location) {
-            #pragma omp critical
-            sim->flow[t+1]++;
-        }
-        /*
-        if (!sim->single_lane) {
-            sim->vy[i][t+1] = sim->vy[i][t] + sim->uy[i][t]*T; 
-            sim->y[i][t+1] = sim->y[i][t] + sim->vy[i][t]*T + sim->uy[i][t]*0.5*pow(T, 2);
-        } else {
-            sim->y[i][t+1] = sim->y[i][t];
-            sim->vy[i][t+1] = 0;
-        }*/
-    }
-    //}
-	
-    update_control(sim, t, n, u_x, u_y);
-	
-
-    //if (!sim->warmup)
-    //    fprintf(stderr,"time-step %5d crashes %5d\r", t, sim->crashes);
-    
-    //for (t=0; t < MIN(K, sim->K)-1; t++) 
-    //  sim->flow[t] *= 3600/(t * sim->T);
-    
-}
 
 void test_sim(sim_t *sim){
 	printf("This is a test that shows sim is initialized, n:%d\tx:%f\n",sim->n,sim->x[2][0]);

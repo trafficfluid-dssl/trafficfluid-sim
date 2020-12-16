@@ -1,8 +1,4 @@
 #include "libLaneFreePlugin_Export.h"
-#include <stdarg.h>
-
-//Define the maximum number of characters to print when calling print_message
-#define MESSAGE_BUFFER_SIZE 256
 
 //NumericalID is used as a data type for ids.
 typedef long long int NumericalID;

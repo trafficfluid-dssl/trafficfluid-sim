@@ -1,13 +1,15 @@
 #include <stdio.h>
-#include "math.h"
-#include "Controller.h"
+
+#define DEFINE_VARIABLES
 #ifdef __unix__
 #include "LaneFree_linux.h"
 #elif defined(WIN32)
 #include <stdlib.h>
-#include "LaneFree_win.h"
+#include <LaneFree_win.h>
 #include "libLaneFreePlugin_Export.h"
 #endif
+
+#include "Controller.h"
 
 #define MIN_DESIRED_SPEED 25
 #define MAX_DESIRED_SPEED 35
@@ -25,7 +27,7 @@ void simulation_initialize(){
 	sim_configure(&sim_params);
 
 	//insert 20 vehicles
-	int n_init = 20;
+	int n_init = 425;
 		
 	double x_incr=5, y_incr=2.5, vx_incr=5;
 	double x_val=x_incr, y_val=y_incr, vx_val=vx_incr;
@@ -47,7 +49,9 @@ void simulation_initialize(){
 		y_val = y_val + y_incr;
 		if(i%virtual_lanes==(virtual_lanes-1)){
 			x_val += x_incr;
-			vx_val += vx_incr;
+			if (vx_val < 35) {
+				vx_val += vx_incr;
+			}			
 			y_val = y_incr;
 		}
 
@@ -77,7 +81,7 @@ void simulation_step() {
 	//For larger networks, you may control vehicles based on the road edge they are in
 	NumericalID* ids_in_edge;
 	NumericalID n_edge_ids;
-	
+	char* veh_name;
 	double vx, accel;
 	
 	for(i=0;i<n_myedges;i++){
@@ -91,7 +95,10 @@ void simulation_step() {
 			
 			for (j = 0; j < n_edge_ids; j++) {
 				double fx, fy;
+				veh_name = get_vehicle_name(ids_in_edge[j]);
+				//printf("Calculate for vehicle %s.\n", veh_name);
 				determine_forces(&sim_params, myedges[i], j, ids_in_edge, n_edge_ids, &fx, &fy);
+				//printf("Forces determined.");
 				regulate_forces(&sim_params, myedges[i], ids_in_edge[j], &fx, &fy);
 				determine_controls(&sim_params, &fx, &fy);
 				apply_acceleration(ids_in_edge[j], fx, fy);
@@ -107,11 +114,16 @@ void simulation_finalize(){
 	
 }
 
+double drand(double min, double max) {
+	double f = (double)rand() / RAND_MAX;
+	return min + f * (max - min);
+}
+
 
 void event_vehicle_enter(NumericalID veh_id){
 	int min_speed = 25, max_speed = 35;
-	//set_desired_speed(veh_id, rand()%(MAX_DESIRED_SPEED - MIN_DESIRED_SPEED + 1) + MIN_DESIRED_SPEED);
-	set_desired_speed(veh_id, (double)(rand() % (int)(MAX_DESIRED_SPEED - MIN_DESIRED_SPEED + 1) + MIN_DESIRED_SPEED));
+	
+	set_desired_speed(veh_id, drand(MIN_DESIRED_SPEED,MAX_DESIRED_SPEED));
 	//char* vname1 = get_vehicle_name(veh_id);
 	// printf("Vehicle %s entered with speed %f.\n",vname1,get_speed_x(veh_id));
 
@@ -134,3 +146,13 @@ void event_vehicles_collide(NumericalID veh_id1, NumericalID veh_id2){
 	// printf("Collision between %s and %s at timestep: %d, and time: %.1f.\n",vname1, vname2, get_current_time_step(), get_current_time_step()*get_time_step_length());
 	
 }
+
+
+//void determine_forces(sim_t* sim, NumericalID edge_id, int i, NumericalID* vehs_array, int n, double* fx, double* fy) {}
+//void regulate_forces(sim_t* sim, NumericalID edge_id, NumericalID veh_id, double* fx, double* fy) {}
+//void determine_controls(sim_t* sim, double* fx, double* fy) {}
+
+
+//void sim_configure(sim_t* sim) {}
+
+
