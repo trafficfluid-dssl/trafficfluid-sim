@@ -95,7 +95,7 @@ void simulation_step() {
 			
 			for (j = 0; j < n_edge_ids; j++) {
 				double fx, fy;
-				veh_name = get_vehicle_name(ids_in_edge[j]);
+				//veh_name = get_vehicle_name(ids_in_edge[j]);
 				//printf("Calculate for vehicle %s.\n", veh_name);
 				determine_forces(&sim_params, myedges[i], j, ids_in_edge, n_edge_ids, &fx, &fy);
 				//printf("Forces determined.");

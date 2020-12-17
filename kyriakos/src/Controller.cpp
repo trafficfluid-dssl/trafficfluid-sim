@@ -15,6 +15,9 @@
 #include <LaneFree_win.h>
 #include "libLaneFreePlugin_Export.h"
 #endif
+
+
+#define CONTROLLER_H
 #include "Controller.h"
 
 
@@ -33,6 +36,17 @@ double LANEWIDTH;
 #define WALL_DN(point, safety, v, yi, wi) U_lemma3( -(safety)*v, MAX(0, yi-0.5*wi - (point)), -sim->uymax_hard)
 #define WALL_UP(point, safety, v, yi, wi) U_lemma3( +(safety)*v, MAX(0, (point) - (yi+0.5*wi)), -sim->uymax_hard)
 
+static double
+circular_dx(sim_t* sim, double dx, int is_circular) {
+    if (!is_circular) {
+        return dx;
+    }
+    double len = sim->roadlen_meters;
+    if (fabs(dx) <= 0.5 * len)
+        return dx;
+    else
+        return (dx >= 0) ? (dx - len) : (dx + len);
+}
 
 
 static double
@@ -48,7 +62,7 @@ ftsy(sim_t *sim, double vy) {
 }
 
 static double
-fmdl(sim_t *sim, NumericalID veh_id) {
+fmdl(sim_t *sim, NumericalID veh_id, NumericalID edge_id) {
     double vd_range = (sim->vd_meters_per_sec_hi - sim->vd_meters_per_sec_lo);
     double point_in_range = 0.5;
     double spread_factor = 1.0;
@@ -58,7 +72,7 @@ fmdl(sim_t *sim, NumericalID veh_id) {
     }
 
 	double width = get_veh_width(veh_id), yv = get_position_y(veh_id);
-    gravity_point = width/2 + (0 + point_in_range)*(sim->roadwid_meters - width)*spread_factor;
+    gravity_point = width/2 + (0 + point_in_range)*(get_edge_width(edge_id) - width)*spread_factor;
     return sim->coeff_fmdl*(2 / (1 + exp(-sim->ftsy_zeta*(gravity_point - yv))) - 1);
 }
 
@@ -148,7 +162,7 @@ fca(sim_t *sim, NumericalID veh_i, NumericalID veh_j, double dx_i_to_j, double d
         // j is approaching i from behind
         // mag depends on where i is located within j's aura
         approaching_speed_x = vxj;
-        approaching_speed_y = fabs(vyj - vyi);
+        approaching_speed_y = fabs(vyj - vyj);
     }
 
     mag = fca_mag(sim,
@@ -167,13 +181,13 @@ fca(sim_t *sim, NumericalID veh_i, NumericalID veh_j, double dx_i_to_j, double d
 static void
 walls_init(sim_t *sim, NumericalID edge_id, NumericalID veh_id, walls_t *walls) {
 	double roadlen_meters = get_edge_length(edge_id), roadwid_meters = get_edge_width(edge_id);
-	double T = get_current_time_step();
-	double vx = get_speed_x(veh_id), vy = get_speed_y(veh_id);
+	double T = get_time_step_length();
+	double vx = get_speed_x(veh_id), vy = get_speed_y(veh_id), vd = get_desired_speed(veh_id);
 	walls->x.position = fmod(get_position_x(veh_id) + 0.5* roadlen_meters, roadlen_meters);
     walls->x.distance = 0.5* roadlen_meters;
-    walls->x.velocity = vx;
+    walls->x.velocity = vd;
     walls->x.leader = -1;
-    walls->x.bound = (get_desired_speed(veh_id)- vx) /T;
+    walls->x.bound = (vd- vx) /T;
     walls->x.degree = 0;
 
     walls->y.dn = 0;
@@ -204,7 +218,7 @@ walls_update(sim_t *sim, NumericalID veh_i, NumericalID veh_j, double fcax, doub
 	double vxi = get_speed_x(veh_i), vxj = get_speed_x(veh_j);
 	double vdi = get_desired_speed(veh_i);
 
-	double T = get_current_time_step();
+	double T = get_time_step_length();
 
 	double lj = get_veh_length(veh_j), xj = get_position_x(veh_j);
 
@@ -229,11 +243,6 @@ walls_update(sim_t *sim, NumericalID veh_i, NumericalID veh_j, double fcax, doub
     return;
 }
 
-typedef struct {
-    int j;
-    double mag;
-    double fcax, fcay;
-} nbor_t;
 
 int cmpnbors(const void *n1ptr, const void *n2ptr) {
     nbor_t *n1 = (nbor_t*)n1ptr;
@@ -248,7 +257,8 @@ int cmpnbors(const void *n1ptr, const void *n2ptr) {
 }
 
 void
-determine_forces(sim_t *sim, NumericalID edge_id, int i, NumericalID* vehs_array, int n, double* fx, double* fy) {
+//determine_forces(sim_t *sim, double T, double roadlen_meters, double roadwid_meters, int i, int n, double* x, double*y, double* vx, double* vy, double* vd, double* l, double* w, int is_circular, double* fx, double* fy) {
+ determine_forces(sim_t* sim, NumericalID edge_id, int i, NumericalID* vehs_array, int n, double* fx, double* fy){
     int j;
     double fcax = 0, fcay = 0;
 
@@ -257,8 +267,8 @@ determine_forces(sim_t *sim, NumericalID edge_id, int i, NumericalID* vehs_array
     nbor_t* nbors_nudge = (nbor_t*)malloc(n * sizeof(nbor_t));
     //nbor_t nbors[425];
     //nbor_t nbors_nudge[425];
-    memset(nbors, 0, sizeof(nbor_t));
-    memset(nbors_nudge, 0, sizeof(nbor_t));
+    memset(nbors, 0, sizeof(nbors));
+    memset(nbors_nudge, 0, sizeof(nbors_nudge));
 
     
     walls_init(sim, edge_id, vehs_array[i], &(sim->walls));
@@ -292,7 +302,7 @@ determine_forces(sim_t *sim, NumericalID edge_id, int i, NumericalID* vehs_array
         //printf("Vehicle id: %lld\n", vehs_array[j]);
         
         
-        if ((dx_i_to_j) > MAX(sim->influence_radius_meters,half_roadlen_meters) || dx_i_to_j < 0)
+        if ((dx_i_to_j) > MIN(sim->influence_radius_meters,half_roadlen_meters) || dx_i_to_j < 0)
             break;
         
         fcamag = fca(sim, vehs_array[i], vehs_array[j], dx_i_to_j, dy_i_to_j, &fcax, &fcay);
@@ -329,7 +339,7 @@ determine_forces(sim_t *sim, NumericalID edge_id, int i, NumericalID* vehs_array
 
 
 
-		if ((-dx_i_to_j) > MAX(sim->influence_radius_meters, half_roadlen_meters) || dx_i_to_j > 0)
+		if ((-dx_i_to_j) > MIN(sim->influence_radius_meters, half_roadlen_meters) || dx_i_to_j > 0)
 			break;
 
 		fcamag = fca(sim, vehs_array[i], vehs_array[j], dx_i_to_j, dy_i_to_j, &fcax, &fcay);
@@ -386,7 +396,7 @@ determine_forces(sim_t *sim, NumericalID edge_id, int i, NumericalID* vehs_array
     if (!sim->ftsx_disabled)
         fxi += ftsx(sim, vxi, vdi);
     fyi += ftsy(sim, vyi);
-    fyi += fmdl(sim, veh_id);
+    fyi += fmdl(sim, veh_id, edge_id);
 
     sim->wall_y_up = sim->walls.y.up;
     sim->wall_y_dn = sim->walls.y.dn;
@@ -417,7 +427,7 @@ regulate_forces(sim_t *sim, NumericalID edge_id, NumericalID veh_id, double* fx,
 	double vx = get_speed_x(veh_id), vd = get_desired_speed(veh_id), vy = get_speed_y(veh_id);
 	double yi = get_position_y(veh_id), wi = get_veh_width(veh_id);
 	double roadwid_meters = get_edge_width(edge_id);
-	double T = get_current_time_step();
+	double T = get_time_step_length();
     /* keeping vehicles within the road */
 	fyi = MAX(fyi, -WALL_DN(0, 1.05, vy, yi, wi));
 	fyi = MIN(fyi, +WALL_UP(roadwid_meters, 1.05, vy, yi, wi));
@@ -647,16 +657,3 @@ sim_configure(sim_t *sim) {
 	//close file
 	fclose(fp);
 }
-
-
-void test_sim(sim_t *sim){
-	printf("This is a test that shows sim is initialized, n:%d\tx:%f\n",sim->n,sim->x[2][0]);
-		
-}
-
-void get_flow(sim_t *sim, double* flow, int size){
-	for(int t=0;t<size;t++){
-		flow[t] = sim->flow[t];
-	}
-}
-

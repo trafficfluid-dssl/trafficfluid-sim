@@ -1,7 +1,21 @@
+#ifdef CONTROLLER_H
+#define EXTERN_C /* nothing */
+#else
+#define EXTERN_C extern
+#endif /* DEFINE_VARIABLES */
 
 //NumericalID is used as a data type for ids.
 typedef long long int NumericalID;
 typedef enum {FCA_0, FCA_1, FCA_2, FCA_3} fca_method_t;
+
+
+typedef struct {
+	int j;
+	double mag;
+	double fcax, fcay;
+} nbor_t;
+
+
 
 typedef	struct {
 	struct {
@@ -78,3 +92,6 @@ void determine_controls(sim_t* sim, double* fx, double* fy);
 
 void sim_configure(sim_t *sim);
 
+
+EXTERN_C nbor_t* nbors;
+EXTERN_C nbor_t* nbors_nudge;
