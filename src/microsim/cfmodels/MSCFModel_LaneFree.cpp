@@ -417,6 +417,37 @@ double lf_plugin_get_relative_distance_x(NumericalID ego_id, NumericalID other_i
 	return dx;
 }
 
+double lf_plugin_get_relative_position_x(NumericalID ego_id, NumericalID other_id) {
+	MSLaneFreeVehicle* ego_lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(ego_id);
+	if (ego_lfveh == nullptr) {
+		std::cout << "Ego not found!\n";
+		return -1;
+	}
+	MSLaneFreeVehicle* other_lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(other_id);
+	if (other_lfveh == nullptr) {
+		std::cout << "Other not found!\n";
+		return -1;
+	}
+
+	if (ego_lfveh->get_edge_id() != other_lfveh->get_edge_id()) {
+		std::cout << "Vehicles are not on the same edge! Relative distance betweeen vehicles on different road edges is not currently supported!\n";
+		return -1;
+	}
+	double ego_x = ego_lfveh->get_position_x();
+	double dx = other_lfveh->get_position_x() - ego_lfveh->get_position_x();
+
+	if (ego_lfveh->is_circular()) {
+		double roadlength = ego_lfveh->get_vehicle()->getEdge()->getLength();
+
+		if (fabs(dx) > 0.5 * roadlength){
+
+			dx = (dx >= 0) ? (dx - roadlength) : (dx + roadlength);
+		}
+	}
+	double r_x = ego_lfveh->get_position_x() + dx;
+	return dx;
+}
+
 double lf_plugin_get_relative_distance_y(NumericalID ego_id, NumericalID other_id) {
 	MSLaneFreeVehicle* ego_lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(ego_id);
 	if (ego_lfveh == nullptr) {
@@ -437,6 +468,7 @@ double lf_plugin_get_relative_distance_y(NumericalID ego_id, NumericalID other_i
 
 	return dy;
 }
+
 
 
 void lf_plugin_set_circular_movement(NumericalID veh_id, bool circular) {
@@ -931,6 +963,7 @@ LaneFreeSimulationPlugin::LaneFreeSimulationPlugin(){
 	get_position_x = &lf_plugin_get_position_x;
 	get_position_y = &lf_plugin_get_position_y;
 	get_relative_distance_x = &lf_plugin_get_relative_distance_x;
+	get_relative_position_x = &lf_plugin_get_relative_position_x;
 	get_relative_distance_y = &lf_plugin_get_relative_distance_y;
 	set_circular_movement = &lf_plugin_set_circular_movement;
 	get_speed_y = &lf_plugin_get_speed_y;
@@ -1023,8 +1056,6 @@ LaneFreeSimulationPlugin::get_message_step(){
 void
 LaneFreeSimulationPlugin::lf_simulation_step(){
 	
-
-
 	all_ids.updated = false;
 	
 	lane_free_ids.updated = false;

@@ -71,6 +71,11 @@ libLaneFreePlugin_EXPORT double (* get_position_y)(NumericalID veh_id);
 libLaneFreePlugin_EXPORT double (*get_relative_distance_x)(NumericalID ego_id, NumericalID other_id);
 
 
+//returns the relative longitudinal position of a vehicle with respect to an ego vehicle
+libLaneFreePlugin_EXPORT double (*get_relative_position_x)(NumericalID ego_id, NumericalID other_id);
+
+
+
 //returns the relative lateral distance of a vehicle with respect to an ego vehicle
 libLaneFreePlugin_EXPORT double (*get_relative_distance_y)(NumericalID ego_id, NumericalID other_id);
 
