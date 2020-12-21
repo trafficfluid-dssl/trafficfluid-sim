@@ -305,7 +305,7 @@ NumericalID* lf_plugin_get_all_ids_in_edge(NumericalID edge_id){
 			thisedge = edge;
 			found_edge = true;
 			break;
-		}		
+		}
 	}
 
 	if(!found_edge){
@@ -387,7 +387,7 @@ double lf_plugin_get_position_x(NumericalID veh_id){
 	return lfveh->get_position_x();
 }
 
-double lf_plugin_get_relative_position_x(NumericalID ego_id, NumericalID other_id) {
+double lf_plugin_get_relative_distance_x(NumericalID ego_id, NumericalID other_id) {
 	MSLaneFreeVehicle* ego_lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(ego_id);
 	if (ego_lfveh == nullptr) {
 		std::cout << "Ego not found!\n";
@@ -417,7 +417,7 @@ double lf_plugin_get_relative_position_x(NumericalID ego_id, NumericalID other_i
 	return dx;
 }
 
-double lf_plugin_get_relative_position_y(NumericalID ego_id, NumericalID other_id) {
+double lf_plugin_get_relative_distance_y(NumericalID ego_id, NumericalID other_id) {
 	MSLaneFreeVehicle* ego_lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(ego_id);
 	if (ego_lfveh == nullptr) {
 		std::cout << "Ego not found!\n";
@@ -930,8 +930,8 @@ LaneFreeSimulationPlugin::LaneFreeSimulationPlugin(){
 	apply_acceleration = &lf_plugin_apply_acceleration;
 	get_position_x = &lf_plugin_get_position_x;
 	get_position_y = &lf_plugin_get_position_y;
-	get_relative_position_x = &lf_plugin_get_relative_position_x;
-	get_relative_position_y = &lf_plugin_get_relative_position_y;
+	get_relative_distance_x = &lf_plugin_get_relative_distance_x;
+	get_relative_distance_y = &lf_plugin_get_relative_distance_y;
 	set_circular_movement = &lf_plugin_set_circular_movement;
 	get_speed_y = &lf_plugin_get_speed_y;
 	get_speed_x = &lf_plugin_get_speed_x;

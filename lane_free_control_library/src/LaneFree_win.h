@@ -67,12 +67,12 @@ libLaneFreePlugin_EXPORT double (* get_position_x)(NumericalID veh_id);
 libLaneFreePlugin_EXPORT double (* get_position_y)(NumericalID veh_id);
 
 
-//returns the relative longitudinal position of a vehicle with respect to an ego vehicle
-libLaneFreePlugin_EXPORT double (*get_relative_position_x)(NumericalID ego_id, NumericalID other_id);
+//returns the relative longitudinal distance of a vehicle with respect to an ego vehicle
+libLaneFreePlugin_EXPORT double (*get_relative_distance_x)(NumericalID ego_id, NumericalID other_id);
 
 
-//returns the relative lateral position of a vehicle with respect to an ego vehicle
-libLaneFreePlugin_EXPORT double (*get_relative_position_y)(NumericalID ego_id, NumericalID other_id);
+//returns the relative lateral distance of a vehicle with respect to an ego vehicle
+libLaneFreePlugin_EXPORT double (*get_relative_distance_y)(NumericalID ego_id, NumericalID other_id);
 
 
 //determines if a given vehicle will be transported at the beginning of the road edge it currently is into, based on the value of circular (true:enables the behavior, false:disables the behavior)

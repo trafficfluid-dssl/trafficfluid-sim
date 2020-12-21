@@ -166,7 +166,7 @@ fca(sim_t *sim, NumericalID veh_i, NumericalID veh_j, double dx_i_to_j, double d
     }
 
     mag = fca_mag(sim,
-                get_relative_position_x(veh_j, veh_i), y-y0, 
+                get_relative_distance_x(veh_j, veh_i), y-y0, 
                 vxi,
                 approaching_speed_x, approaching_speed_y, len, wid);
     
@@ -223,7 +223,7 @@ walls_update(sim_t *sim, NumericalID veh_i, NumericalID veh_j, double fcax, doub
 	double lj = get_veh_length(veh_j), xj = get_position_x(veh_j);
 
     // determine front bound
-	double dx = get_relative_position_x(veh_i, veh_j) - (get_veh_length(veh_i) + get_veh_length(veh_j))/2;//circular_dx(sim, sim->x[j][t]-0.5*sim->l[j] - (sim->x[i][t]+0.5*sim->l[i]));
+	double dx = get_relative_distance_x(veh_i, veh_j) - (get_veh_length(veh_i) + get_veh_length(veh_j))/2;//circular_dx(sim, sim->x[j][t]-0.5*sim->l[j] - (sim->x[i][t]+0.5*sim->l[i]));
     double vs = MIN(dx/sim->frame_timegap, vxj - 0.1);
     double uxbound = ((1.-degree_x)*(vdi-vxi) + degree_x*(vs - vxi))/(1*T);
 
@@ -295,8 +295,8 @@ void
 		if (j == i)
 			break;
         
-        dx_i_to_j = get_relative_position_x(veh_id, vehs_array[j]);
-        dy_i_to_j = get_relative_position_y(veh_id, vehs_array[j]);
+        dx_i_to_j = get_relative_distance_x(veh_id, vehs_array[j]);
+        dy_i_to_j = get_relative_distance_y(veh_id, vehs_array[j]);
         
         fcamag = 0;
         //printf("Vehicle id: %lld\n", vehs_array[j]);
@@ -333,8 +333,8 @@ void
         }
 		if (j == i)
 			break;
-		dx_i_to_j = get_relative_position_x(veh_id, vehs_array[j]);
-		dy_i_to_j = get_relative_position_y(veh_id, vehs_array[j]);
+		dx_i_to_j = get_relative_distance_x(veh_id, vehs_array[j]);
+		dy_i_to_j = get_relative_distance_y(veh_id, vehs_array[j]);
 		fcamag = 0;
 
 
