@@ -1006,21 +1006,26 @@ LaneFreeSimulationPlugin::LaneFreeSimulationPlugin(){
 	myInstance = this;
 }
 
+void free_mem(void* ptr) {
+	if (ptr != NULL) {
+		free(ptr);
+	}
+}
 
 LaneFreeSimulationPlugin::~LaneFreeSimulationPlugin() {
 	simulation_finalize();
 	free_hashmap();
 	
-	free(all_ids.ptr);
-	free(lane_free_ids.ptr);
-	free(vehicle_name.ptr);
-	free(all_edges.ptr);
-	free(all_ids_in_edge.ptr);
-	free(veh_type_name.ptr);
-	free(detector_ids.ptr);
-	free(detector_name.ptr);
-	free(detector_values.ptr);
-	free(density_per_segment_per_edge.ptr);
+	free_mem(all_ids.ptr);
+	free_mem(lane_free_ids.ptr);
+	free_mem(vehicle_name.ptr);
+	free_mem(all_edges.ptr);
+	free_mem(all_ids_in_edge.ptr);
+	free_mem(veh_type_name.ptr);
+	free_mem(detector_ids.ptr);
+	free_mem(detector_name.ptr);
+	free_mem(detector_values.ptr);
+	free_mem(density_per_segment_per_edge.ptr);
 	myInstance = nullptr;
 }
 
