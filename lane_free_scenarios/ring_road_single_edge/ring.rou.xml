@@ -1,0 +1,11 @@
+<routes>
+    
+    <vType id="lane_free_car" vClass="passenger" carFollowModel="LaneFree" maxSpeed="35" length="3.4"  arrivalSpeed="35" minGap="0"/>
+    
+    
+    
+    
+    
+    <route id="route0"  edges="road_stretch"/>
+    
+</routes>
