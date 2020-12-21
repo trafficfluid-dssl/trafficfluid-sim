@@ -1,12 +1,11 @@
 #include <stdio.h>
-
+#include <stdlib.h>
 #define DEFINE_VARIABLES
 #ifdef __unix__
 #include "LaneFree_linux.h"
 #elif defined(WIN32)
-#include <stdlib.h>
 #include <LaneFree_win.h>
-#include "libLaneFreePlugin_Export.h"
+
 #endif
 
 #include "Controller.h"
