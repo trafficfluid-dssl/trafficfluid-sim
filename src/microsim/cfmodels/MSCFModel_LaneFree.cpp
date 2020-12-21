@@ -91,10 +91,9 @@ void update_arraymemory_size(arrayMemStruct* s, size_t requested_size) {
 	else if (requested_size > s->asize) {
 		//std::cout << "Try to update size!\n";
 		size_t allocated_blocks = std::max(requested_size, 2 * s->asize);
-		void* tmp = s->ptr;
 		s->ptr = realloc(s->ptr, allocated_blocks * block_size);
 		
-		s->asize = allocated_blocks;
+		s->asize = allocated_blocks; 
 	}
 
 	if (s->ptr == NULL) {
@@ -140,9 +139,7 @@ NumericalID lf_plugin_get_all_ids_size(){
 	}
 
 	MSVehicleControl& c = MSNet::getInstance()->getVehicleControl();
-    NumericalID ids_size = c.loadedVehSize();
-
-    
+        
     int counter = 0;
     for (MSVehicleControl::constVehIt i = c.loadedVehBegin(); i != c.loadedVehEnd(); ++i) {
         if ((*i).second->isOnRoad()) {
@@ -294,7 +291,7 @@ char* lf_plugin_get_edge_name(NumericalID edge_id){
 NumericalID* lf_plugin_get_all_ids_in_edge(NumericalID edge_id){
 	
 	MSEdgeVector edges_v = MSNet::getInstance()->getEdgeControl().getEdges();
-	if( edges_v.size()<=edge_id){
+	if( (NumericalID)edges_v.size()<=edge_id){
 		std::cout<< "Edge_id " << edge_id << "too large!\n";
 		return nullptr;
 	}	
@@ -352,7 +349,7 @@ NumericalID lf_plugin_get_all_ids_in_edge_size(NumericalID edge_id){
 	//	return all_ids_in_edge_ams->usize;
 	//}
 	MSEdgeVector edges_v = MSNet::getInstance()->getEdgeControl().getEdges();
-	if( edges_v.size()<=edge_id){
+	if( (NumericalID)edges_v.size()<=edge_id){
 		std::cout<< "Edge_id " << edge_id << "too large!\n";
 		return -1;
 	}	
@@ -433,7 +430,7 @@ double lf_plugin_get_relative_position_x(NumericalID ego_id, NumericalID other_i
 		std::cout << "Vehicles are not on the same edge! Relative distance betweeen vehicles on different road edges is not currently supported!\n";
 		return -1;
 	}
-	double ego_x = ego_lfveh->get_position_x();
+	
 	double dx = other_lfveh->get_position_x() - ego_lfveh->get_position_x();
 
 	if (ego_lfveh->is_circular()) {
@@ -445,7 +442,7 @@ double lf_plugin_get_relative_position_x(NumericalID ego_id, NumericalID other_i
 		}
 	}
 	double r_x = ego_lfveh->get_position_x() + dx;
-	return dx;
+	return r_x;
 }
 
 double lf_plugin_get_relative_distance_y(NumericalID ego_id, NumericalID other_id) {
@@ -595,7 +592,7 @@ double lf_plugin_get_edge_width(NumericalID edge_id){
 
 	if(!found){
 		std::cout<<"Edge with id "<< edge_id << "not found!\n";
-		return NULL;
+		return -1;
 	}
 
 	
@@ -876,7 +873,7 @@ int* lf_plugin_get_density_per_segment_per_edge(NumericalID edge_id, double segm
 	MSEdgeVector edges_v = MSNet::getInstance()->getEdgeControl().getEdges();
 	// NumericalID edges_size = edges_v.size();
 	
-	int i,j, n_v;
+	int i, n_v;
 	std::vector<const SUMOVehicle*> vehs_in_edge;
 	MSVehicle* veh;
 	
@@ -894,20 +891,20 @@ int* lf_plugin_get_density_per_segment_per_edge(NumericalID edge_id, double segm
 			//std::cout<<"Edge with id "<< edge_id << " is empty!\n";
 			return NULL;
 		}
-		size_segments =  (int)std::ceil(edge->getLength()/segment_length);		
-		dens_per_segment = (int*)calloc(size_segments,sizeof(int));
-		
-		if (dens_per_segment != NULL) {
-			for (i = 0; i < n_v; i++) {
-				veh = (MSVehicle*)vehs_in_edge[i];
-				x_v = veh->getPositionOnLane();
-				segment_i = std::min((int)std::floor(x_v / segment_length), size_segments - 1);
-				dens_per_segment[segment_i] += 1;
+		size_segments =  (int)std::ceil(edge->getLength()/segment_length);	
+		arrayMemStruct* dens_per_segment_ams = LaneFreeSimulationPlugin::getInstance()->get_density_per_segment_per_edge_mem();
+		update_arraymemory_size(dens_per_segment_ams, size_segments);
 
-			}
-		}
-		else {
-			std::cout << "Could not allocate memory!\n";
+		dens_per_segment = (int*)dens_per_segment_ams->ptr;
+		
+		
+		for (i = 0; i < n_v; i++) {
+			veh = (MSVehicle*)vehs_in_edge[i];
+			x_v = veh->getPositionOnLane();
+			segment_i = std::min((int)std::floor(x_v / segment_length), size_segments - 1);
+			dens_per_segment[segment_i] += 1;
+
+		
 		}
 		
 		return dens_per_segment;
