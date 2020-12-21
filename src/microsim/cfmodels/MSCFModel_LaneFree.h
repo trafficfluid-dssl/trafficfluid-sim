@@ -157,7 +157,14 @@ public:
     }
 
     double get_position_x(){
-        return myveh->getPositionOnLane()-myveh->getLength()/2;
+
+        double pos_x = myveh->getPositionOnLane()-myveh->getLength()/2;
+
+        //avoid negative positions when circular movement
+        if (pos_x < 0 && is_circular()) {
+            return myveh->getEdge()->getLength() + pos_x;
+        }
+        return pos_x;
     }
 
     double get_position_y(){
