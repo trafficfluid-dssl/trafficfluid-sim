@@ -147,11 +147,7 @@ void event_vehicles_collide(NumericalID veh_id1, NumericalID veh_id2){
 }
 
 
-//void determine_forces(sim_t* sim, NumericalID edge_id, int i, NumericalID* vehs_array, int n, double* fx, double* fy) {}
-//void regulate_forces(sim_t* sim, NumericalID edge_id, NumericalID veh_id, double* fx, double* fy) {}
-//void determine_controls(sim_t* sim, double* fx, double* fy) {}
+//is called when a vehicle exceeds the road boundaries
+void event_vehicle_out_of_bounds(NumericalID veh_id) {
 
-
-//void sim_configure(sim_t* sim) {}
-
-
+}

@@ -1131,19 +1131,24 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 	MSVehicle* veh2;
 	MSLaneFreeVehicle* lfv1;
 	MSLaneFreeVehicle* lfv2;
-	double xv1, yv1, lv1, wv1, dx, dy;
+	double xv1, yv1, lv1, wv1, half_vwidth, dx, dy,roadwidth;
 	
 	for (MSEdge* edge : edges_v) {
 		vehs_in_edge = edge->getVehicles();
+		roadwidth = edge->getWidth();
 		std::sort(vehs_in_edge.begin(), vehs_in_edge.end(), less_than_key());
 		n_v = vehs_in_edge.size();
-		for(i=0;i<n_v-1;i++){
+		for(i=0;i<n_v;i++){
 			veh1 = (MSVehicle*)vehs_in_edge[i];			
 			lv1 = veh1->getVehicleType().getLength();
 			wv1 = veh1->getVehicleType().getWidth();
 			lfv1 = find_vehicle_in_edge(veh1->getNumericalID(),edge->getNumericalID());
 			xv1 = lfv1->get_position_x();
 			yv1 = lfv1->get_position_y();
+			half_vwidth = wv1 / 2;
+			if (yv1 > (roadwidth - half_vwidth) || yv1 < half_vwidth) {
+				event_vehicle_out_of_bounds(veh1->getNumericalID());
+			}
 			for(j=i+1;j<n_v;j++){
 				veh2 = (MSVehicle*)vehs_in_edge[j];
 				lfv2 = find_vehicle_in_edge(veh2->getNumericalID(),edge->getNumericalID());				

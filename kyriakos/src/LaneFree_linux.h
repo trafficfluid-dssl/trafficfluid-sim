@@ -5,13 +5,7 @@
 #endif /* DEFINE_VARIABLES */
 
 
-#include <stdio.h>
-#include <stdarg.h>
 
-
-
-//Define the maximum number of characters to print when calling print_message
-#define MESSAGE_BUFFER_SIZE 256
 
 //NumericalID is used as a data type for ids.
 typedef long long int NumericalID;
@@ -156,23 +150,26 @@ EXTERN NumericalID (*insert_new_vehicle)(char* veh_name, char* route_id, char* t
 
 
 //is called once before the first time-step
-void simulation_initialize();
+EXTERN void simulation_initialize();
 
 //is called in every time-step
-void simulation_step();
+EXTERN void simulation_step();
 
 //is called when the simulation ends
-void simulation_finalize();
+EXTERN void simulation_finalize();
 
 
 //is called when a new vehicle enters
-void event_vehicle_enter(NumericalID veh_id);
+EXTERN void event_vehicle_enter(NumericalID veh_id);
 
 //is called when a new vehicle exits
-void event_vehicle_exit(NumericalID veh_id);
+EXTERN void event_vehicle_exit(NumericalID veh_id);
 
 
 //is called when two vehicles collide
-void event_vehicles_collide(NumericalID veh_id1, NumericalID veh_id2);
+EXTERN void event_vehicles_collide(NumericalID veh_id1, NumericalID veh_id2);
 
 
+
+//is called when a vehicle exceeds the road boundaries
+EXTERN void event_vehicle_out_of_bounds(NumericalID veh_id);

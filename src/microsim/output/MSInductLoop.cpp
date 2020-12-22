@@ -118,7 +118,7 @@ MSInductLoop::notifyMove(SUMOTrafficObject& veh, double oldPos,
         const double timeBeforeEnter = MSCFModel::passingTime(oldPos, myPosition, newPos, oldSpeed, newSpeed);
         myVehiclesOnDet[&veh] = SIMTIME + timeBeforeEnter;
         myEnteredVehicleNumber++;
-        // LFPlugin Begin
+        // LFPlugin Begin        
         myTotalEnteredVehicleNumber++;
         // LFPlugin End
     }
@@ -143,7 +143,12 @@ MSInductLoop::notifyMove(SUMOTrafficObject& veh, double oldPos,
             // This can happen even if it is still registered in myVehiclesOnDet, e.g., after teleport.
             myVehiclesOnDet.erase(&veh);
         }
-        return false;
+        // LFPlugin Begin
+        return true;
+        // LFPlugin End
+        //original was set to false after vehicle left the detector's area
+        //return false;
+
     }
     // vehicle stays on the detector
     return true;
@@ -152,6 +157,7 @@ MSInductLoop::notifyMove(SUMOTrafficObject& veh, double oldPos,
 
 bool
 MSInductLoop::notifyLeave(SUMOTrafficObject& veh, double /* lastPos */, MSMoveReminder::Notification reason, const MSLane* /* enteredLane */) {
+    std::cout << "Veh " << veh.getID() << " left\n";
     if (reason != MSMoveReminder::NOTIFICATION_JUNCTION) {
 #ifdef HAVE_FOX
         FXConditionalLock lock(myNotificationMutex, myNeedLock);

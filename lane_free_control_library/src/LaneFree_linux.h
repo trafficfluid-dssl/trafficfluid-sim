@@ -160,3 +160,6 @@ void event_vehicle_exit(NumericalID veh_id);
 void event_vehicles_collide(NumericalID veh_id1, NumericalID veh_id2);
 
 
+
+//is called when a vehicle exceeds the road boundaries
+void event_vehicle_out_of_bounds(NumericalID veh_id);

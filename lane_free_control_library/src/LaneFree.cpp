@@ -133,12 +133,12 @@ void simulation_step() {
 	 	if(n_edge_ids>0){
 			//vehicles are ordered
 	 		ids_in_edge = get_all_ids_in_edge(myedges[i]);
-			printf("Vehicles in edge with id %lld:", myedges[i]);
+			//printf("Vehicles in edge with id %lld:", myedges[i]);
 			for (j = 0; j < n_edge_ids; j++) {
 				vname = get_vehicle_name(ids_in_edge[j]);
-				printf("%s\t",vname);
+				//printf("%s\t",vname);
 			}
-			printf("\n\n");
+			//printf("\n\n");
 	 	}
 	 }
 	
@@ -175,4 +175,9 @@ void event_vehicles_collide(NumericalID veh_id1, NumericalID veh_id2){
 	//char* vname2 = get_vehicle_name(veh_id2);
 	// printf("Collision between %s and %s at timestep: %d, and time: %.1f.\n",vname1, vname2, get_current_time_step(), get_current_time_step()*get_time_step_length());
 	
+}
+
+void event_vehicle_out_of_bounds(NumericalID veh_id) {
+	char* vname1 = get_vehicle_name(veh_id);	
+	printf("Vehicle %s is out of bounds at time %.2f, at pos:%f,%f.\n", vname1, get_current_time_step() * get_time_step_length(), get_position_x(veh_id),get_position_y(veh_id));
 }
