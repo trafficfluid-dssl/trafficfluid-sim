@@ -84,18 +84,19 @@ MSInductLoop::notifyEnter(SUMOTrafficObject& veh, Notification reason, const MSL
         return false;
     }
     if (reason != NOTIFICATION_JUNCTION) { // the junction case is handled in notifyMove
-        if (veh.getBackPositionOnLane(myLane) >= myPosition) {
-            return false;
-        }
+        //LFPlugin Begin
+        // We remove this due to potential ring road cases
+        //if (veh.getBackPositionOnLane(myLane) >= myPosition) {
+        //    return false;
+        //}
+        //LFPlugin End
         if (veh.getPositionOnLane() >= myPosition) {
 #ifdef HAVE_FOX
             FXConditionalLock lock(myNotificationMutex, myNeedLock);
 #endif
             myVehiclesOnDet[&veh] = SIMTIME;
             myEnteredVehicleNumber++;
-            // LFPlugin Begin
-            myTotalEnteredVehicleNumber++;
-            // LFPlugin End
+            
         }
     }
     return true;
