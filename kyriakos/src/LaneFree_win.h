@@ -144,6 +144,9 @@ EXTERN libLaneFreePlugin_EXPORT int* (*get_density_per_segment_per_edge)(Numeric
 //returns the size of the array provided above
 EXTERN libLaneFreePlugin_EXPORT int (*get_density_per_segment_per_edge_size)(NumericalID edge_id, double segment_length);
 
+//returns the ids of front vehicles that may be located beyond the veh_id's road edge, according to the front distance provided, and based on its routing. 
+//you need "cross_edge=1" to look for vehicles beyond the current edge, and pass the address of a variable to "neighbors_size" in order to acquire the size of the resulting array.
+EXTERN libLaneFreePlugin_EXPORT NumericalID* (*get_all_neighbor_ids_front)(NumericalID veh_id, double front_distance, int cross_edge, size_t* neighbors_size);
 
 //insert a new vehicle (route_id and type_id need to be defined in the scenario tested)
 EXTERN libLaneFreePlugin_EXPORT NumericalID (*insert_new_vehicle)(char* veh_name, char* route_id, char* type_id, double pos_x, double pos_y, double speed_x, double speed_y);

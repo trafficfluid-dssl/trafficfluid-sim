@@ -166,7 +166,7 @@ fca(sim_t *sim, NumericalID veh_i, NumericalID veh_j, double dx_i_to_j, double d
     }
 
     mag = fca_mag(sim,
-                get_relative_distance_x(veh_j, veh_i), y-y0, 
+                -get_relative_distance_x(veh_i, veh_j), y-y0, 
                 vxi,
                 approaching_speed_x, approaching_speed_y, len, wid);
     

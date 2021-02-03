@@ -209,9 +209,28 @@ public:
 protected:
 
     void update_y(double lateral_acceleration){
-        double new_pos_y = myveh->getLateralPositionOnLane() + speed_y*TS + 0.5*lateral_acceleration*TS*TS;   
+        double pos_on_lane = myveh->getLateralPositionOnLane();
+        double new_pos_y = pos_on_lane + speed_y*TS + 0.5*lateral_acceleration*TS*TS;   
         myveh->setLateralPositionOnLane(new_pos_y);    
         speed_y = speed_y + lateral_acceleration*TS;
+
+
+        //check whether we need to change lane
+        if ((abs(new_pos_y) > ((myveh->getLane()->getWidth()) / 2))) {
+            MSLane* veh_lane = myveh->getLane();
+            const MSEdge* veh_edge = myveh->getEdge();
+            MSLane* new_lane = nullptr;
+            if (pos_on_lane > 0) {
+                new_lane = veh_edge->leftLane(veh_lane);
+                
+            }
+            else if (pos_on_lane < 0) {
+                new_lane = veh_edge->rightLane(veh_lane);
+            }
+            if (new_lane != nullptr) {
+                veh_lane = new_lane;
+            }
+        }
     }
 
     void update_x(double longitudinal_acceleration){
@@ -246,6 +265,9 @@ protected:
 
 typedef std::unordered_map<NumericalID,MSLaneFreeVehicle*> VehicleMap;
 typedef std::unordered_map<NumericalID,VehicleMap*> VehicleMapEdges;
+
+typedef std::vector<const SUMOVehicle*> SortedVehiclesVector;
+typedef std::unordered_map<NumericalID, SortedVehiclesVector*> SortedVehiclesVectorEdges;
 
 typedef std::unordered_map<NumericalID,std::vector<double>> InsertedLateralInitStatus;
 
@@ -296,7 +318,6 @@ public:
     void add_new_lat_stats(NumericalID veh_id, double pos_y, double speed_y);
 
 
-
     arrayMemStruct* get_all_ids_mem() {
         return &all_ids;
     }
@@ -336,15 +357,21 @@ public:
         return &density_per_segment_per_edge;
     } 
 
+    arrayMemStruct* get_all_neighbor_ids_front_mem() {
+        return &all_neighbor_ids_front;
+    }
+
+    //Deprecated print
     //bool is_message_empty() {
     //    return msgBufferVector.empty();
     //}
     //Deprecated print
     //std::string get_message_step();
 
-
+    //Deprecated print
     //void append_message_step(std::string msg);
 
+    SortedVehiclesVector* get_sorted_vehicles_in_edge(NumericalID edge_id);
     
 protected:
     NumericalID find_stored_edge(MSVehicle* veh);
@@ -355,6 +382,8 @@ protected:
     VehicleMapEdges allVehiclesMapEdges;
 
     InsertedLateralInitStatus insertedLatInitStatus;
+
+    SortedVehiclesVectorEdges sortedVehiclesVectorEdges;
 
     double max_vehicle_length;
 
@@ -370,6 +399,7 @@ protected:
     arrayMemStruct detector_values;
     arrayMemStruct density_per_segment_per_edge;
     
+    arrayMemStruct all_neighbor_ids_front;
 
     
     //Deprecated print

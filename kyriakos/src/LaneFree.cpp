@@ -26,7 +26,7 @@ void simulation_initialize(){
 	sim_configure(&sim_params);
 
 	//insert 20 vehicles
-	int n_init = 425;
+	int n_init = 0;
 		
 	double x_incr=5, y_incr=2.5, vx_incr=5;
 	double x_val=x_incr, y_val=y_incr, vx_val=vx_incr;
@@ -37,13 +37,13 @@ void simulation_initialize(){
 	char veh_name[40];
 	//route_id and type_id should be defined in the scenario we are running
 	char route_id[20]="route0";
-	char type_id[20]="lane_free_car";
+	char type_id[20]="1";
 	NumericalID v_id;
 	for(int i=0;i<n_init;i++){
 				
 		sprintf(veh_name, "%s_plugin_%d", type_id,(i+1));
-		
-		v_id = insert_new_vehicle(veh_name, route_id, type_id, x_val, y_val, vx_val,0);
+		printf("try insert!\n");
+		v_id = insert_new_vehicle(veh_name, route_id, type_id, x_val, y_val, vx_val,0);		
 		printf("%s inserted\n", veh_name);
 		y_val = y_val + y_incr;
 		if(i%virtual_lanes==(virtual_lanes-1)){
@@ -82,10 +82,16 @@ void simulation_step() {
 	NumericalID n_edge_ids;
 	char* veh_name;
 	double vx, accel;
-	
+
+	NumericalID* front_neighbors;
+	size_t neighbors_size; //store here the number of front neighbors for each vehicle	
+	double front_distance = 200;//get vehicles up to 200 meters ahead
+	int cross_edge = 1; //1: get neighbors that are beyond the current road segment, 0: get only vehicles within the same road edge
+	double neighbor_distance;
 	for(i=0;i<n_myedges;i++){
-	 	//printf("edge id: %lld\n", myedges[i]);
+	 	//printf("edge id: %lld", myedges[i]);
 	 	n_edge_ids = get_all_ids_in_edge_size(myedges[i]);
+		//printf(", vehs size:%lld\n", n_edge_ids);
 		length = get_edge_length(myedges[i]);
 		width = get_edge_width(myedges[i]);
 	 	if(n_edge_ids>0){
@@ -94,7 +100,19 @@ void simulation_step() {
 			
 			for (j = 0; j < n_edge_ids; j++) {
 				double fx, fy;
-				//veh_name = get_vehicle_name(ids_in_edge[j]);
+				veh_name = get_vehicle_name(ids_in_edge[j]);
+				//printf("vehicle %s:", veh_name);
+				front_neighbors = get_all_neighbor_ids_front(ids_in_edge[j], front_distance, cross_edge, &neighbors_size);
+				
+				
+				//printf("Neighbors of %s:", veh_name);
+				
+				for (int neighbor_index = 0; neighbor_index < neighbors_size; neighbor_index++) {
+					veh_name = get_vehicle_name(front_neighbors[neighbor_index]);
+					neighbor_distance = get_relative_distance_x(ids_in_edge[j], front_neighbors[neighbor_index]);
+					//printf("%s with dist: %f, ", veh_name, neighbor_distance);
+				}
+				//printf("\n");
 				//printf("Calculate for vehicle %s.\n", veh_name);
 				determine_forces(&sim_params, myedges[i], j, ids_in_edge, n_edge_ids, &fx, &fy);
 				//printf("Forces determined.");
@@ -127,7 +145,7 @@ void event_vehicle_enter(NumericalID veh_id){
 	// printf("Vehicle %s entered with speed %f.\n",vname1,get_speed_x(veh_id));
 
 	//make the vehicles emulate a ring road scenario
-	set_circular_movement(veh_id, true);
+	//set_circular_movement(veh_id, true);
 	
 }
 
