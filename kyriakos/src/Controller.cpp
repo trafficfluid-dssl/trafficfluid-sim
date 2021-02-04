@@ -258,13 +258,14 @@ int cmpnbors(const void *n1ptr, const void *n2ptr) {
 
 void
 //determine_forces(sim_t *sim, double T, double roadlen_meters, double roadwid_meters, int i, int n, double* x, double*y, double* vx, double* vy, double* vd, double* l, double* w, int is_circular, double* fx, double* fy) {
- determine_forces(sim_t* sim, NumericalID edge_id, int i, NumericalID* vehs_array, int n, double* fx, double* fy){
+ determine_forces(sim_t* sim, NumericalID edge_id, int i, NumericalID* vehs_array, int n, NumericalID* front_neighbors, int n_neighbors, double* fx, double* fy){
     int j;
     double fcax = 0, fcay = 0;
 
 	//TODO: this is not efficient, do it like the internal array pointer structure (use global array pointers), also remove the free() at the end once we are done!
-    nbor_t* nbors = (nbor_t*)malloc(n*sizeof(nbor_t));
-    nbor_t* nbors_nudge = (nbor_t*)malloc(n * sizeof(nbor_t));
+    int max_n = n + n_neighbors;
+    nbor_t* nbors = (nbor_t*)malloc(max_n *sizeof(nbor_t));
+    nbor_t* nbors_nudge = (nbor_t*)malloc(max_n * sizeof(nbor_t));
     //nbor_t nbors[425];
     //nbor_t nbors_nudge[425];
     memset(nbors, 0, sizeof(nbors));
@@ -285,27 +286,47 @@ void
 	//one for from i until front_end, where front_end is n-1, and when it reaches n-1 it resets to zero. we break when either the ifluence_radius_meters is exceeded or we have relative distance >roadlength/2
 	double dx_i_to_j, dy_i_to_j, fcamag;
 
-
+    NumericalID* downstream_vehs_array;
+    int downstream_start_index, downstream_n;
 	//Downstream vehicles
-    
-    for (j=(i+1); ; j ++) {
-        if (j > n - 1) {
-            j = 0;
-        }    
-		if (j == i)
-			break;
+    if (n_neighbors == -1) {//if n_neighbors==-1, then we do not use the functionality of front neighbors, so for downstream vehicles we retain the old functionality
+        downstream_start_index = i + 1;
+        downstream_vehs_array = vehs_array;
+        downstream_n = n;
+    }
+    else { // use the front neighbors array, and start from 0
+        downstream_start_index = 0;
+        downstream_vehs_array = front_neighbors;
+        downstream_n = n_neighbors;
+    }
+    //printf("%d: ", downstream_n);
+    for (j=downstream_start_index; ; j ++) {
+        //printf("%d, ", j);
+        if (n_neighbors == -1) {
+            if (j > downstream_n - 1) {
+                j = 0;
+            }
+            if (j == i)
+                break;
+        }
+        else {
+            if (j >= n_neighbors) {
+                break;
+            }
+        }
         
-        dx_i_to_j = get_relative_distance_x(veh_id, vehs_array[j]);
-        dy_i_to_j = get_relative_distance_y(veh_id, vehs_array[j]);
+        dx_i_to_j = get_relative_distance_x(veh_id, downstream_vehs_array[j]);
+        dy_i_to_j = get_relative_distance_y(veh_id, downstream_vehs_array[j]);
         
         fcamag = 0;
         //printf("Vehicle id: %lld\n", vehs_array[j]);
         
+        if (n_neighbors == -1) {
+            if ((dx_i_to_j) > MIN(sim->influence_radius_meters, half_roadlen_meters) || dx_i_to_j < 0)
+                break;
+        }
         
-        if ((dx_i_to_j) > MIN(sim->influence_radius_meters,half_roadlen_meters) || dx_i_to_j < 0)
-            break;
-        
-        fcamag = fca(sim, vehs_array[i], vehs_array[j], dx_i_to_j, dy_i_to_j, &fcax, &fcay);
+        fcamag = fca(sim, vehs_array[i], downstream_vehs_array[j], dx_i_to_j, dy_i_to_j, &fcax, &fcay);
 
 
         if (fcax < 0) {
@@ -324,7 +345,7 @@ void
             nbors_added_nudge++;
         }
     }
-
+    //printf("\n");
    
 	//Upstream vehicles
 	for (j = i - 1; ; j --) {

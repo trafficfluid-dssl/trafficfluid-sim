@@ -150,6 +150,9 @@ EXTERN NumericalID* (*get_all_neighbor_ids_front)(NumericalID veh_id, double fro
 //insert a new vehicle (route_id and type_id need to be defined in the scenario tested)
 EXTERN NumericalID (*insert_new_vehicle)(char* veh_name, char* route_id, char* type_id, double pos_x, double pos_y, double speed_x, double speed_y);
 
+//returns 1 if the vehicle is currently on an acceleration lane and needs to merge
+EXTERN int (*am_i_on_acceleration_lane)(NumericalID veh_id);
+
 
 
 //is called once before the first time-step

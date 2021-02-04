@@ -13,6 +13,7 @@
 #define MIN_DESIRED_SPEED 25
 #define MAX_DESIRED_SPEED 35
 
+#define CIRCULAR_MOVEMENT 0
 //define global simulation variable
 sim_t sim_params;
 
@@ -102,10 +103,17 @@ void simulation_step() {
 				double fx, fy;
 				veh_name = get_vehicle_name(ids_in_edge[j]);
 				//printf("vehicle %s:", veh_name);
-				front_neighbors = get_all_neighbor_ids_front(ids_in_edge[j], front_distance, cross_edge, &neighbors_size);
+				if (!CIRCULAR_MOVEMENT) {
+					front_neighbors = get_all_neighbor_ids_front(ids_in_edge[j], front_distance, cross_edge, &neighbors_size);
+				}
+				else {
+					front_neighbors = ids_in_edge;
+					neighbors_size = -1;
+				}
 				
 				
-				//printf("Neighbors of %s:", veh_name);
+				/*
+				//printf("\nNeighbors of %s:", veh_name);
 				
 				for (int neighbor_index = 0; neighbor_index < neighbors_size; neighbor_index++) {
 					veh_name = get_vehicle_name(front_neighbors[neighbor_index]);
@@ -113,11 +121,18 @@ void simulation_step() {
 					//printf("%s with dist: %f, ", veh_name, neighbor_distance);
 				}
 				//printf("\n");
+				*/
+				veh_name = get_vehicle_name(ids_in_edge[j]);
 				//printf("Calculate for vehicle %s.\n", veh_name);
-				determine_forces(&sim_params, myedges[i], j, ids_in_edge, n_edge_ids, &fx, &fy);
+				determine_forces(&sim_params, myedges[i], j, ids_in_edge, n_edge_ids, front_neighbors, neighbors_size, &fx, &fy);
+				
 				//printf("Forces determined.");
 				regulate_forces(&sim_params, myedges[i], ids_in_edge[j], &fx, &fy);
 				determine_controls(&sim_params, &fx, &fy);
+				if (am_i_on_acceleration_lane(ids_in_edge[j])) {
+					fy += 1;		
+					printf("%s on accel lane\n", veh_name);
+				}
 				apply_acceleration(ids_in_edge[j], fx, fy);
 			}
 			
@@ -145,7 +160,10 @@ void event_vehicle_enter(NumericalID veh_id){
 	// printf("Vehicle %s entered with speed %f.\n",vname1,get_speed_x(veh_id));
 
 	//make the vehicles emulate a ring road scenario
-	//set_circular_movement(veh_id, true);
+	if (CIRCULAR_MOVEMENT) {
+		set_circular_movement(veh_id, true);
+	}
+	
 	
 }
 

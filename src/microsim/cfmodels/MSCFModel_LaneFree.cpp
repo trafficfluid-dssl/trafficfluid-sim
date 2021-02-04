@@ -640,7 +640,7 @@ NumericalID* lf_plugin_get_all_neighbor_ids_front(NumericalID veh_id, double fro
 	const SUMOVehicle* neighbor_veh;
 
 	
-	//std::cout << "\nvehicle:" << lfveh->get_vehicle()->getID() << ":";
+	//std::cout << "\n\nvehicle:" << lfveh->get_vehicle()->getID() << " in edge:"<< all_veh_edges[route_edge_index]->getID()<<":";
 	while (true) {
 		//std::cout << "iter!\t";
 		if (vehicle_index >= size_edge) {
@@ -773,12 +773,17 @@ double lf_plugin_get_relative_distance_x(NumericalID ego_id, NumericalID other_i
 	if (ego_edge_id != other_edge_id) {
 		//find route of ego, and check whether the other edge is on its path
 		
-		const MSRoute veh_route = ego_lfveh->get_vehicle()->getRoute();
-		const ConstMSEdgeVector veh_edges = veh_route.getEdges();
-
+		const MSRoute ego_route = ego_lfveh->get_vehicle()->getRoute();
+		const MSEdge* ego_edge = &ego_lfveh->get_vehicle()->getLane()->getEdge();
+		const MSEdge* other_edge = &other_lfveh->get_vehicle()->getLane()->getEdge();
+		double pos_ego = ego_lfveh->get_position_x();
+		double pos_other = other_lfveh->get_position_x();
 
 		
-
+		double distance = ego_route.getDistanceBetween(pos_ego, pos_other, ego_edge, other_edge);//TODO include later on the routeposition that will be stored
+		return distance;
+		/*
+		const ConstMSEdgeVector veh_edges = veh_route.getEdges();
 		double x_vid = ego_lfveh->get_position_x();
 		
 
@@ -790,7 +795,9 @@ double lf_plugin_get_relative_distance_x(NumericalID ego_id, NumericalID other_i
 		const MSEdge* tmp_edge_next;
 		const MSEdge* tmp_internal_edge;
 
-		bool found_edge = false, found_other = false;
+		
+
+		
 		
 		//std::cout << "Route of " << lfveh->get_vehicle()->getID()<<", with current edge:"<< lfveh->get_vehicle()->getLane()->getEdge().getID() <<", reg:"<< lfveh->get_vehicle()->getEdge()->getID()<<", and position:"<< lfveh->get_position_x() <<" :";
 		for (size_t i = 0; i < veh_edges.size() - 1; i++) {//calculate the distance inside here, or maybe try the function provided, which may give directly the answer getDistanceBetween
@@ -880,7 +887,9 @@ double lf_plugin_get_relative_distance_x(NumericalID ego_id, NumericalID other_i
 
 
 		
-		return other_x_vid - x_relative;
+		return other_x_vid - x_relative;*/
+
+
 	}
 	double dx = other_lfveh->get_position_x() - ego_lfveh->get_position_x();
 
@@ -1329,6 +1338,16 @@ int lf_plugin_get_density_per_segment_per_edge_size(NumericalID edge_id, double 
 }
 
 
+int lf_plugin_am_i_on_acceleration_lane(NumericalID veh_id) {
+	MSLaneFreeVehicle* lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(veh_id);
+	if (lfveh == nullptr) {
+		std::cout << "Ego not found!\n";
+		return -1;
+	}
+
+	return (int)(lfveh->get_vehicle()->getLane()->isAccelLane());
+}
+
 LaneFreeSimulationPlugin::LaneFreeSimulationPlugin(){
 
 	// assign the function pointers of the API to the corresponding implemented functions
@@ -1367,6 +1386,7 @@ LaneFreeSimulationPlugin::LaneFreeSimulationPlugin(){
 	get_density_per_segment_per_edge_size = &lf_plugin_get_density_per_segment_per_edge_size;
 	insert_new_vehicle = &lf_plugin_insert_new_vehicle;
 	get_all_neighbor_ids_front = &lf_plugin_get_all_neighbor_ids_front;
+	am_i_on_acceleration_lane = &lf_plugin_am_i_on_acceleration_lane;
 	//Legacy code, just use printf
 	//print_to_sumo = &lf_plugin_print_to_sumo;
 	//printMessageTimer = SysUtils::getCurrentMillis();
@@ -1744,7 +1764,7 @@ LaneFreeSimulationPlugin::change_edge(MSVehicle* veh){
 	if(old_edge_id==new_edge_id){
 		return;
 	}
-	
+
 	VehicleMap* old_edge_vm = allVehiclesMapEdges[old_edge_id];
 	
 	NumericalID veh_id = veh->getNumericalID();

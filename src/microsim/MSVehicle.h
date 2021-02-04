@@ -584,6 +584,11 @@ public:
         return myLane;
     }
 
+    // LFPlugin Begin
+    void setLane(MSLane* newLane){
+        myLane = newLane;
+    }
+    // LFPlugin End
 
     /** @brief Returns the maximal speed for the vehicle on its current lane (including speed factor and deviation,
      *         i.e., not necessarily the allowed speed limit)

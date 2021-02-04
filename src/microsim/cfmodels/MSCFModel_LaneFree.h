@@ -25,10 +25,11 @@
 #include <microsim/MSLane.h>
 #include <microsim/MSVehicle.h>
 #include <microsim/MSVehicleType.h>
+#include <microsim/lcmodels/MSAbstractLaneChangeModel.h>
 #include <utils/xml/SUMOXMLDefinitions.h>
 //#include <tgmath.h> 
 #define MAX_ITERS 5
-#define UPDATE_PRINT_MS 5
+//#define UPDATE_PRINT_MS 5
 // TODO check consistency with https://sumo.dlr.de/docs/Developer/CodeStyle.html (use the suggested object instead of unordered_map & modify for loops with iterators)
 // TODO check if we can just include LaneFree.h file, so as to not define NumericalID again here
 
@@ -211,26 +212,69 @@ protected:
     void update_y(double lateral_acceleration){
         double pos_on_lane = myveh->getLateralPositionOnLane();
         double new_pos_y = pos_on_lane + speed_y*TS + 0.5*lateral_acceleration*TS*TS;   
-        myveh->setLateralPositionOnLane(new_pos_y);    
-        speed_y = speed_y + lateral_acceleration*TS;
+        /*
+        if (!in_accel_lane && myveh->getLane()->isAccelLane()) {
+            in_accel_lane = true;
+            accel_lane_width = myveh->getLane()->getWidth();
+        }
 
+        if (in_accel_lane && !(myveh->getLane()->isAccelLane())) {
+            in_accel_lane = false;
+            new_pos_y = pos_on_lane - accel_lane_width;
+            std::cout << myveh->getID() << " goes from accel to highway!\n";
+        }*/
 
+        
+        
         //check whether we need to change lane
         if ((abs(new_pos_y) > ((myveh->getLane()->getWidth()) / 2))) {
             MSLane* veh_lane = myveh->getLane();
             const MSEdge* veh_edge = myveh->getEdge();
             MSLane* new_lane = nullptr;
-            if (pos_on_lane > 0) {
+            int direction = 0;
+            if (new_pos_y > 0) {
                 new_lane = veh_edge->leftLane(veh_lane);
-                
+                direction = 1;
+                //std::cout << "go to left lane "<< new_lane->getID() <<" for " << myveh->getID() << "\n";
             }
-            else if (pos_on_lane < 0) {
+            else if (new_pos_y < 0) {
+                direction = -1;
                 new_lane = veh_edge->rightLane(veh_lane);
+                //std::cout << "go to right lane " << new_lane->getID() << " for " << myveh->getID() << "\n";
             }
-            if (new_lane != nullptr) {
-                veh_lane = new_lane;
+            
+            if (new_lane != nullptr && !(new_lane->isAccelLane())) {
+                //myveh->leaveLane(MSMoveReminder::NOTIFICATION_LANE_CHANGE, new_lane);
+                //myveh->enterLaneAtLaneChange(new_lane);
+                //veh_lane->removeVehicle(myveh, MSMoveReminder::NOTIFICATION_LANE_CHANGE);
+                //new_lane->enteredByLaneChange(myveh);
+                //myveh->setLane(new_lane);
+                //
+                
+                
+                
+                //myveh->getLaneChangeModel().primaryLaneChanged(veh_lane, new_lane, 1);
+                
+                //myveh->getLaneChangeModel().endLaneChangeManeuver();
+                
+                //myveh->getLaneChangeModel().updateShadowLane();
+                std::vector<std::pair<SUMOTime, int> > laneTimeLine;
+                int laneIndex = myveh->getLaneIndex() + direction;                
+                laneTimeLine.push_back(std::make_pair(MSNet::getInstance()->getCurrentTimeStep(), laneIndex));
+                laneTimeLine.push_back(std::make_pair(MSNet::getInstance()->getCurrentTimeStep(), laneIndex));
+                myveh->getInfluencer().setLaneTimeLine(laneTimeLine);
+                
+                
+                new_pos_y = new_pos_y - direction*(veh_lane->getWidth()+new_lane->getWidth())/2;
+                //myveh->setLateralPositionOnLane(new_pos_y);
+                //std::cout<<"change lane for "<< myveh->getID()<<"\n";
             }
+            
         }
+
+        myveh->setLateralPositionOnLane(new_pos_y);
+        speed_y = speed_y + lateral_acceleration * TS;
+        
     }
 
     void update_x(double longitudinal_acceleration){
@@ -257,8 +301,6 @@ protected:
     double accel_x;
     double accel_y;
     bool ring_road;
-    
-
 };
 
 

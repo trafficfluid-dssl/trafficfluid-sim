@@ -85,7 +85,7 @@ typedef struct {
 }sim_t;
 
 
-void determine_forces(sim_t* sim, NumericalID edge_id, int i, NumericalID* vehs_array, int n, double* fx, double* fy);
+void determine_forces(sim_t* sim, NumericalID edge_id, int i, NumericalID* vehs_array, int n, NumericalID* front_neighbors, int n_neighbors, double* fx, double* fy);
 void regulate_forces(sim_t* sim, NumericalID edge_id, NumericalID veh_id, double* fx, double* fy);
 void determine_controls(sim_t* sim, double* fx, double* fy);
 

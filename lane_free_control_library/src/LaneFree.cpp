@@ -19,9 +19,9 @@ void simulation_initialize(){
 	srand(get_seed());
 
 	//insert 20 vehicles
-	int n_init = 20;
+	int n_init = 40;
 		
-	double x_incr=5, y_incr=2.5, vx_incr=5;
+	double x_incr=25, y_incr=2.5, vx_incr=5;
 	double x_val=x_incr, y_val=y_incr, vx_val=vx_incr;
 	int virtual_lanes = 3;
 	double width=10;
@@ -30,10 +30,11 @@ void simulation_initialize(){
 	char veh_name[40];
 	//route_id and type_id should be defined in the scenario we are running
 	char route_id[20]="route0";
-	char type_id[20]="lane_free_car";
+	char type_id[20]="1";
 	NumericalID v_id;
 	for(int i=0;i<n_init;i++){
-				
+		
+		sprintf(type_id, "%d", i%8+1);
 		sprintf(veh_name, "%s_plugin_%d", type_id,(i+1));
 		
 		v_id = insert_new_vehicle(veh_name, route_id, type_id, x_val, y_val, vx_val,0);
@@ -41,7 +42,10 @@ void simulation_initialize(){
 		y_val = y_val + y_incr;
 		if(i%virtual_lanes==(virtual_lanes-1)){
 			x_val += x_incr;
-			vx_val += vx_incr;
+			if (vx_val < 35) {
+				vx_val += vx_incr;
+			}
+			
 			y_val = y_incr;
 		}
 
@@ -95,7 +99,7 @@ void simulation_step() {
 	char* detector_name;
 	for (j = 0; j < detectors_size; j++) {
 		detector_name = get_detector_name(detector_ids[j]);
-		//printf("detector:%s count:%d\n", detector_name, detector_values[j]);
+		printf("detector:%s count:%d\n", detector_name, detector_values[j]);
 	}
 
 	//Check the density per road per segment
