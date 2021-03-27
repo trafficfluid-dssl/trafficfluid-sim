@@ -20,7 +20,7 @@
 #pragma once
 #include <config.h>
 #include <unordered_map>
-
+#include <array>
 #include "MSCFModel.h"
 #include <microsim/MSLane.h>
 #include <microsim/MSVehicle.h>
@@ -53,7 +53,7 @@ struct less_than_key
 {
     inline bool operator() (const SUMOVehicle* v1, const SUMOVehicle* v2)
     {
-        return ((MSVehicle*)v1)->getPositionOnLane() < ((MSVehicle*)v2)->getPositionOnLane();
+        return (((MSVehicle*)v1)->getPositionOnLane() - ((MSVehicle*)v1)->getLength()/2) < (((MSVehicle*)v2)->getPositionOnLane() - ((MSVehicle*)v2)->getLength() / 2);
     }
 };
 
@@ -62,6 +62,7 @@ typedef long long int NumericalID;
 typedef struct ArrayMem arrayMemStruct;
 
 
+typedef std::unordered_map<NumericalID, std::array<double, 2>> LastVehicleStatus;
 
 double fRand(double fMin, double fMax);
 
@@ -74,8 +75,9 @@ double fRand(double fMin, double fMax);
 // our LaneFree vehicle contains a pointer to the corresponding SUMO vehicle, while also containing information regarding the lateral speed and the desired (longitudinal) speed.
 class MSLaneFreeVehicle{
 public:
-    static double last_init_pos_y;
-    static double last_v_width;
+    //static double last_init_pos_y; //use the last vehicle status
+    //static double last_v_width;
+    static LastVehicleStatus last_veh_status;
 
     MSLaneFreeVehicle(MSVehicle* veh){
         myveh = veh;
@@ -83,22 +85,40 @@ public:
         // veh->setSpeed(28);
         speed_x = veh->getSpeed();
         speed_x_desired = veh->getMaxSpeed();
-        if(is_lanefree()){
+        if(is_lanefree()){//put new vehicle in an appropriate lateral position (random position, but it does not collide with other vehicles)            
             double road_width = veh->getEdge()->getWidth();
+            NumericalID vedgeid = veh->getEdge()->getNumericalID();
             double v_width = veh->getWidth();
-            double random_init_y_pos;
-            int max_it = 0;            
-            if((v_width+last_v_width)<0.75*road_width){
-                do{
-                    random_init_y_pos = fRand(v_width/2, road_width-v_width/2);
-                    max_it++;
-                }while(abs(random_init_y_pos-last_init_pos_y)<(v_width/2+last_v_width/2) && max_it < MAX_ITERS);
+            double random_init_y_pos = 0;
+            double last_v_width = 0, last_init_pos_y = 0;
+            int max_it = 0;
+            LastVehicleStatus::iterator it_f = last_veh_status.find(vedgeid);
+            if (it_f != last_veh_status.end()) {
+                
+                last_v_width = it_f->second[0];
+                last_init_pos_y = it_f->second[1];
+                if ((v_width + last_v_width) < road_width) { //this can be changed, it should be better if we found the best "opening" for the new vehicle to enter, and put it randomly within that lateral "region"
+                    do {
+                        random_init_y_pos = fRand(v_width / 2, road_width - v_width / 2);
+                        max_it++;
+                    } while (abs(random_init_y_pos - last_init_pos_y) < (v_width / 2 + last_v_width / 2) && max_it < MAX_ITERS);
+                }
+                else {
+                    random_init_y_pos = fRand(v_width / 2, road_width - v_width / 2);
+                }
+                last_init_pos_y = random_init_y_pos;
+                last_v_width = v_width;
+                it_f->second[0] = last_v_width;
+                it_f->second[1] = last_init_pos_y;
             }
-            else{
-                random_init_y_pos = fRand(v_width/2, road_width-v_width/2);
+            else {
+                random_init_y_pos = fRand(v_width / 2, road_width - v_width / 2);
+                std::array<double, 2> last_stat_array { v_width, random_init_y_pos };
+                last_veh_status.insert(std::make_pair(vedgeid, last_stat_array));
             }
-            last_init_pos_y = random_init_y_pos;
-            last_v_width = v_width;
+            
+            
+            
             double pos_y = get_position_y();
             double dist_from_lane = veh->getLateralPositionOnLane();
             double transformation = pos_y - dist_from_lane;
@@ -226,7 +246,7 @@ protected:
 
         
         
-        //check whether we need to change lane
+        //check whether we need to update the current lane
         if ((abs(new_pos_y) > ((myveh->getLane()->getWidth()) / 2))) {
             MSLane* veh_lane = myveh->getLane();
             const MSEdge* veh_edge = myveh->getEdge();

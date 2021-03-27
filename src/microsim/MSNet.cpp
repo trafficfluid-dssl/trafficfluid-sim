@@ -563,6 +563,7 @@ MSNet::simulationStep() {
         const int dist = (int)distance(myStateDumpTimes.begin(), timeIt);
         MSStateHandler::saveState(myStateDumpFiles[dist], myStep);
     }
+
     if (myStateDumpPeriod > 0 && myStep % myStateDumpPeriod == 0) {
         std::string timeStamp = time2string(myStep);
         std::replace(timeStamp.begin(), timeStamp.end(), ':', '-');
@@ -573,12 +574,13 @@ MSNet::simulationStep() {
 #ifdef HAVE_FOX
     MSRoutingEngine::waitForAll();
 #endif
+    
     if (MSGlobals::gCheck4Accidents) {
         myEdges->detectCollisions(myStep, STAGE_EVENTS);
     }
     // check whether the tls programs need to be switched
     myLogics->check2Switch(myStep);
-
+    
     if (MSGlobals::gUseMesoSim) {
         MSGlobals::gMesoNet->simulate(myStep);
         myVehicleControl->removePending();
@@ -598,10 +600,10 @@ MSNet::simulationStep() {
         if (MSGlobals::gCheck4Accidents) {
             myEdges->detectCollisions(myStep, STAGE_MOVEMENTS);
         }
-
+        
         // vehicles may change lanes
         myEdges->changeLanes(myStep);
-
+        
         if (MSGlobals::gCheck4Accidents) {
             myEdges->detectCollisions(myStep, STAGE_LANECHANGE);
         }

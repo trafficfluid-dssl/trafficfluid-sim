@@ -694,10 +694,11 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
     aVehicle->setTentativeLaneAndPosition(this, pos, posLat);
     aVehicle->updateBestLanes(false, this);
     // LFPlugin Begin
-    if(aVehicle->getCarFollowModel().getModelID()==SUMO_TAG_CF_LANEFREE){
-        incorporateVehicle(aVehicle, pos, speed, posLat, find_if(myVehicles.begin(), myVehicles.end(), [&](MSVehicle* const v) {return v->getPositionOnLane() >= pos;}), notification);
-        return true;
-    }
+    //Here we can control how many vehicles enter in the same timestep, for now, we allow 1 vehicle per timestep
+    //if(aVehicle->getCarFollowModel().getModelID()==SUMO_TAG_CF_LANEFREE){
+    //    incorporateVehicle(aVehicle, pos, speed, posLat, find_if(myVehicles.begin(), myVehicles.end(), [&](MSVehicle* const v) {return v->getPositionOnLane() >= pos;}), notification);
+    //    return true;
+    //}
     // LFPlugin End
     const MSCFModel& cfModel = aVehicle->getCarFollowModel();
     const std::vector<MSLane*>& bestLaneConts = aVehicle->getBestLanesContinuation(this);

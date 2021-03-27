@@ -127,6 +127,14 @@ char* (*get_detector_name)(NumericalID detector_id);
 //returns the values of all detectors (number of vehicles for each detector)
 int* (*get_detectors_values)();
 
+//returns the value of a single detector, based on the detector's id
+int (*get_detector_value)(NumericalID detector_id);
+
+//returns the density of vehicles for a given segment region for a given edge id
+int (*get_density_on_segment_region_on_edge)(NumericalID edge_id, double segment_start, double segment_end);
+
+//returns the average speed of vehicles for a given segment region for a given edge id
+double (*get_average_speed_on_segment_region_on_edge)(NumericalID edge_id, double segment_start, double segment_end);
 
 //returns the density of vehicles per segment for a given edge id, and a segment length
 int* (*get_density_per_segment_per_edge)(NumericalID edge_id, double segment_length);

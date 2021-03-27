@@ -656,9 +656,10 @@ MSVehicle::Influencer::getOriginalSpeed() const {
 int
 MSVehicle::Influencer::influenceChangeDecision(const SUMOTime currentTime, const MSEdge& currentEdge, const int currentLaneIndex, int state) {
     // remove leading commands which are no longer valid
-    while (myLaneTimeLine.size() == 1 || (myLaneTimeLine.size() > 1 && currentTime > myLaneTimeLine[1].first)) {
+    while (myLaneTimeLine.size() == 1 || (myLaneTimeLine.size() > 1 && currentTime > myLaneTimeLine[1].first)) {    
         myLaneTimeLine.erase(myLaneTimeLine.begin());
     }
+
     ChangeRequest changeRequest = REQUEST_NONE;
     // do nothing if the time line does not apply for the current time
     if (myLaneTimeLine.size() >= 2 && currentTime >= myLaneTimeLine[0].first) {
@@ -667,7 +668,8 @@ MSVehicle::Influencer::influenceChangeDecision(const SUMOTime currentTime, const
             if (currentLaneIndex > destinationLaneIndex) {
                 changeRequest = REQUEST_RIGHT;
             } else if (currentLaneIndex < destinationLaneIndex) {
-                changeRequest = REQUEST_LEFT;
+                changeRequest = REQUEST_LEFT;  
+                return LCA_LEFT;
             } else {
                 changeRequest = REQUEST_HOLD;
             }
@@ -676,6 +678,7 @@ MSVehicle::Influencer::influenceChangeDecision(const SUMOTime currentTime, const
             state = state | LCA_TRACI;
         }
     }
+    
     // check whether the current reason shall be canceled / overridden
     if ((state & LCA_WANTS_LANECHANGE_OR_STAY) != 0) {
         // flags for the current reason
@@ -3800,12 +3803,11 @@ MSVehicle::executeMove() {
     // Whether the vehicle did move to another lane
     bool moved = false;
     // Reason for a possible emergency stop
-    std::string emergencyReason = " for unknown reasons";
-    processLaneAdvances(passedLanes, moved, emergencyReason);
+    std::string emergencyReason = " for unknown reasons";    
+    processLaneAdvances(passedLanes, moved, emergencyReason);    
 
     updateTimeLoss(vNext);
     myCollisionImmunity = MAX2((SUMOTime) - 1, myCollisionImmunity - DELTA_T);
-
     if (!hasArrived() && !myLane->getEdge().isVaporizing()) {
         if (myState.myPos > myLane->getLength()) {
             WRITE_WARNING("Vehicle '" + getID() + "' performs emergency stop at the end of lane '" + myLane->getID()
@@ -6111,7 +6113,7 @@ MSVehicle::getSpeedWithoutTraciInfluence() const {
 
 
 int
-MSVehicle::influenceChangeDecision(int state) {
+MSVehicle::influenceChangeDecision(int state) {    
     if (hasInfluencer()) {
         state = getInfluencer().influenceChangeDecision(
                     MSNet::getInstance()->getCurrentTimeStep(),

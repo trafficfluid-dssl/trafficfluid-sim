@@ -19,7 +19,7 @@ void simulation_initialize(){
 	srand(get_seed());
 
 	//insert 20 vehicles
-	int n_init = 40;
+	int n_init = 0;
 		
 	double x_incr=25, y_incr=2.5, vx_incr=5;
 	double x_val=x_incr, y_val=y_incr, vx_val=vx_incr;
