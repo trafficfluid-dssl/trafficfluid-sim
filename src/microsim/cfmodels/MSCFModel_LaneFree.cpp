@@ -1478,13 +1478,36 @@ int lf_plugin_get_density_on_segment_region_on_edge(NumericalID edge_id, double 
 int lf_plugin_am_i_on_acceleration_lane(NumericalID veh_id) {
 	MSLaneFreeVehicle* lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(veh_id);
 	if (lfveh == nullptr) {
-		std::cout << "Ego not found!\n";
+		std::cout << "Vehicle not found!\n";
 		return -1;
 	}
 
 	return (int)(lfveh->get_vehicle()->getLane()->isAccelLane());
 }
 
+
+double lf_plugin_get_global_position_x(NumericalID veh_id) {
+	MSLaneFreeVehicle* lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(veh_id);
+	if (lfveh == nullptr) {
+		std::cout << "Vehicle not found!\n";
+		return -1;
+	}
+
+	double global_pos_x = lfveh->get_vehicle()->getPosition().x()-lfveh->get_vehicle()->getLength()/2;
+	return global_pos_x;
+}
+
+
+double lf_plugin_get_global_position_y(NumericalID veh_id) {
+	MSLaneFreeVehicle* lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(veh_id);
+	if (lfveh == nullptr) {
+		std::cout << "Vehicle not found!\n";
+		return -1;
+	}
+
+	double global_pos_y = lfveh->get_vehicle()->getPosition().y();
+	return global_pos_y;
+}
 LaneFreeSimulationPlugin::LaneFreeSimulationPlugin(){
 
 	// assign the function pointers of the API to the corresponding implemented functions
@@ -1534,6 +1557,8 @@ LaneFreeSimulationPlugin::LaneFreeSimulationPlugin(){
 	get_detector_value = &lf_plugin_get_detector_value;
 	get_average_speed_on_segment_region_on_edge = &lf_plugin_get_average_speed_on_segment_region_on_edge;
 	get_density_on_segment_region_on_edge = &lf_plugin_get_density_on_segment_region_on_edge;
+	get_global_position_x = &lf_plugin_get_global_position_x;
+	get_global_position_y = &lf_plugin_get_global_position_y;
 	srand(lf_plugin_get_seed());
 	max_vehicle_length = 0;
 	

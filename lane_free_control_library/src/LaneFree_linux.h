@@ -151,6 +151,12 @@ NumericalID(*insert_new_vehicle)(char* veh_name, char* route_id, char* type_id, 
 //returns 1 if the vehicle is currently on an acceleration lane and needs to merge
 int (*am_i_on_acceleration_lane)(NumericalID veh_id);
 
+//returns the global x position of the vehicle
+double (*get_global_position_x)(NumericalID veh_id);
+
+//returns the global y position of the vehicle
+double (*get_global_position_y)(NumericalID veh_id);
+
 //is called once before the first time-step
 void simulation_initialize();
 

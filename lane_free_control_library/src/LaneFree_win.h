@@ -158,6 +158,11 @@ libLaneFreePlugin_EXPORT NumericalID (*insert_new_vehicle)(char* veh_name, char*
 //returns 1 if the vehicle is currently on an acceleration lane and needs to merge
 libLaneFreePlugin_EXPORT int (*am_i_on_acceleration_lane)(NumericalID veh_id);
 
+//returns the global x position of the vehicle
+libLaneFreePlugin_EXPORT double (*get_global_position_x)(NumericalID veh_id);
+
+//returns the global y position of the vehicle
+libLaneFreePlugin_EXPORT double (*get_global_position_y)(NumericalID veh_id);
 
 //is called once before the first time-step
 libLaneFreePlugin_EXPORT void simulation_initialize();
