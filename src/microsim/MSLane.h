@@ -163,10 +163,12 @@ public:
         bool myDownstream;
         /// @brief index delta
         int myDirection;
-
+                
     };
 
-
+    // LFPlugin Begin
+    int enteredVehsCurTimeStep;
+    // LFPlugin End
 public:
     /** @enum ChangeRequest
      * @brief Requests set via TraCI

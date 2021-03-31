@@ -672,6 +672,52 @@ MSLane::checkFailure(const MSVehicle* aVehicle, double& speed, double& dist, con
 }
 
 
+
+//for each pair that corresponds to a lateral region [a,b] it should be a<b
+void update_available_space(std::vector<std::pair<double, double>>* available_lat_space, std::pair<double, double> restricted_space) {
+    
+
+    int i=0;
+
+    int size_v = available_lat_space->size();
+    std::pair<double, double> element;
+
+    double a_low, a_high, b_low=restricted_space.first, b_high=restricted_space.second;
+    while (i < size_v) {
+
+        element = available_lat_space->at(i);
+
+        a_low = element.first;
+        a_high = element.second;
+        
+        if (b_high<a_low || b_low>a_high) { //restricted space is out of this region, so it does not affect it
+            i++;            
+        }
+        else if (b_low <= a_low && a_high <= b_high) { //restricted space completely removes this region
+            available_lat_space->erase(available_lat_space->begin() + i);
+            size_v--;
+        }
+        else if (a_low <= b_low && a_high <= b_high) { //restricts the region from [a_low,a_high] to [a_low,b_low]            
+            available_lat_space->at(i).second = b_low;
+            i++;
+            
+            
+        }
+        else if (a_high <= a_low && b_high <= a_high) { //restricts the region from [a_low,a_high] to [b_high,a_high]            
+            available_lat_space->at(i).first = b_high;
+            i++;
+        }
+        else if (a_low <= b_low && b_high <= a_high) { //restricts the region from [a_low,a_high] to [a_low,b_low] and [b_high,a_high]
+            available_lat_space->at(i).second = b_low;
+            available_lat_space->push_back(std::make_pair(b_high, a_high));
+            i++;
+        }
+        
+    }
+
+}
+
+
 bool
 MSLane::isInsertionSuccess(MSVehicle* aVehicle,
                            double speed, double pos, double posLat, bool patchSpeed,
@@ -694,12 +740,65 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
     aVehicle->setTentativeLaneAndPosition(this, pos, posLat);
     aVehicle->updateBestLanes(false, this);
     // LFPlugin Begin
+    std::vector<std::pair<double, double>> available_lat_space;
+    double vwidth = aVehicle->getWidth();
+    available_lat_space.push_back(std::make_pair(vwidth/2,getWidth()-vwidth/2));
+
+    double desired_tau = aVehicle->getCarFollowModel().getHeadwayTime(); //Our Lane-Free controller acts as a car follow model
+    double tau,s,v=aVehicle->getSpeed();
+    double myfrontpos = aVehicle->getPositionOnLane();
+    double y, other_vwidth;
+    std::pair<double, double> space_restriction;
+    bool check_tau;
+    if (v == 0) {
+        //just check if there is available space
+    }
+
+    for (VehCont::iterator veh = myVehicles.begin(); veh != myVehicles.end(); ++veh) {
+        s = (*veh)->getPositionOnLane() - (*veh)->getLength() - myfrontpos;
+        if (s <= 0 || v == 0) {
+            check_tau = false;
+        }
+        else {
+            check_tau = true;
+            tau = s / v;
+        }
+        
+
+        if (check_tau && desired_tau < tau) {
+            //spawn randomly within the available space  
+        }
+        else {
+            other_vwidth = (*veh)->getWidth();
+            y = getWidth()/2 + (*veh)->getLateralPositionOnLane();
+            space_restriction.first = y - other_vwidth / 2 - vwidth / 2;
+            space_restriction.second = y + other_vwidth / 2 + vwidth / 2;
+
+            update_available_space(&available_lat_space, space_restriction);
+            
+
+            if (available_lat_space.empty()) {
+                return false;
+            }
+
+        }
+    }
+
+    //if we have not yet spawned, but have available space
+    //spawn randomly within the available space
+    
     //Here we can control how many vehicles enter in the same timestep, for now, we allow 1 vehicle per timestep
-    //if(aVehicle->getCarFollowModel().getModelID()==SUMO_TAG_CF_LANEFREE){
+    //for (VehCont::iterator veh = myVehicles.begin(); veh != myVehicles.end(); ++veh) {
+    //    std::cout<<(*veh)->getID()<<" with pos:("<< (*veh)->getPositionOnLane() <<","<< (*veh)->getLateralPositionOnLane()<<"),";
+    //}
+    //std::cout << "\n";
+    //if(aVehicle->getCarFollowModel().getModelID()==SUMO_TAG_CF_LANEFREE && enteredVehsCurTimeStep<1){
     //    incorporateVehicle(aVehicle, pos, speed, posLat, find_if(myVehicles.begin(), myVehicles.end(), [&](MSVehicle* const v) {return v->getPositionOnLane() >= pos;}), notification);
+    //    enteredVehsCurTimeStep++;
     //    return true;
     //}
     // LFPlugin End
+    //return false;
     const MSCFModel& cfModel = aVehicle->getCarFollowModel();
     const std::vector<MSLane*>& bestLaneConts = aVehicle->getBestLanesContinuation(this);
     std::vector<MSLane*>::const_iterator ri = bestLaneConts.begin();
@@ -1220,6 +1319,9 @@ MSLane::getFirstVehicleInformation(const MSVehicle* ego, double latOffset, bool 
 // ------  ------
 void
 MSLane::planMovements(SUMOTime t) {
+    //LFPlugin Begin
+    enteredVehsCurTimeStep = 0;
+    //LFPlugin End
     assert(myVehicles.size() != 0);
     double cumulatedVehLength = 0.;
     MSLeaderInfo leaders(this);

@@ -80,6 +80,9 @@ public:
     /// @brief Destructor
     virtual ~MSVehicleControl();
 
+    // LFPlugin Begin
+    //int getNumberOfVehicleTypes();
+    // LFPlugin End
 
     /// @name Vehicle creation
     /// @{

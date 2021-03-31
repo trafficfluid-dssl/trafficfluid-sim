@@ -58,6 +58,8 @@ MSInductLoop::MSInductLoop(const std::string& id, MSLane* const lane,
     assert(myPosition >= 0 && myPosition <= myLane->getLength());
     reset();
     // LFPlugin Begin
+    //int num_types = MSNet::getInstance()->getVehicleControl().getNumberOfVehicleTypes();
+    //std::cout << "size:" << num_types << "\n";
     myTotalEnteredVehicleNumber = 0;
     // LFPlugin End
 }
@@ -158,7 +160,9 @@ MSInductLoop::notifyMove(SUMOTrafficObject& veh, double oldPos,
 
 bool
 MSInductLoop::notifyLeave(SUMOTrafficObject& veh, double /* lastPos */, MSMoveReminder::Notification reason, const MSLane* /* enteredLane */) {
-    std::cout << "Veh " << veh.getID() << " left\n";
+    // LFPlugin Begin
+    //std::cout << "Veh " << veh.getID() << " left\n";
+    // LFPlugin End    
     if (reason != MSMoveReminder::NOTIFICATION_JUNCTION) {
 #ifdef HAVE_FOX
         FXConditionalLock lock(myNotificationMutex, myNeedLock);

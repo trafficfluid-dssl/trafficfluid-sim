@@ -123,6 +123,7 @@ public:
             double dist_from_lane = veh->getLateralPositionOnLane();
             double transformation = pos_y - dist_from_lane;
             double new_dist_from_lane = random_init_y_pos - transformation;
+            //std::cout << "new veh " << veh->getID() << " on lat pos " << new_dist_from_lane << "\n";
             veh->setLateralPositionOnLane(new_dist_from_lane);    
         }
         
@@ -130,6 +131,8 @@ public:
         accel_y = 0;
         accel_x = 0;
     }
+
+    
 
     void set_position_x(double new_pos_x){
         myveh->setPositionOnLane(new_pos_x+myveh->getLength()/2);

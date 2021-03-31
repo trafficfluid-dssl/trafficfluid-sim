@@ -367,6 +367,11 @@ MSVehicleControl::checkVType(const std::string& id) {
 
 bool
 MSVehicleControl::addVType(MSVehicleType* vehType) {
+    // LFPlugin Begin
+    //std::cout << "added:" << vehType->getID() << " " << vehType->getNumericalID() << "\n";
+    // LFPlugin End   
+    
+    
     if (checkVType(vehType->getID())) {
         myVTypeDict[vehType->getID()] = vehType;
         return true;
@@ -435,6 +440,17 @@ MSVehicleControl::getVType(const std::string& id, std::mt19937* rng) {
     return it->second;
 }
 
+// LFPlugin Begin
+/*
+int 
+MSVehicleControl::getNumberOfVehicleTypes() {
+    for (VTypeDictType::const_iterator i = myVTypeDict.begin(); i != myVTypeDict.end(); ++i) {
+        std::cout << ((*i).second)->getID() << "\n";
+    }
+    return myVTypeDict.size();
+}
+*/
+// LFPlugin End
 
 void
 MSVehicleControl::insertVTypeIDs(std::vector<std::string>& into) const {

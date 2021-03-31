@@ -1559,6 +1559,7 @@ LaneFreeSimulationPlugin::LaneFreeSimulationPlugin(){
 	get_density_on_segment_region_on_edge = &lf_plugin_get_density_on_segment_region_on_edge;
 	get_global_position_x = &lf_plugin_get_global_position_x;
 	get_global_position_y = &lf_plugin_get_global_position_y;
+	get_edge_of_vehicle = &lf_plugin_get_edge_of_vehicle;
 	srand(lf_plugin_get_seed());
 	max_vehicle_length = 0;
 	
@@ -1870,8 +1871,9 @@ LaneFreeSimulationPlugin::find_edge(NumericalID veh_id){
 
 	for(VehicleMapEdges::iterator it = allVehiclesMapEdges.begin();it!=allVehiclesMapEdges.end();it++){
 		vm = it->second;
+		
 		it_v =  vm->find(veh_id);
-		if(it_v!=vm->end()){
+		if(it_v!=vm->end()){			
 			return it->first;
 		}
 
