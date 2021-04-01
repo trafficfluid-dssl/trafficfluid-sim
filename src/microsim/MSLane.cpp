@@ -712,11 +712,35 @@ void update_available_space(std::vector<std::pair<double, double>>* available_la
             available_lat_space->push_back(std::make_pair(b_high, a_high));
             i++;
         }
+        else {
+            printf("error, we not handle this case, avail region:[%f,%f], restriction:[%f,%f]\n", a_low, a_high, b_low, b_high);
+        }
         
     }
 
 }
 
+//random value within [fMin, fMax] (uniform distribution)
+double dRand(double fMin, double fMax)
+{
+    double f = (double)rand() / RAND_MAX;
+    return fMin + f * (fMax - fMin);
+}
+
+//random integer value within [iMin, iMax] (check whether this is actually uniform)
+int iRand(int iMin, int iMax) {
+    return rand() % (iMax - iMin) + iMin;
+}
+//select an appropriate lateral position to spawn
+double random_lateral_position_available_region(std::vector<std::pair<double, double>>* available_lat_space) {
+    
+    //first select randomly one of the available regions
+    int selected_region = iRand(0, available_lat_space->size());
+    double low = available_lat_space->at(selected_region).first;
+    double high = available_lat_space->at(selected_region).second;
+
+    return dRand(low, high);
+}
 
 bool
 MSLane::isInsertionSuccess(MSVehicle* aVehicle,
@@ -740,9 +764,11 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
     aVehicle->setTentativeLaneAndPosition(this, pos, posLat);
     aVehicle->updateBestLanes(false, this);
     // LFPlugin Begin
+    /*
     std::vector<std::pair<double, double>> available_lat_space;
     double vwidth = aVehicle->getWidth();
-    available_lat_space.push_back(std::make_pair(vwidth/2,getWidth()-vwidth/2));
+    double road_low = vwidth / 2, road_high = getWidth() - vwidth / 2;
+    available_lat_space.push_back(std::make_pair(road_low, road_high));
 
     double desired_tau = aVehicle->getCarFollowModel().getHeadwayTime(); //Our Lane-Free controller acts as a car follow model
     double tau,s,v=aVehicle->getSpeed();
@@ -750,10 +776,8 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
     double y, other_vwidth;
     std::pair<double, double> space_restriction;
     bool check_tau;
-    if (v == 0) {
-        //just check if there is available space
-    }
-
+    int selected_region_index;
+    double random_dist_from_lane;
     for (VehCont::iterator veh = myVehicles.begin(); veh != myVehicles.end(); ++veh) {
         s = (*veh)->getPositionOnLane() - (*veh)->getLength() - myfrontpos;
         if (s <= 0 || v == 0) {
@@ -766,16 +790,24 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
         
 
         if (check_tau && desired_tau < tau) {
-            //spawn randomly within the available space  
+            //spawn randomly within the available space 
+            y = random_lateral_position_available_region(&available_lat_space);
+            double dist_from_lane = veh->getLateralPositionOnLane();
+            double transformation = pos_y - dist_from_lane;
+            random_dist_from_lane = random_init_y_pos - transformation;
+            
         }
         else {
             other_vwidth = (*veh)->getWidth();
             y = getWidth()/2 + (*veh)->getLateralPositionOnLane();
-            space_restriction.first = y - other_vwidth / 2 - vwidth / 2;
-            space_restriction.second = y + other_vwidth / 2 + vwidth / 2;
-
-            update_available_space(&available_lat_space, space_restriction);
-            
+            space_restriction.first = std::max(y - other_vwidth / 2 - vwidth / 2, road_low);
+            space_restriction.second = std::min(y + other_vwidth / 2 + vwidth / 2, road_high);
+            if (space_restriction.second <= road_low || space_restriction.first >= road_high) {
+                printf("this will be excluded!\n");
+            }
+            else {
+                update_available_space(&available_lat_space, space_restriction);
+            }
 
             if (available_lat_space.empty()) {
                 return false;
@@ -783,7 +815,7 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
 
         }
     }
-
+    */
     //if we have not yet spawned, but have available space
     //spawn randomly within the available space
     
@@ -1929,6 +1961,10 @@ MSLane::executeMovements(const SUMOTime t) {
         ++i;
         i = VehCont::reverse_iterator(myVehicles.erase(i.base()));
     }
+
+    //LFPlugin Begin 
+    //remove following code, as we do not want teleports
+    /*
     if (myVehicles.size() > 0) {
         if (MSGlobals::gTimeToGridlock > 0 || MSGlobals::gTimeToGridlockHighways > 0) {
             MSVehicle* veh = myVehicles.back(); // the vehice at the front of the queue
@@ -1960,6 +1996,8 @@ MSLane::executeMovements(const SUMOTime t) {
             } // else look for a (waiting) vehicle that isn't stopped?
         }
     }
+    */
+    //LFPlugin End
     if (MSGlobals::gLateralResolution > 0) {
         // trigger sorting of vehicles as their order may have changed
         MSNet::getInstance()->getEdgeControl().needsVehicleIntegration(this);

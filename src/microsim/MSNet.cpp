@@ -629,7 +629,11 @@ MSNet::simulationStep() {
         //myEdges->patchActiveLanes(); // @note required to detect collisions on lanes that were empty before insertion. wasteful?
         myEdges->detectCollisions(myStep, STAGE_INSERTIONS);
     }
-    MSVehicleTransfer::getInstance()->checkInsertions(myStep);
+
+    // LFPlugin Begin
+    //remove following code, as we do not want teleports
+    //MSVehicleTransfer::getInstance()->checkInsertions(myStep);
+    // LFPlugin End
 
     // execute endOfTimestepEvents
     myEndOfTimestepEvents->execute(myStep);

@@ -85,6 +85,8 @@ public:
         // veh->setSpeed(28);
         speed_x = veh->getSpeed();
         speed_x_desired = veh->getMaxSpeed();
+
+        
         if(is_lanefree()){//put new vehicle in an appropriate lateral position (random position, but it does not collide with other vehicles)            
             double road_width = veh->getEdge()->getWidth();
             NumericalID vedgeid = veh->getEdge()->getNumericalID();
