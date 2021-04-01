@@ -166,9 +166,7 @@ public:
                 
     };
 
-    // LFPlugin Begin
-    int enteredVehsCurTimeStep;
-    // LFPlugin End
+    
 public:
     /** @enum ChangeRequest
      * @brief Requests set via TraCI

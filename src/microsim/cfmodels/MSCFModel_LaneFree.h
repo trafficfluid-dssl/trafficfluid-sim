@@ -86,7 +86,7 @@ public:
         speed_x = veh->getSpeed();
         speed_x_desired = veh->getMaxSpeed();
 
-        
+        /*
         if(is_lanefree()){//put new vehicle in an appropriate lateral position (random position, but it does not collide with other vehicles)            
             double road_width = veh->getEdge()->getWidth();
             NumericalID vedgeid = veh->getEdge()->getNumericalID();
@@ -128,7 +128,7 @@ public:
             //std::cout << "new veh " << veh->getID() << " on lat pos " << new_dist_from_lane << "\n";
             veh->setLateralPositionOnLane(new_dist_from_lane);    
         }
-        
+        */
         ring_road = false;
         accel_y = 0;
         accel_x = 0;
