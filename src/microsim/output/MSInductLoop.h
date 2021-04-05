@@ -31,6 +31,9 @@
 #include <microsim/MSMoveReminder.h>
 #include <microsim/output/MSDetectorFileOutput.h>
 
+// LFPlugin Begin
+#include <unordered_map>
+// LFPlugin End
 
 // ===========================================================================
 // class declarations
@@ -297,6 +300,16 @@ public:
         // TODO consider reseting the value
         return myTotalEnteredVehicleNumber;
     }
+
+    int getVehiclesCountForType(std::string veh_type) {
+        VehiclesPerType::iterator it = myTotalEnteredVehicleNumberPerType.find(veh_type);
+        if (it == myTotalEnteredVehicleNumberPerType.end()) {
+            return 0;
+        }
+        else {
+            return it->second;
+        }
+    }
     // LFPlugin End
 protected:
     /// @name Function for summing up values
@@ -329,6 +342,8 @@ protected:
 
     // LFPlugin Begin
     int myTotalEnteredVehicleNumber;
+    typedef std::unordered_map<std::string, int> VehiclesPerType;
+    VehiclesPerType myTotalEnteredVehicleNumberPerType;
     // LFPlugin End
 
     /// @brief Type of myVehicleDataCont.

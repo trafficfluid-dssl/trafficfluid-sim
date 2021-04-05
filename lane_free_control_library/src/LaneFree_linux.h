@@ -31,6 +31,8 @@ NumericalID(*get_all_edges_size)();
 //returns the id of the edge for a given vehicle, based on the vehicle's id
 NumericalID(*get_edge_of_vehicle)(NumericalID veh_id);
 
+//returns the name of the edge
+char* (*get_edge_name)(NumericalID edge_id);
 
 //returns all ids in a given edge, based on the edge's id, and ordered according to their longitudinal position
 NumericalID* (*get_all_ids_in_edge)(NumericalID edge_id);
@@ -130,14 +132,24 @@ int* (*get_detectors_values)();
 //returns the value of a single detector, based on the detector's id
 int (*get_detector_value)(NumericalID detector_id);
 
+//returns the value that corresponds to the specified type of a single detector, based on the detector's id
+int (*get_detector_value_for_type)(NumericalID detector_id, char* veh_type);
+
 //returns the density of vehicles for a given segment region for a given edge id
 int (*get_density_on_segment_region_on_edge)(NumericalID edge_id, double segment_start, double segment_end);
+
+//returns the density of vehicles for a given segment region for a given edge id and for a given type of vehicles
+int (*get_density_on_segment_region_on_edge_for_type)(NumericalID edge_id, double segment_start, double segment_end, char* veh_type);
 
 //returns the average speed of vehicles for a given segment region for a given edge id
 double (*get_average_speed_on_segment_region_on_edge)(NumericalID edge_id, double segment_start, double segment_end);
 
+//returns the average speed of vehicles for a given segment region for a given edge id and for a given type of vehicles
+double (*get_average_speed_on_segment_region_on_edge_for_type)(NumericalID edge_id, double segment_start, double segment_end, char* veh_type);
+
 //returns the density of vehicles per segment for a given edge id, and a segment length
 int* (*get_density_per_segment_per_edge)(NumericalID edge_id, double segment_length);
+
 //returns the size of the array provided above
 int (*get_density_per_segment_per_edge_size)(NumericalID edge_id, double segment_length);
 

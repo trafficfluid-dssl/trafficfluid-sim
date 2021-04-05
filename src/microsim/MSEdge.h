@@ -173,6 +173,10 @@ public:
     /// @brief return vehicles on this edges lanes or segments
     std::vector<const SUMOVehicle*> getVehicles() const;
 
+    // LFPlugin Begin
+    std::vector<const SUMOVehicle*> getVehiclesforType(std::string veh_type) const;
+    // LFPlugin End
+
     double getBruttoOccupancy() const;
 
     /// @brief return flow based on meanSpead @note: may produced incorrect results when jammed

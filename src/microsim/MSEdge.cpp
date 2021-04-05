@@ -1197,6 +1197,23 @@ MSEdge::getVehicles() const {
     return result;
 }
 
+// LFPlugin Begin
+std::vector<const SUMOVehicle*>
+MSEdge::getVehiclesforType(std::string veh_type) const {
+    std::vector<const SUMOVehicle*> result;
+    for (MSLane* lane : getLanes()) {
+        for (auto veh : lane->getVehiclesSecure()) {
+            if (veh->getVehicleType().getID() == veh_type) {
+                result.push_back(veh);
+            }
+            
+        }
+        lane->releaseVehicles();
+    }
+    
+    return result;
+}
+// LFPlugin End
 
 int
 MSEdge::getVehicleNumber() const {

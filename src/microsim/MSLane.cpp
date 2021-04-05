@@ -784,10 +784,11 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
     //std::cout << "\n";
     if(aVehicle->getCarFollowModel().getModelID()==SUMO_TAG_CF_LANEFREE){
         std::vector<std::pair<double, double>> available_lat_space;
+        std::vector<std::pair<double, double>> available_lat_space_tmp;
         double vwidth = aVehicle->getWidth();
         double road_low = vwidth / 2, road_high = getWidth() - vwidth / 2;
         available_lat_space.push_back(std::make_pair(road_low, road_high));
-        double lat_distance = 0.5;
+        double lat_distance = aVehicle->getVehicleType().getMinGapLat();
         double desired_tau = aVehicle->getCarFollowModel().getHeadwayTime(); //Our Lane-Free controller acts as a car follow model
         
         double tau, s, v = speed;
@@ -797,6 +798,7 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
         bool check_tau;
         int selected_region_index;
         double y_lane;
+        
         for (VehCont::iterator veh = myVehicles.begin(); veh != myVehicles.end(); ++veh) {
             s = (*veh)->getPositionOnLane() - (*veh)->getLength() - myfrontpos;
             if (s <= 0 || v == 0) {
@@ -805,11 +807,13 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
             else {
                 check_tau = true;                
                 tau = s / v;
+                
             }
             //printf("%s to %s s:%f, v:%f\n",aVehicle->getID(),(*veh)->getID(), s, v);
 
             if (check_tau && desired_tau < tau) {
                 //do not need to see further
+                speed = (*veh)->getSpeed();
                 break;
 
             }
@@ -822,6 +826,7 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
                     printf("this will be excluded!\n");
                 }
                 else {
+                    
                     update_available_space(&available_lat_space, space_restriction);
                 }
 
@@ -829,6 +834,8 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
                     
                     //this means that there is no available space to enter
                     return false;
+                    
+                    
                 }
 
             }

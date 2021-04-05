@@ -216,10 +216,7 @@ MSInsertionControl::determineCandidates(SUMOTime time) {
             pars->repetitionsDone++;
             // try to build the vehicle
             if (vehControl.getVehicle(newPars->id) == nullptr) {
-                const MSRoute* const route = MSRoute::dictionary(pars->routeid);
-                // LFPlugin Begin 
-                // comment here we need to randomly select a vehicle type according to a distribution
-                // LFPlugin End
+                const MSRoute* const route = MSRoute::dictionary(pars->routeid);                                
                 MSVehicleType* const vtype = vehControl.getVType(pars->vtypeid, MSRouteHandler::getParsingRNG());
                 SUMOVehicle* const vehicle = vehControl.buildVehicle(newPars, route, vtype, !MSGlobals::gCheckRoutes);
                 int quota = vehControl.getQuota();

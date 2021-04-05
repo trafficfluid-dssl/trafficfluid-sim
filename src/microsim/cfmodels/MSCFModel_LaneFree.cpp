@@ -1288,6 +1288,27 @@ int lf_plugin_get_detector_value(NumericalID detector_id) {
 
 }
 
+int lf_plugin_get_detector_value_for_type(NumericalID detector_id, char* veh_type) {
+	std::string veh_type_str(veh_type);
+	MSDetectorControl* detectorControl = &MSNet::getInstance()->getDetectorControl();
+	int count;
+	std::vector<int> values;
+	int c_i = 0;
+	int c_id = (int)detector_id;
+	for (SumoXMLTag i : detectorControl->getAvailableTypes()) {
+		// std::cout<<i<<"\n";
+		for (auto j : detectorControl->getTypedDetectors(i)) {
+			if (c_i == c_id) {
+				return ((MSInductLoop*)j.second)->getVehiclesCountForType(veh_type_str);
+			}
+			c_i++;
+		}
+	}
+	printf("Error, detector not found!\n");
+	return -1;
+
+}
+
 int* lf_plugin_get_density_per_segment_per_edge(NumericalID edge_id, double segment_length){
 
 	MSEdgeVector edges_v = MSNet::getInstance()->getEdgeControl().getEdges();
@@ -1486,6 +1507,122 @@ int lf_plugin_am_i_on_acceleration_lane(NumericalID veh_id) {
 }
 
 
+double lf_plugin_get_average_speed_on_segment_region_on_edge_for_type(NumericalID edge_id, double segment_start, double segment_end, char* veh_type) {
+	std::string veh_type_str(veh_type);
+	if (segment_start > segment_end) {
+		printf("Segment start point should always be before the segment end point!\n");
+		return -1;
+	}
+
+	MSEdgeVector edges_v = MSNet::getInstance()->getEdgeControl().getEdges();
+	// NumericalID edges_size = edges_v.size();
+
+	int i, n_v;
+	std::vector<const SUMOVehicle*> vehs_in_edge;
+	MSVehicle* veh;
+
+
+	int density = 0;
+	double sum_speed = 0;
+
+	double x_v;
+	double edge_length;
+	for (MSEdge* edge : edges_v) {
+		if (edge_id != edge->getNumericalID()) {
+			continue;
+		}
+		edge_length = edge->getLength();
+		if (segment_end > edge_length) {
+			printf("Segment values from %f to %f are not within the selected road!\n", segment_start, segment_end);
+			return -1;
+		}
+		vehs_in_edge = edge->getVehiclesforType(veh_type_str);
+		n_v = vehs_in_edge.size();
+		if (n_v == 0) {
+			//std::cout<<"Edge with id "<< edge_id << " is empty!\n";
+			return 0;
+		}
+
+
+		//TODO: we should probably find the starting vehicle here with binary search, since vehicles are ordered
+		for (i = 0; i < n_v; i++) {
+			veh = (MSVehicle*)vehs_in_edge[i];
+			x_v = veh->getPositionOnLane();
+			if (x_v >= segment_start && x_v < segment_end) {
+				density++;
+				sum_speed += lf_plugin_get_speed_x(veh->getNumericalID());
+			}
+		}
+
+		if (density > 0) {
+			return sum_speed / density;
+		}
+		else {
+			//printf("Selected region is empty!\n");
+			return 0;
+		}
+
+	}
+	std::cout << "Edge with id " << edge_id << " not found!\n";
+	return -1;
+}
+
+
+int lf_plugin_get_density_on_segment_region_on_edge_for_type(NumericalID edge_id, double segment_start, double segment_end, char* veh_type) {
+	std::string veh_type_str(veh_type);
+	if (segment_start > segment_end) {
+		printf("Segment start point should always be before the segment end point!\n");
+		return -1;
+	}
+
+	MSEdgeVector edges_v = MSNet::getInstance()->getEdgeControl().getEdges();
+	// NumericalID edges_size = edges_v.size();
+
+	int i, n_v;
+	std::vector<const SUMOVehicle*> vehs_in_edge;
+	MSVehicle* veh;
+
+
+	int density = 0;
+
+	double x_v;
+	double edge_length;
+	for (MSEdge* edge : edges_v) {
+		if (edge_id != edge->getNumericalID()) {
+			continue;
+		}
+		//std::cout << "Edge:" << edge->getID() << "\n";
+		edge_length = edge->getLength();
+		if (segment_end > edge_length) {
+			printf("Segment values from %f to %f are not within the selected road!\n", segment_start, segment_end);
+			return -1;
+		}
+		vehs_in_edge = edge->getVehiclesforType(veh_type_str);
+		n_v = vehs_in_edge.size();
+		if (n_v == 0) {
+			//std::cout<<"Edge with id "<< edge_id << " is empty!\n";
+			return 0;
+		}
+
+
+		//we should probably find the vehicle here with binary search, since vehicles are ordered
+		for (i = 0; i < n_v; i++) {
+			veh = (MSVehicle*)vehs_in_edge[i];
+			x_v = veh->getPositionOnLane();
+			if (x_v >= segment_start && x_v < segment_end) {
+				density++;
+			}
+		}
+		//std::cout << "Success!\n";
+		return density;
+	}
+	std::cout << "Edge with id " << edge_id << " not found!\n";
+	return -1;
+}
+
+
+
+
 double lf_plugin_get_global_position_x(NumericalID veh_id) {
 	MSLaneFreeVehicle* lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(veh_id);
 	if (lfveh == nullptr) {
@@ -1508,6 +1645,9 @@ double lf_plugin_get_global_position_y(NumericalID veh_id) {
 	double global_pos_y = lfveh->get_vehicle()->getPosition().y();
 	return global_pos_y;
 }
+
+
+
 LaneFreeSimulationPlugin::LaneFreeSimulationPlugin(){
 
 	// assign the function pointers of the API to the corresponding implemented functions
@@ -1555,11 +1695,15 @@ LaneFreeSimulationPlugin::LaneFreeSimulationPlugin(){
 	get_edge_length = &lf_plugin_get_edge_length;
 	get_edge_width = &lf_plugin_get_edge_width;
 	get_detector_value = &lf_plugin_get_detector_value;
+	get_detector_value_for_type = &lf_plugin_get_detector_value_for_type;
 	get_average_speed_on_segment_region_on_edge = &lf_plugin_get_average_speed_on_segment_region_on_edge;
 	get_density_on_segment_region_on_edge = &lf_plugin_get_density_on_segment_region_on_edge;
+	get_density_on_segment_region_on_edge_for_type = &lf_plugin_get_density_on_segment_region_on_edge_for_type;
+	get_average_speed_on_segment_region_on_edge_for_type = &lf_plugin_get_average_speed_on_segment_region_on_edge_for_type;
 	get_global_position_x = &lf_plugin_get_global_position_x;
 	get_global_position_y = &lf_plugin_get_global_position_y;
 	get_edge_of_vehicle = &lf_plugin_get_edge_of_vehicle;
+	get_edge_name = &lf_plugin_get_edge_name;
 	srand(lf_plugin_get_seed());
 	max_vehicle_length = 0;
 	

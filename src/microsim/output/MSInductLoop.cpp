@@ -60,6 +60,10 @@ MSInductLoop::MSInductLoop(const std::string& id, MSLane* const lane,
     // LFPlugin Begin
     //int num_types = MSNet::getInstance()->getVehicleControl().getNumberOfVehicleTypes();
     //std::cout << "size:" << num_types << "\n";
+
+    //create a map
+    //myTotalEnteredVehicleNumberPerCategory = new std::unordered_map<std::string, size_t>();
+
     myTotalEnteredVehicleNumber = 0;
     // LFPlugin End
 }
@@ -98,6 +102,8 @@ MSInductLoop::notifyEnter(SUMOTrafficObject& veh, Notification reason, const MSL
 #endif
             myVehiclesOnDet[&veh] = SIMTIME;
             myEnteredVehicleNumber++;
+
+
             
         }
     }
@@ -123,6 +129,17 @@ MSInductLoop::notifyMove(SUMOTrafficObject& veh, double oldPos,
         myEnteredVehicleNumber++;
         // LFPlugin Begin        
         myTotalEnteredVehicleNumber++;
+        //update the proper category. If there is no such category, create it
+        std::string veh_type = veh.getVehicleType().getID();
+        VehiclesPerType::iterator it = myTotalEnteredVehicleNumberPerType.find(veh_type);
+
+        if (it == myTotalEnteredVehicleNumberPerType.end()) {
+            //type not found, we need to add it
+            myTotalEnteredVehicleNumberPerType.insert(std::make_pair(veh_type, 1));
+        }
+        else {
+            it->second = it->second + 1;
+        }
         // LFPlugin End
     }
     double oldBackPos = oldPos - veh.getVehicleType().getLength();
