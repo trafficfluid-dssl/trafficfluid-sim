@@ -84,8 +84,7 @@ public:
         speed_y = 0;
         // veh->setSpeed(28);
         speed_x = veh->getSpeed();
-        speed_x_desired = veh->getMaxSpeed();
-
+        speed_x_desired = veh->getDesiredSpeed();
         /*
         if(is_lanefree()){//put new vehicle in an appropriate lateral position (random position, but it does not collide with other vehicles)            
             double road_width = veh->getEdge()->getWidth();
@@ -170,6 +169,7 @@ public:
 
     void set_desired_speed(double new_desired_speed){
         speed_x_desired = new_desired_speed;
+        myveh->setDesiredSpeed(new_desired_speed);
     }
 
     
@@ -439,6 +439,10 @@ public:
     //void append_message_step(std::string msg);
 
     SortedVehiclesVector* get_sorted_vehicles_in_edge(NumericalID edge_id);
+
+    double get_max_vehicle_length(){
+        return max_vehicle_length;
+    }
     
 protected:
     NumericalID find_stored_edge(MSVehicle* veh);

@@ -77,6 +77,8 @@ class MSSimpleDriverState;
 class MSVehicle : public MSBaseVehicle {
 public:
 
+
+
     /// the lane changer sets myLastLaneChangeOffset
     friend class MSLaneChanger;
     friend class MSLaneChangerSublane;
@@ -129,6 +131,7 @@ public:
         double lastCoveredDist() const {
             return myLastCoveredDist;
         }
+
 
 
     private:
@@ -492,6 +495,16 @@ public:
     void setSpeed(double newspeed) {
         myState.setSpeed(newspeed);
     }
+
+    // LFPlugin Begin
+    double getDesiredSpeed() const {
+        return myDesiredSpeed;
+    }
+    void setDesiredSpeed(double newdspeed) {
+        myDesiredSpeed = newdspeed;
+    }
+    // LFPlugin End
+
 
     /** @brief Returns the vehicle's speed before the previous time step
      * @return The vehicle's speed before the previous time step
@@ -1934,6 +1947,11 @@ protected:
     SUMOTime myJunctionEntryTime;
     SUMOTime myJunctionEntryTimeNeverYield;
     SUMOTime myJunctionConflictEntryTime;
+
+
+    // LFPlugin Begin
+    double myDesiredSpeed;
+    // LFPlugin End
 
 protected:
 

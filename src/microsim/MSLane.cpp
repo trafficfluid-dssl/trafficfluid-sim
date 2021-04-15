@@ -91,6 +91,9 @@
 //#define DEBUG_COND2(obj) ((obj != 0 && (obj)->getID() == "ego"))
 //#define DEBUG_COND2(obj) (true)
 
+// LFPlugin Begin
+#include <microsim/cfmodels/MSCFModel_LaneFree.h>
+// LFPlugin End
 
 // ===========================================================================
 // static member definitions
@@ -210,6 +213,9 @@ MSLane::MSLane(const std::string& id, double maxSpeed, double length, MSEdge* co
     initRestrictions();// may be reloaded again from initialized in MSEdge::closeBuilding
     assert(myRNGs.size() > 0);
     myRNGIndex = numericalID % myRNGs.size();
+    OptionsCont& oc = OptionsCont::getOptions();
+    
+    srand(oc.getInt("seed"));
 }
 
 
@@ -736,6 +742,10 @@ double dRand(double fMin, double fMax)
 {
     double f = (double)rand() / RAND_MAX;
     return fMin + f * (fMax - fMin);
+
+    //std::default_random_engine generator;
+    //std::uniform_real_distribution<double> distribution(fMin, fMax);
+    //return distribution(generator);
 }
 
 //random integer value within [iMin, iMax] (check whether this is actually uniform)
@@ -782,7 +792,8 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
     //    std::cout<<(*veh)->getID()<<" with pos:("<< (*veh)->getPositionOnLane() <<","<< (*veh)->getLateralPositionOnLane()<<"),";
     //}
     //std::cout << "\n";
-    if(aVehicle->getCarFollowModel().getModelID()==SUMO_TAG_CF_LANEFREE){
+    bool desired_speed_alignment = false;
+    if(aVehicle->getCarFollowModel().getModelID()==SUMO_TAG_CF_LANEFREE && !desired_speed_alignment){
         std::vector<std::pair<double, double>> available_lat_space;
         std::vector<std::pair<double, double>> available_lat_space_tmp;
         double vwidth = aVehicle->getWidth();
@@ -790,31 +801,71 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
         available_lat_space.push_back(std::make_pair(road_low, road_high));
         double lat_distance = aVehicle->getVehicleType().getMinGapLat();
         double desired_tau = aVehicle->getCarFollowModel().getHeadwayTime(); //Our Lane-Free controller acts as a car follow model
-        
-        double tau, s, v = speed;
+        double avg_speed_front, sum_speed_front=0;
+        //how many front vehicles to check
+        int num_front_check = 5, veh_counter = 0;
+        for (VehCont::iterator veh = myVehicles.begin(); veh != myVehicles.end(); ++veh) {
+            sum_speed_front += (*veh)->getSpeed();
+            veh_counter++;
+            if (veh_counter == num_front_check) {
+                break;
+            }
+        }
+
+        if (veh_counter > 0) {
+            avg_speed_front = sum_speed_front / veh_counter;
+        }
+        else {
+            avg_speed_front = speed;
+        }
+
+        double s, v = std::min(speed, avg_speed_front);
+        speed = v;
         double myfrontpos = aVehicle->getPositionOnLane();
         double y, other_vwidth;
         std::pair<double, double> space_restriction;
         bool check_tau;
-        int selected_region_index;
+        //double front_veh_speed = speed;
         double y_lane;
-        
+        double desired_space_gap = desired_tau * v;
+        double max_veh_length = LaneFreeSimulationPlugin::getInstance()->get_max_vehicle_length();
+        //SortedVehiclesVector* vehs_in_edge_sorted = LaneFreeSimulationPlugin::getInstance()->get_sorted_vehicles_in_edge(getEdge().getNumericalID());
+        bool check_max_length = false;
+        double front_veh_pos = 0, front_veh_length, dx;
         for (VehCont::iterator veh = myVehicles.begin(); veh != myVehicles.end(); ++veh) {
+            //getPositionOnLane returns the position of the front point
             s = (*veh)->getPositionOnLane() - (*veh)->getLength() - myfrontpos;
             if (s <= 0 || v == 0) {
                 check_tau = false;
             }
             else {
                 check_tau = true;                
-                tau = s / v;
+                
                 
             }
             //printf("%s to %s s:%f, v:%f\n",aVehicle->getID(),(*veh)->getID(), s, v);
+            //comment: actually, we should add another contition when to break! check how collision detection works!
+            if (check_max_length) {
+                dx = (*veh)->getPositionOnLane() - front_veh_pos;
+                if (dx > (max_veh_length-front_veh_length)) {
+                    break;
+                }                       
+            }
 
-            if (check_tau && desired_tau < tau) {
-                //do not need to see further
-                speed = (*veh)->getSpeed();
-                break;
+            //desired_space_gap = std::min((*veh)->getSpeed(), speed)*desired_tau;
+            if (check_tau && desired_space_gap < s) {
+                //we need to check until we exceed max_veh_length
+                //speed = (*veh)->getSpeed();
+                if (!check_max_length) {
+                    check_max_length = true;
+                    front_veh_length = (*veh)->getLength();
+                    front_veh_pos = (*veh)->getPositionOnLane();
+                    //front_veh_speed = (*veh)->getSpeed();
+                    //std::cout << "Spawn veh:" << aVehicle->getID() << " back from veh:" << (*veh)->getID() << " with dist s:" << s << " and dep. speed:" << v << "\n";
+                }
+                
+                
+                //break;
 
             }
             else {
@@ -848,10 +899,119 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
         y_lane = y - getWidth() / 2;
         aVehicle->setLateralPositionOnLane(y_lane);
         posLat = y_lane;
-
-
+        aVehicle->setDesiredSpeed(aVehicle->getMaxSpeed());
+        //speed = std::min(speed, front_veh_speed);
         incorporateVehicle(aVehicle, pos, speed, posLat, find_if(myVehicles.begin(), myVehicles.end(), [&](MSVehicle* const v) {return v->getPositionOnLane() >= pos;}), notification);
         
+        return true;
+    }
+    else if(aVehicle->getCarFollowModel().getModelID() == SUMO_TAG_CF_LANEFREE && desired_speed_alignment) {
+        std::vector<std::pair<double, double>> available_lat_space;
+        std::vector<std::pair<double, double>> available_lat_space_tmp;
+        double desired_speed_low = 25;
+        double desired_speed_high = 35;
+        double vwidth = aVehicle->getWidth();
+        double road_low = vwidth / 2, road_high = getWidth() - vwidth / 2;
+
+        double random_desired_speed = aVehicle->getDesiredSpeed();
+        if (random_desired_speed == 0) {
+            random_desired_speed = dRand(desired_speed_low, desired_speed_high);
+            aVehicle->setDesiredSpeed(random_desired_speed);
+
+        }
+        
+
+        double spawn_lateral_position = road_low + ((random_desired_speed - desired_speed_low) / (desired_speed_high - desired_speed_low)) * (road_high - road_low);
+        
+        double lat_distance = aVehicle->getVehicleType().getMinGapLat();
+        double desired_tau = aVehicle->getCarFollowModel().getHeadwayTime(); //Our Lane-Free controller acts as a car follow model
+        
+        
+        double myfrontpos = aVehicle->getPositionOnLane();
+        double other_vwidth;
+        std::pair<double, double> space_restriction;
+        
+        double max_veh_length = LaneFreeSimulationPlugin::getInstance()->get_max_vehicle_length();
+        //SortedVehiclesVector* vehs_in_edge_sorted = LaneFreeSimulationPlugin::getInstance()->get_sorted_vehicles_in_edge(getEdge().getNumericalID());
+        bool check_max_length = false;
+        double front_veh_pos = 0, front_veh_length, dx,dy;
+        double mylatpos = spawn_lateral_position-getWidth()/2;
+        double front_veh_pos_back = 0;
+        double front_veh_speed;
+        bool found_front_veh = false;
+
+        std::string vid_front;
+        speed = random_desired_speed;
+        posLat = mylatpos;
+
+        
+        for (VehCont::iterator veh = myVehicles.begin(); veh != myVehicles.end(); ++veh) {
+            //getPositionOnLane returns the position of the front point
+            dy = (*veh)->getLateralPositionOnLane() - mylatpos;
+            if (std::abs(dy) > ((vwidth + (*veh)->getWidth()) / 2 + lat_distance)) {
+                continue;
+            }
+            
+            if (!check_max_length) {
+                found_front_veh = true;
+                check_max_length = true;
+                front_veh_length = (*veh)->getLength();
+                front_veh_pos = (*veh)->getPositionOnLane();
+                front_veh_pos_back = (*veh)->getBackPositionOnLane();
+                front_veh_speed = (*veh)->getSpeed();
+                vid_front = (*veh)->getID();
+                continue;
+            }
+
+            dx = (*veh)->getPositionOnLane() - front_veh_pos;
+            if (dx > (max_veh_length - front_veh_length)) {
+                break;
+            }
+
+            if (front_veh_pos_back > (*veh)->getBackPositionOnLane()) {
+                front_veh_length = (*veh)->getLength();
+                front_veh_pos = (*veh)->getPositionOnLane();
+                front_veh_pos_back = (*veh)->getBackPositionOnLane();
+                front_veh_speed = (*veh)->getSpeed();
+                vid_front = (*veh)->getID();
+            }
+            
+            
+        }
+
+
+        if (found_front_veh) {
+            double space_gap = front_veh_pos_back - myfrontpos;
+            
+            if (space_gap <= 0) {
+                return false;
+            }
+            
+            double v_depart = space_gap / desired_tau;
+            //std::cout << "Try to spawn veh:" << aVehicle->getID() << " back from veh:" << vid_front << " with dist s:" << space_gap << " dep. speed:" << v_depart << " and des. speed:" << random_desired_speed << "\n";
+            
+            if (front_veh_speed < speed && v_depart < front_veh_speed) {
+                return false;
+            }
+
+            if (front_veh_speed > speed && v_depart < speed) {
+                return false;
+            }
+           
+            speed = std::min(v_depart, speed);
+            //std::cout << "Spawn veh:" << aVehicle->getID() << " back from veh:" << vid_front << " with dist s:" << space_gap << " dep. speed:" << speed << " and des. speed:"<< random_desired_speed<<"\n";
+        }
+        //if we have not yet spawned, but have available space
+        //spawn randomly within the available space
+        
+
+        
+        aVehicle->setLateralPositionOnLane(posLat); //TODO: at some point check whether this is needed!
+        
+        aVehicle->setDesiredSpeed(random_desired_speed);
+
+        incorporateVehicle(aVehicle, pos, speed, posLat, find_if(myVehicles.begin(), myVehicles.end(), [&](MSVehicle* const v) {return v->getPositionOnLane() >= pos; }), notification);
+
         return true;
     }
     // LFPlugin End
@@ -2153,7 +2313,9 @@ MSLane::appropriate(const MSVehicle* veh) {
 void
 MSLane::integrateNewVehicles() {
     myNeedsCollisionCheck = true;
+
     std::vector<MSVehicle*>& buffered = myVehBuffer.getContainer();
+    
     sort(buffered.begin(), buffered.end(), vehicle_position_sorter(this));
     for (MSVehicle* const veh : buffered) {
         assert(veh->getLane() == this);

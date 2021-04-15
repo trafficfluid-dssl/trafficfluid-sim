@@ -1141,16 +1141,16 @@ Vehicle::addR(const std::string& vehicleID,
     vehicleParams.personNumber = personNumber;
     SUMOVehicleParameter* params = new SUMOVehicleParameter(vehicleParams);
     try {
-        SUMOVehicle* vehicle = MSNet::getInstance()->getVehicleControl().buildVehicle(params, route, vehicleType, true, false);
-        if (fromTaz == "" && !route->getEdges().front()->validateDepartSpeed(*vehicle)) {
+        SUMOVehicle* vehicle = MSNet::getInstance()->getVehicleControl().buildVehicle(params, route, vehicleType, true, false);        
+        if (fromTaz == "" && !route->getEdges().front()->validateDepartSpeed(*vehicle)) {            
             MSNet::getInstance()->getVehicleControl().deleteVehicle(vehicle, true);
             throw TraCIException("Departure speed for vehicle '" + vehicleID + "' is too high for the departure edge '" + route->getEdges().front()->getID() + "'.");
         }
-        std::string msg;
+        std::string msg;        
         if (vehicle->getRouteValidity(true, true) != MSBaseVehicle::ROUTE_VALID) {
             MSNet::getInstance()->getVehicleControl().deleteVehicle(vehicle, true);
             throw TraCIException("Vehicle '" + vehicleID + "' has no valid route. ");
-        }
+        }        
         MSNet::getInstance()->getVehicleControl().addVehicle(vehicleParams.id, vehicle);
         if (vehicleParams.departProcedure != DEPART_TRIGGERED && vehicleParams.departProcedure != DEPART_CONTAINER_TRIGGERED) {
             MSNet::getInstance()->getInsertionControl().add(vehicle);

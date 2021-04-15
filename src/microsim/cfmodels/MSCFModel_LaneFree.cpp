@@ -1893,6 +1893,7 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 				dy = abs(yv1-lfv2->get_position_y());
 				if((dx<((lv1+veh2->getVehicleType().getLength())/2)) && (dy<((wv1/2+veh2->getVehicleType().getWidth())/2))){
 					event_vehicles_collide(veh1->getNumericalID(), veh2->getNumericalID());
+					MSNet::getInstance()->getVehicleControl().registerCollision();
 				}
 				if(dx>(lv1+max_vehicle_length)/2){
 					break;

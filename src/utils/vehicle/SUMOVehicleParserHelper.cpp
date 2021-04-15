@@ -308,7 +308,7 @@ SUMOVehicleParserHelper::parseCommonAttributes(const SUMOSAXAttributes& attrs, c
     // parse type information
     if (attrs.hasAttribute(SUMO_ATTR_TYPE)) {
         ret->parametersSet |= VEHPARS_VTYPE_SET; // !!! needed?
-        ret->vtypeid = attrs.get<std::string>(SUMO_ATTR_TYPE, ret->id.c_str(), ok);
+        ret->vtypeid = attrs.get<std::string>(SUMO_ATTR_TYPE, ret->id.c_str(), ok);        
     }
     // parse line information
     if (attrs.hasAttribute(SUMO_ATTR_LINE)) {

@@ -330,7 +330,7 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
     { "id",                     SUMO_ATTR_ID },
     { "refId",                  SUMO_ATTR_REFID },
     { "name",                   SUMO_ATTR_NAME },
-    { "type",                   SUMO_ATTR_TYPE },
+    { "type",                   SUMO_ATTR_TYPE },    
     { "version",                SUMO_ATTR_VERSION },
     { "priority",               SUMO_ATTR_PRIORITY },
     { "numLanes",               SUMO_ATTR_NUMLANES },

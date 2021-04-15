@@ -938,6 +938,9 @@ MSVehicle::MSVehicle(SUMOVehicleParameter* pars, const MSRoute* route,
     myInfluencer(nullptr) {
     myCFVariables = type->getCarFollowModel().createVehicleVariables();
     myNextDriveItem = myLFLinkLanes.begin();
+    //LFPlugin Begin
+    myDesiredSpeed = 0;
+    //LFPlugin End
 }
 
 
