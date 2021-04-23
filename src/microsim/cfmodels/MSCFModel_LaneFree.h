@@ -430,6 +430,10 @@ public:
         return &all_neighbor_ids_front;
     }
 
+    arrayMemStruct* get_all_neighbor_ids_back_mem() {
+        return &all_neighbor_ids_back;
+    }
+
     //Deprecated print
     //bool is_message_empty() {
     //    return msgBufferVector.empty();
@@ -475,6 +479,7 @@ protected:
     arrayMemStruct density_per_segment_per_edge;
     
     arrayMemStruct all_neighbor_ids_front;
+    arrayMemStruct all_neighbor_ids_back;
 
     std::default_random_engine random_engine;
     std::uniform_real_distribution<double> uniform_real_dis;

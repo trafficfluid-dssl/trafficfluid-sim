@@ -846,6 +846,7 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
             return true;
 
         }
+
         std::pair<double, double> space_restriction;
         bool check_tau;
         double front_veh_speed = speed;

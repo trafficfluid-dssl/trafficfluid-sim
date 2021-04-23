@@ -100,6 +100,21 @@ public:
         return std::find(myEdges.begin(), myEdges.end(), edge) != myEdges.end();
     }
 
+    // LFPlugin Begin
+    //check where the edge is
+    int edge_index(const MSEdge* const edge) const {
+        ConstMSEdgeVector::const_iterator it = std::find(myEdgeswInternal.begin(), myEdgeswInternal.end(), edge);
+        if (it == myEdgeswInternal.end()) {
+            return -1;
+        }
+        return it - myEdgeswInternal.begin();
+    }
+
+    const ConstMSEdgeVector& getEdgeswInternal() const {
+        return myEdgeswInternal;
+    }
+    // LFPlugin End
+
     bool containsAnyOf(const MSEdgeVector& edgelist) const;
 
     const MSEdge* operator[](int index) const;
@@ -261,6 +276,11 @@ public:
 private:
     /// The list of edges to pass
     ConstMSEdgeVector myEdges;
+
+    // LFPlugin Begin
+    // additional vector that contains all edges along with the internal ones
+    ConstMSEdgeVector myEdgeswInternal;
+    // LFPlugin End
 
     /// whether the route may be deleted after the last vehicle abandoned it
     const bool myAmPermanent;

@@ -57,7 +57,27 @@ MSRoute::MSRoute(const std::string& id,
     myCosts(-1),
     mySavings(0),
     myReroute(false),
-    myStops(stops) {}
+    myStops(stops) {
+    // LFPlugin Begin
+    // initialize myEdgeswInternal
+    const MSEdge* tmp_edge_prev = nullptr;
+    const MSEdge* tmp_edge_internal;
+    for (ConstMSEdgeVector::iterator it = myEdges.begin(); it != myEdges.end(); it++) {
+        
+        if (tmp_edge_prev != nullptr) {
+            tmp_edge_internal = tmp_edge_prev->getInternalFollowingEdge((*it));
+            if (tmp_edge_internal != nullptr) {
+                myEdgeswInternal.push_back(tmp_edge_internal);
+            }
+        }
+        myEdgeswInternal.push_back((*it));
+        
+        
+
+        tmp_edge_prev = (*it);
+    }
+    // LFPlugin End
+    }
 
 
 MSRoute::~MSRoute() {
