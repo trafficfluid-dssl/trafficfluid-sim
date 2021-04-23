@@ -721,6 +721,12 @@ public:
     /// @brief Information for the router which parameter were set, TraCI may modify this (when changing color)
     mutable int parametersSet;
 
+
+    // LFPlugin Begin
+    // additional variables needed
+    std::string lf_attribute_insertion_policy;
+    // LFPlugin End
+
 protected:
     /// @brief obtain depart parameter in string format
     std::string getDepart() const;

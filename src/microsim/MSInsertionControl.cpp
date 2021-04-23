@@ -198,7 +198,7 @@ void
 MSInsertionControl::determineCandidates(SUMOTime time) {
     MSVehicleControl& vehControl = MSNet::getInstance()->getVehicleControl();
     for (std::vector<Flow>::iterator i = myFlows.begin(); i != myFlows.end();) {
-        SUMOVehicleParameter* pars = i->pars;
+        SUMOVehicleParameter* pars = i->pars;        
         bool tryEmitByProb = pars->repetitionProbability > 0;
         while ((pars->repetitionProbability < 0
                 && pars->repetitionsDone < pars->repetitionNumber

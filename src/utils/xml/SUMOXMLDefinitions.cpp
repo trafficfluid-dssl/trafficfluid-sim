@@ -846,6 +846,11 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
     { "driverState",       SUMO_ATTR_RNG_DRIVERSTATE },
     // @}
 
+    // LFPlugin Begin
+    // additional attributes for lane-free plugin
+    { "insertionPolicy",   SUMO_ATTR_LF_INSERTION_POLICY },
+    // LFPlugin End
+
     // Other
     { "",                       SUMO_ATTR_NOTHING } //< must be the last one
 };

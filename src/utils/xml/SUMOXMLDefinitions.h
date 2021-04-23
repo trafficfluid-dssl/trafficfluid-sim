@@ -855,6 +855,12 @@ enum SumoXMLAttr {
     SUMO_ATTR_BEGIN,
     /// @brief weights: time range end
     SUMO_ATTR_END,
+
+    // LFPlugin Begin
+    // additional attributes needed
+    SUMO_ATTR_LF_INSERTION_POLICY,
+    // LFPlugin End
+
     /// @brief link,node: the traffic light id responsible for this link
     SUMO_ATTR_TLID,
     /// @brief node: the type of traffic light

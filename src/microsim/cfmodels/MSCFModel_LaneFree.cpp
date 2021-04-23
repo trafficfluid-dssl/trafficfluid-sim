@@ -1646,7 +1646,12 @@ double lf_plugin_get_global_position_y(NumericalID veh_id) {
 	return global_pos_y;
 }
 
+double
+LaneFreeSimulationPlugin::get_uniform_distribution_sample(double from, double to) {
+	double val = uniform_real_dis(random_engine);
 
+	return val * (to - from) + from;
+}
 
 LaneFreeSimulationPlugin::LaneFreeSimulationPlugin(){
 
@@ -1722,6 +1727,11 @@ LaneFreeSimulationPlugin::LaneFreeSimulationPlugin(){
 	initialise_arraymemory(&density_per_segment_per_edge,INT_M);
 
 	initialise_arraymemory(&all_neighbor_ids_front, NUMID_M);
+
+	random_engine.seed(lf_plugin_get_seed());
+	uniform_real_dis = std::uniform_real_distribution<double>(0, 1);
+
+
 	myInstance = this;
 }
 

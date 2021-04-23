@@ -51,6 +51,10 @@ std::set<SumoXMLAttr> SUMOVehicleParserHelper::allowedJMAttrs;
 // method definitions
 // ===========================================================================
 
+// LFPlugin Begin
+// here we add additional parameters to demand
+// LFPlugin End
+
 SUMOVehicleParameter*
 SUMOVehicleParserHelper::parseFlowAttributes(SumoXMLTag tag, const SUMOSAXAttributes& attrs, const bool hardFail, const SUMOTime beginDefault, const SUMOTime endDefault, bool isPerson) {
     bool ok = true;
@@ -210,6 +214,15 @@ SUMOVehicleParserHelper::parseFlowAttributes(SumoXMLTag tag, const SUMOSAXAttrib
             delete ret;
             return handleError(hardFail, abortCreation, "Flow cannot be created");
         }
+
+        // LFPlugin Begin
+        // additional attributes
+        if (attrs.hasAttribute(SUMO_ATTR_LF_INSERTION_POLICY)) {
+            
+            ret->lf_attribute_insertion_policy = attrs.get<std::string>(SUMO_ATTR_LF_INSERTION_POLICY, id.c_str(), ok);
+        }
+        //std::cout << "insertion policy:" << ret->lf_attribute_insertion_policy << "\n";
+        // LFPlugin End
         return ret;
     } else {
         if (hardFail) {

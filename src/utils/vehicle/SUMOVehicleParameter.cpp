@@ -49,6 +49,11 @@ SUMOVehicleParameter::SUMOVehicleParameter()
       line(), fromTaz(), toTaz(), personNumber(0), containerNumber(0),
       speedFactor(-1),
       parametersSet(0)
+      // LFPlugin Begin
+      // initialize additional parameters
+      ,
+      lf_attribute_insertion_policy("latExploit")
+      // LFPlugin End
 { }
 
 

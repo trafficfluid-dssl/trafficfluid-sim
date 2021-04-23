@@ -27,6 +27,7 @@
 #include <microsim/MSVehicleType.h>
 #include <microsim/lcmodels/MSAbstractLaneChangeModel.h>
 #include <utils/xml/SUMOXMLDefinitions.h>
+#include <random>
 //#include <tgmath.h> 
 #define MAX_ITERS 5
 //#define UPDATE_PRINT_MS 5
@@ -138,6 +139,7 @@ public:
     void set_position_x(double new_pos_x){
         myveh->setPositionOnLane(new_pos_x+myveh->getLength()/2);
     }
+
     void set_position_y(double new_pos_y){
         double pos_y = get_position_y();
         double dist_from_lane = myveh->getLateralPositionOnLane();
@@ -444,6 +446,8 @@ public:
         return max_vehicle_length;
     }
     
+    double get_uniform_distribution_sample(double from, double to);
+        
 protected:
     NumericalID find_stored_edge(MSVehicle* veh);
     void free_hashmap();
@@ -472,7 +476,8 @@ protected:
     
     arrayMemStruct all_neighbor_ids_front;
 
-    
+    std::default_random_engine random_engine;
+    std::uniform_real_distribution<double> uniform_real_dis;
     //Deprecated print
     //std::vector<std::string> msgBufferVector;
     
