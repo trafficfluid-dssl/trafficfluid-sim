@@ -556,6 +556,13 @@ public:
     inline double getLateralShift() const {
         return myLateralShift;
     }
+    
+    // LFPlugin Begin
+    // get the lateral shift w.r.t. the right road boundaries
+    inline double getLateralShift_lf() const {
+        return myLateralShift_lf;
+    }
+    // LFPlugin End
 
     /// @brief get string description for this link
     std::string  getDescription() const;
@@ -701,5 +708,10 @@ private:
 
     /// invalidated assignment operator
     MSLink& operator=(const MSLink& s);
+
+    // LFPlugin Begin
+    // myLateralShift_lf is the lateral shift w.r.t. the right road boundaries
+    double myLateralShift_lf;
+    // LFPlugin End
 
 };

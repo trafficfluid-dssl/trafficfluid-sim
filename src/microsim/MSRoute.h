@@ -110,6 +110,14 @@ public:
         return it - myEdgeswInternal.begin();
     }
 
+    int edge_index_normal(const MSEdge* const edge) const {
+        ConstMSEdgeVector::const_iterator it = std::find(myEdges.begin(), myEdges.end(), edge);
+        if (it == myEdges.end()) {
+            return -1;
+        }
+        return it - myEdges.begin();
+    }
+
     const ConstMSEdgeVector& getEdgeswInternal() const {
         return myEdgeswInternal;
     }

@@ -742,7 +742,8 @@ NumericalID* lf_plugin_get_all_neighbor_ids_back(NumericalID veh_id, double back
 	}
 
 	const MSRoute veh_route = lfveh->get_vehicle()->getRoute();
-	const ConstMSEdgeVector veh_edges = veh_route.getEdges();
+	//const ConstMSEdgeVector veh_edges = veh_route.getEdges();
+	const ConstMSEdgeVector veh_edges = veh_route.getEdgeswInternal();
 
 
 	double x_vid = lfveh->get_position_x();
@@ -758,6 +759,7 @@ NumericalID* lf_plugin_get_all_neighbor_ids_back(NumericalID veh_id, double back
 
 	bool found_edge = false;
 	//std::cout << "Route of " << lfveh->get_vehicle()->getID()<<", with current edge:"<< lfveh->get_vehicle()->getLane()->getEdge().getID() <<", reg:"<< lfveh->get_vehicle()->getEdge()->getID()<<", and position:"<< lfveh->get_position_x() <<" :";
+	/*
 	for (int i = veh_edges.size() - 2; i >=0; i--) {
 		tmp_edge_prev = veh_edges.at(i);
 		tmp_internal_edge = tmp_edge_prev->getInternalFollowingEdge(tmp_edge);
@@ -780,8 +782,14 @@ NumericalID* lf_plugin_get_all_neighbor_ids_back(NumericalID veh_id, double back
 
 		tmp_edge = tmp_edge_prev;
 	}
-
-	
+	*/
+	int my_edge_index = veh_route.edge_index(lfveh->get_vehicle()->getEdge());
+	if (my_edge_index != -1) {
+		found_edge = true;
+	}
+	for (int i = my_edge_index; i >= 0; i--) {
+		all_veh_edges.push_back(veh_edges.at(i));
+	}
 	
 	//std::cout << " " << tmp_edge->getID() << " ";
 	//std::cout << "\n";
@@ -964,7 +972,7 @@ double lf_plugin_get_relative_distance_x(NumericalID ego_id, NumericalID other_i
 		const MSEdge* other_edge = &other_lfveh->get_vehicle()->getLane()->getEdge();
 		double pos_ego = ego_lfveh->get_position_x();
 		double pos_other = other_lfveh->get_position_x();
-		//TODO find which is front of the other
+				
 		int ego_index = ego_route.edge_index(ego_edge);
 		if (ego_index == -1) {
 			std::cout << "Error! edge not found!\n";
@@ -1155,13 +1163,67 @@ double lf_plugin_get_relative_distance_y(NumericalID ego_id, NumericalID other_i
 		std::cout << "Other not found!\n";
 		return -1;
 	}
-	
-	/*//lateral distance is probably ok for vehicles in different road edges. TODO check this in the future
-	if (ego_lfveh->get_edge_id() != other_lfveh->get_edge_id()) {
-		std::cout << "Vehicles are not on the same edge! Relative distance betweeen vehicles on different road edges is not currently supported!\n";
-		return -1;
-	}*/
-	double dy = other_lfveh->get_position_y() - ego_lfveh->get_position_y();
+	double latShift = 0, total_latShift=0;
+	NumericalID ego_edge_id = ego_lfveh->get_vehicle()->getLane()->getEdge().getNumericalID(), other_edge_id = other_lfveh->get_vehicle()->getLane()->getEdge().getNumericalID();
+	if (ego_edge_id != other_edge_id) {
+		//find route of ego, and check whether the other edge is on its path
+
+		const MSRoute ego_route = ego_lfveh->get_vehicle()->getRoute();
+		const MSEdge* ego_edge = &ego_lfveh->get_vehicle()->getLane()->getEdge();
+		const MSEdge* other_edge = &other_lfveh->get_vehicle()->getLane()->getEdge();
+		double pos_ego = ego_lfveh->get_position_x();
+		double pos_other = other_lfveh->get_position_x();
+
+		int ego_index = ego_route.edge_index(ego_edge);
+		if (ego_index == -1) {
+			std::cout << "Error! edge not found!\n";
+			return -1;
+		}
+		int other_index = ego_route.edge_index(other_edge);
+		if (other_index == -1) {
+			std::cout << "Error! other vehicle not in the path of ego!\n";
+			return -1;
+		}
+		
+		
+		int start_index, end_index;
+		int coeff;
+		if (ego_index < other_index) {
+			start_index = ego_index;
+			end_index = other_index;
+			coeff = -1;	
+		}
+		else if (ego_index > other_index) {
+			start_index = other_index;
+			end_index = ego_index;
+			coeff = +1;
+		}
+		else {
+			std::cout << "Error! edge indices should not be the same";
+			return -1;
+		}
+		ConstMSEdgeVector route_edges = ego_route.getEdgeswInternal();
+
+		const MSEdge* tmp_edge = route_edges.at(start_index);
+		const MSEdge* tmp_edge_next;
+		for (int i = start_index + 1; i <= end_index; i++) {
+			tmp_edge_next = route_edges.at(i);
+			
+			latShift = tmp_edge->getLateralShiftToFollowingEdge(tmp_edge_next);
+			if (latShift == 0 && i < end_index && tmp_edge_next->isInternal()) {
+				latShift = tmp_edge->getLateralShiftToFollowingEdge(route_edges.at(i + 1));				
+			}
+			//printf("latshift:%f", latShift);
+			total_latShift += latShift;
+			tmp_edge = tmp_edge_next;
+		}
+
+
+		total_latShift = coeff * total_latShift;
+
+	}
+
+	double dy = other_lfveh->get_position_y() - ego_lfveh->get_position_y() + total_latShift;
 
 	return dy;
 }

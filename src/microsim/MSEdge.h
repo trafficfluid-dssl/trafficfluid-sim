@@ -566,6 +566,9 @@ public:
     /// @todo extension: inner junctions are not filled
     const MSEdge* getInternalFollowingEdge(const MSEdge* followerAfterInternal) const;
 
+    // LFPlugin Begin
+    double getLateralShiftToFollowingEdge(const MSEdge* followeAfterInternal) const;
+    // LFPlugin End
 
     /// @brief returns the length of all internal edges on the junction until reaching the non-internal edge followerAfterInternal.
     double getInternalFollowingLengthTo(const MSEdge* followerAfterInternal) const;

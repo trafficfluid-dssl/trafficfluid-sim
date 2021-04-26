@@ -679,7 +679,7 @@ const MSEdge*
 MSEdge::getInternalFollowingEdge(const MSEdge* followerAfterInternal) const {
     //@todo to be optimized
     for (const MSLane* const l : *myLanes) {
-        for (const MSLink* const link : l->getLinkCont()) {
+        for (const MSLink* const link : l->getLinkCont()) {            
             if (&link->getLane()->getEdge() == followerAfterInternal) {
                 if (link->getViaLane() != nullptr) {
                     return &link->getViaLane()->getEdge();
@@ -692,6 +692,30 @@ MSEdge::getInternalFollowingEdge(const MSEdge* followerAfterInternal) const {
     return nullptr;
 }
 
+// LFPlugin Begin
+double
+MSEdge::getLateralShiftToFollowingEdge(const MSEdge* followerAfterInternal) const {
+    double ls;
+    for (const MSLane* const l : *myLanes) {
+        for (const MSLink* const link : l->getLinkCont()) {
+            if (&link->getLane()->getEdge() == followerAfterInternal) {
+                ls = link->getLateralShift_lf();
+                /*
+                if (link->getViaLane() != nullptr) {                    
+                    ls2 += link->getViaLane()->getLinkTo(link->getLane())->getLateralShift_lf();
+                    std::cout << "Lateral shift:" << ls << " or (" << ls2 << ") from " << getID() << " to:" << followerAfterInternal->getID() << " and through:" << (link->getViaLane())->getID() << "\n";
+
+                }*/
+                if (ls != 0) {
+                    return ls;
+                }
+                
+            }
+        }
+    }    
+    return 0;
+}
+// LFPlugin End
 
 double
 MSEdge::getInternalFollowingLengthTo(const MSEdge* followerAfterInternal) const {

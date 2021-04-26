@@ -822,12 +822,16 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
         }
 
 
+        
         double s, v = std::min(speed, avg_speed_front);
-        speed = v;
         double myfrontpos = aVehicle->getPositionOnLane();
         double y, other_vwidth;
         double desired_space_gap = desired_tau * speed;
         if (insertion_policy == "center") {
+            //limit initial speed only based on the one vehicle downstream
+            if (veh_counter > 0) {
+                speed = std::min(speed, myVehicles.at(0)->getSpeed());
+            }
             if (veh_counter > 0) {
                 MSVehicle* front_veh = myVehicles.at(0);
                 s = front_veh->getPositionOnLane() - front_veh->getLength() - myfrontpos;
@@ -846,7 +850,8 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
             return true;
 
         }
-
+        
+        speed = v;
         std::pair<double, double> space_restriction;
         bool check_tau;
         double front_veh_speed = speed;

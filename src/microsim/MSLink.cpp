@@ -120,6 +120,35 @@ MSLink::MSLink(MSLane* predLane, MSLane* succLane, MSLane* via, LinkDirection di
             //std::cout << " lateral shift link=" << myLaneBefore->getID() << "->" << getViaLaneOrLane()->getID() << " dist=" << dist << " shift=" << myLateralShift << "\n";
         }
     }
+
+    // LFPlugin Begin
+    myLateralShift_lf = 0;
+    MSLane* prevLane = (myLaneBefore->getEdge().getLanes().at(0));
+    PositionVector from = prevLane->getShape();
+    MSLane* nextLane = (getViaLaneOrLane()->getEdge().getLanes().at(0));
+    const PositionVector& to = nextLane->getShape();
+    if (from.back() != to.front()) {
+        
+        
+        const double dist = from.back().distanceTo2D(to.front());
+        // figure out direction of shift
+        try {
+            from.move2side(dist);
+        }
+        catch (InvalidArgument&) {
+        }
+        double latshiftlf = (from.back().distanceTo2D(to.front()) < dist) ? dist : -dist;
+        /*
+        if (myLateralShift > 0) {
+            myLateralShift = 2 * (myLateralShift - prevLane->getWidth()/2);
+        }
+        else if (myLateralShift < 0) {
+            myLateralShift = - 2 * (-myLateralShift - nextLane->getWidth() / 2);
+        }*/
+        myLateralShift_lf = latshiftlf + nextLane->getWidth()/2 - prevLane->getWidth() / 2;
+        std::cout << " lateral shift link=" << myLaneBefore->getID() << "->" << myLane->getID() << " dist=" << dist << " shift=" << myLateralShift_lf << "\n";
+    }
+    // LFPlugin End
 }
 
 
