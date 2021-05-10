@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on 22/12/2020 9:37:38 μμ by Eclipse SUMO GUI Version 98e945f8d5
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
+
+    <input>
+        <net-file value="C:\Users\dtrou\source\repos\sumo_lanefreeplugin\lane_free_scenarios\highway_single_edge\autobahn5km.net.xml"/>
+        <route-files value="C:\Users\dtrou\source\repos\sumo_lanefreeplugin\lane_free_scenarios\highway_single_edge\autobahn.rou.xml"/>
+        <additional-files value="C:\Users\dtrou\source\repos\sumo_lanefreeplugin\lane_free_scenarios\highway_single_edge\detector.add.xml"/>
+    </input>
+
+    <output>
+        <netstate-dump value="C:\Users\dtrou\source\repos\sumo_lanefreeplugin\lane_free_scenarios\highway_single_edge\statistics.xml"/>
+    </output>
+
+    <time>
+        <step-length value="0.2"/>
+    </time>
+
+    <processing>
+        <step-method.ballistic value="true"/>
+        <collision.action value="none"/>
+    </processing>
+
+    <gui_only>
+        <gui-settings-file value="C:\Users\dtrou\source\repos\sumo_lanefreeplugin\lane_free_scenarios\highway_single_edge\gui-settings.cfg"/>
+        <tracker-interval value="0.2"/>
+    </gui_only>
+
+</configuration>
+-->
+
+<netstate xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netstate_file.xsd">
+</netstate>

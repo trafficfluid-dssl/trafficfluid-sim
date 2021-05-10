@@ -1,0 +1,10 @@
+<routes>
+    <vType id="normal_car_35" vClass="passenger" carFollowModel="LaneFree" maxSpeed="35" length="3.2"  arrivalSpeed="35" minGap="0" color="blue"/>
+    <vType id="normal_car_31" vClass="passenger" maxSpeed="31" length="3.2"  arrivalSpeed="31"/>
+    
+    
+
+    <flow id="normal_flow" type="normal_car_35" begin="0" end="200" number="100" from="entry" to="exit" departSpeed="20" departPos="0" />
+    <route id="route0"  edges="entry long_edge exit"/>
+    
+</routes>

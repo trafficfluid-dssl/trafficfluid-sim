@@ -1,9 +1,9 @@
 <routes>
 
     <vType id="lane_free_car" vClass="passenger" maxSpeed="35" carFollowModel="LaneFree" length="3.2"  arrivalSpeed="35" minGap="1"/>
-    <vType id="lane_free_car_r" vClass="passenger" maxSpeed="35" carFollowModel="LaneFree" length="3.2"  arrivalSpeed="35" minGap="1" color="blue"/>
+    <vType id="lane_free_car_r" vClass="passenger" maxSpeed="35" carFollowModel="LaneFree" length="3.2"  arrivalSpeed="35" minGap="1" color="green"/>
  
-    <flow id="normal_35enex" type="lane_free_car" begin="0" end="2500" number="1700"  departPos="0" departLane="best" departSpeed="5">
+    <flow id="normal_35enex" type="lane_free_car" begin="0" end="2500" number="3700"  departPos="0" departLane="best" departSpeed="5">
         <route edges="entry entry_2 long_edge exit"/>
     </flow>
     <flow id="normal_35enoff" type="lane_free_car" begin="0" end="2500" number="500" departPos="0" departLane="best" departSpeed="5">
@@ -16,7 +16,7 @@
         <route edges="on_ramp on_ramp_2 long_edge exit"/>
     </flow>
 
-    <flow id="rnormal_35enex" type="lane_free_car_r" begin="0" end="2500" number="1700"  departPos="0" departLane="best" departSpeed="5">
+    <flow id="rnormal_35enex" type="lane_free_car_r" begin="0" end="2500" number="3700"  departPos="0" departLane="best" departSpeed="5">
         <route edges="r_entry r_entry_2 r_long_edge r_exit"/>
     </flow>
     <flow id="rnormal_35enoff" type="lane_free_car_r" begin="0" end="2500" number="500" departPos="0" departLane="best" departSpeed="5">

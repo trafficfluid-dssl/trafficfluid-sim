@@ -1,3 +1,0 @@
-/home/dtrou/github/sumo/lane_free_control_library/build/CMakeFiles/rebuild_cache.dir
-/home/dtrou/github/sumo/lane_free_control_library/build/CMakeFiles/edit_cache.dir
-/home/dtrou/github/sumo/lane_free_control_library/build/CMakeFiles/testLaneFree.dir

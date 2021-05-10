@@ -146,7 +146,7 @@ MSLink::MSLink(MSLane* predLane, MSLane* succLane, MSLane* via, LinkDirection di
             myLateralShift = - 2 * (-myLateralShift - nextLane->getWidth() / 2);
         }*/
         myLateralShift_lf = latshiftlf + nextLane->getWidth()/2 - prevLane->getWidth() / 2;
-        std::cout << " lateral shift link=" << myLaneBefore->getID() << "->" << myLane->getID() << " dist=" << dist << " shift=" << myLateralShift_lf << "\n";
+        //std::cout << " lateral shift link=" << myLaneBefore->getID() << "->" << myLane->getID() << " dist=" << dist << " shift=" << myLateralShift_lf << "\n";
     }
     // LFPlugin End
 }

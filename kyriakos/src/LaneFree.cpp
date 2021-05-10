@@ -76,7 +76,7 @@ void simulation_step() {
 	NumericalID n_myedges = get_all_edges_size();
 	int* density_per_edge;
 	int size;
-	double segment_length = 100; //in meters
+	//double segment_length = 100; //in meters
 	
 	//For larger networks, you may control vehicles based on the road edge they are in
 	NumericalID* ids_in_edge;
@@ -113,14 +113,14 @@ void simulation_step() {
 				
 				
 				/*
-				//printf("\nNeighbors of %s:", veh_name);
+				printf("\nNeighbors of %s:", veh_name);
 				
 				for (int neighbor_index = 0; neighbor_index < neighbors_size; neighbor_index++) {
 					veh_name = get_vehicle_name(front_neighbors[neighbor_index]);
 					neighbor_distance = get_relative_distance_x(ids_in_edge[j], front_neighbors[neighbor_index]);
-					//printf("%s with dist: %f, ", veh_name, neighbor_distance);
+					printf("%s with dist: %f, ", veh_name, neighbor_distance);
 				}
-				//printf("\n");
+				printf("\n");
 				*/
 				veh_name = get_vehicle_name(ids_in_edge[j]);
 				//printf("Calculate for vehicle %s.\n", veh_name);
@@ -131,7 +131,7 @@ void simulation_step() {
 				determine_controls(&sim_params, &fx, &fy);
 				if (am_i_on_acceleration_lane(ids_in_edge[j])) {
 					fy += 1;		
-					printf("%s on accel lane\n", veh_name);
+					//printf("%s on accel lane\n", veh_name);
 				}
 				apply_acceleration(ids_in_edge[j], fx, fy);
 			}

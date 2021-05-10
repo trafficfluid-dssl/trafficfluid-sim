@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on 2/2/2021 5:16:36 μμ by Eclipse SUMO GUI Version 024ec0b912
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
+
+    <input>
+        <net-file value="C:\Users\dtrou\source\repos\sumo_lanefreeplugin\lane_free_scenarios\highwayonofframps\ramps.net.xml"/>
+        <route-files value="C:\Users\dtrou\source\repos\sumo_lanefreeplugin\lane_free_scenarios\highwayonofframps\ramps.rou.xml"/>
+    </input>
+
+    <output>
+        <netstate-dump value="C:\Users\dtrou\source\repos\sumo_lanefreeplugin\lane_free_scenarios\highwayonofframps\statistics.xml"/>
+    </output>
+
+    <time>
+        <step-length value="0.2"/>
+    </time>
+
+    <processing>
+        <step-method.ballistic value="true"/>
+        <collision.action value="none"/>
+    </processing>
+
+    <gui_only>
+        <gui-settings-file value="C:\Users\dtrou\source\repos\sumo_lanefreeplugin\lane_free_scenarios\highwayonofframps\gui-settings.cfg"/>
+        <tracker-interval value="0.2"/>
+    </gui_only>
+
+</configuration>

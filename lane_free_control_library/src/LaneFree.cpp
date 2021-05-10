@@ -1,4 +1,4 @@
-#include <stdio.h>
+
 #include <stdlib.h>
 #include "math.h"
 
@@ -12,7 +12,12 @@
 #define MIN_DESIRED_SPEED 25
 #define MAX_DESIRED_SPEED 35
 
-
+#include <stdio.h>
+#ifdef __unix__
+#include "LaneFree_linux.h"
+#elif defined(WIN32)
+#include "LaneFree_win.h"
+#endif
 void simulation_initialize(){
 
 	//initialize srand with the same seed as sumo
