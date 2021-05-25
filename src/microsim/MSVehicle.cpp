@@ -3571,7 +3571,6 @@ MSVehicle::processLaneAdvances(std::vector<MSLane*>& passedLanes, bool& moved, s
                     MSNet::getInstance()->getEdgeControl().checkCollisionForInactive(approachedLane);
                 }
                 if (link != nullptr) {
-                    
                     if ((getVClass() & SVC_RAIL_CLASSES) != 0
                             && !myLane->isInternal()
                             && myLane->getBidiLane() != nullptr
@@ -3618,7 +3617,6 @@ MSVehicle::processLaneAdvances(std::vector<MSLane*>& passedLanes, bool& moved, s
                 } else {
                     emergencyReason = " because there is no connection to the next edge";
                     approachedLane = nullptr;
-                    //std::cout<< getID() << ", has no link!\n";
                     break;
                 }
                 if (approachedLane != myLane && approachedLane != nullptr) {

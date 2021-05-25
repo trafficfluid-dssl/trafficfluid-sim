@@ -118,10 +118,6 @@ public:
         return it - myEdges.begin();
     }
 
-    int size_wInternal() const {
-        return myEdgeswInternal.size();
-    }
-
     const ConstMSEdgeVector& getEdgeswInternal() const {
         return myEdgeswInternal;
     }

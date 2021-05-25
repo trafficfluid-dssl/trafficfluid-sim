@@ -881,7 +881,7 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
                 dx = (*veh)->getPositionOnLane() - front_veh_pos;
                 if (dx > (max_veh_length-front_veh_length)) {
                     break;
-                }
+                }                       
             }
             sum_speed += (*veh)->getSpeed();
             num_vehs++;
