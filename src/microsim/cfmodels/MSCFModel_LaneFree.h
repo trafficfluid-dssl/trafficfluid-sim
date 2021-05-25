@@ -65,6 +65,8 @@ typedef struct ArrayMem arrayMemStruct;
 
 typedef std::unordered_map<NumericalID, std::array<double, 2>> LastVehicleStatus;
 
+typedef std::vector<std::pair< ConstMSEdgeVector, MSVehicle*>> VehiclesRerouteData;
+
 double fRand(double fMin, double fMax);
 
 //declare here the api functions ("C compatible", in terms if arguments, and return value) (maybe implement them directly, or inside the cpp file alternatively)
@@ -451,6 +453,8 @@ public:
     }
     
     double get_uniform_distribution_sample(double from, double to);
+
+    void reroute_vehicles();
         
 protected:
     NumericalID find_stored_edge(MSVehicle* veh);
@@ -483,6 +487,9 @@ protected:
 
     std::default_random_engine random_engine;
     std::uniform_real_distribution<double> uniform_real_dis;
+
+    VehiclesRerouteData veh_reroute_data;
+
     //Deprecated print
     //std::vector<std::string> msgBufferVector;
     

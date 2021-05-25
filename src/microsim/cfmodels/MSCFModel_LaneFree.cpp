@@ -1920,6 +1920,22 @@ LaneFreeSimulationPlugin::get_uniform_distribution_sample(double from, double to
 	return val * (to - from) + from;
 }
 
+void
+LaneFreeSimulationPlugin::reroute_vehicles() {
+	
+	ConstMSEdgeVector veh_edges;
+	MSVehicle* veh;
+
+	for (VehiclesRerouteData::iterator r_it = veh_reroute_data.begin(); r_it != veh_reroute_data.end(); r_it++) {
+		veh_edges = r_it->first;
+		veh = r_it->second;
+		if (!veh->replaceRouteEdges(veh_edges, -1, 0, "lfplugin:change_route", false,true,true)) {
+			std::cout << "Could not change route!\n";
+		}
+	}
+
+	veh_reroute_data.clear();
+}
 LaneFreeSimulationPlugin::LaneFreeSimulationPlugin(){
 
 	// assign the function pointers of the API to the corresponding implemented functions
@@ -2106,7 +2122,7 @@ LaneFreeSimulationPlugin::lf_simulation_step(){
 	}
 	*/
 	
-
+	reroute_vehicles();
 }
 
 
@@ -2358,6 +2374,55 @@ LaneFreeSimulationPlugin::change_edge(MSVehicle* veh){
 	if(old_edge_id==new_edge_id){
 		return;
 	}
+	// This should be relocated. What the issue may be is the fact that change_edge is called within the whole procedure of changing edge. So, we need a vector that stores vehicles here, and the new route. and perform rerouting elsewhere, in a function where we can easily change places
+	if (!(veh->getLane()->getEdge().isInternal())) {
+		const MSEdge* cur_edge = &(veh->getLane()->getEdge());
+		MSRoute veh_route = veh->getRoute();
+		int cur_edge_index = veh_route.edge_index(cur_edge);
+		if (cur_edge_index == -1) {
+			std::cout << "Error, edge not found in veh routing scheme!\n";
+		}
+		int size = veh_route.size_wInternal();
+		if (cur_edge_index == size - 1) {
+			std::cout << "This is the last edge!\n";
+		}
+		else {
+			int next_edge_index = cur_edge_index + 1;
+			const MSEdge* next_edge = veh_route.getEdgeswInternal()[next_edge_index];
+			if (next_edge->isInternal()) {
+				const MSJunction* target_junction = next_edge->getToJunction();
+				
+				//std::cout << veh->getID() << " is approaching junction "<< target_junction->getID() <<"!\n";
+				if (target_junction->getID() == "gneJ5") {
+					ConstMSEdgeVector outgoing_edges = target_junction->getOutgoing();
+					ConstMSEdgeVector veh_edges = veh_route.getEdges();
+					std::cout <<"\nFor " << veh->getID() << " "<< veh->getVehicleType().getID()<<" in "<<  cur_edge->getID()<< ","<< veh->getEdge()->getID()<<"\n";
+					for (ConstMSEdgeVector::iterator ie = veh_edges.begin(); ie != veh_edges.end(); ie++) {
+						std::cout << (*ie)->getID() << ", ";
+					}
+					//std::cout << "replace:" << veh_edges[veh_edges.size() - 1]->getID();
+					int cur_edge_idx = veh_route.edge_index_normal(cur_edge);
+					veh_edges = { veh_edges.begin() + cur_edge_idx, veh_edges.begin() + cur_edge_idx + 1 };
+					veh_edges[1] = outgoing_edges.at(0)->getSuccessors().at(0);
+					//std::cout << " with:" << veh_edges[veh_edges.size() - 1]->getID()<<"\n";
+					
+					//std::cout << veh_edges.at(0)->getID() << "\n";
+					veh_reroute_data.push_back(std::make_pair(veh_edges, veh));
+					
+					//we may need the line below when having incomplete paths
+					//veh->reroute(MSNet::getInstance()->getCurrentTimeStep(), "lfplugin:change_route",
+					//	veh->getBaseInfluencer().getRouterTT(veh->getRNGIndex(), veh->getVClass()), true);
+					//veh_edges = veh->getRoute().getEdges();
+					//for (ConstMSEdgeVector::iterator ie = veh_edges.begin(); ie != veh_edges.end(); ie++) {
+					//	std::cout << (*ie)->getID() << ", ";
+					//}
+				}
+			}
+		}
+	}
+	
+
+
 
 	VehicleMap* old_edge_vm = allVehiclesMapEdges[old_edge_id];
 	
