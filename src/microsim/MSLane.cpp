@@ -795,6 +795,13 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
     std::string insertion_policy = aVehicle->getParameter().lf_attribute_insertion_policy;
     
     bool desired_speed_alignment = !(insertion_policy=="latExploit" || insertion_policy=="center");
+    //add flow speed
+    if (insertion_policy == "API") {
+        
+        incorporateVehicle(aVehicle, pos, speed, posLat, find_if(myVehicles.begin(), myVehicles.end(), [&](MSVehicle* const v) {return v->getPositionOnLane() >= pos; }), notification);
+
+        return true;
+    }
     if(aVehicle->getCarFollowModel().getModelID()==SUMO_TAG_CF_LANEFREE && !desired_speed_alignment){
         std::vector<std::pair<double, double>> available_lat_space;
         std::vector<std::pair<double, double>> available_lat_space_tmp;
