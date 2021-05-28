@@ -1373,9 +1373,12 @@ NumericalID lf_plugin_insert_new_vehicle(char* veh_name, char* route_id, char* t
 	MSVehicleType* vehicleType = MSNet::getInstance()->getVehicleControl().getVType(vTypeID);
 	double depart_pos_front = pos_x + vehicleType->getLength()/2;
 	std::string departPos = std::to_string(depart_pos_front);
-	std::string departSpeed = std::to_string(speed_x);
+	std::string departSpeed = std::to_string(speed_x);	
 	NumericalID new_vid = libsumo::Vehicle::addR(id, routeID, vTypeID, depart, departLane, departPos, departSpeed);
+	
 	LaneFreeSimulationPlugin::getInstance()->add_new_lat_stats(new_vid, pos_y, speed_y);
+
+	
 	// MSLaneFreeVehicle* lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(new_vid);
 	// if(lfveh==nullptr){
 	// 	std::cout<< "Vehicle with id:" << new_vid << " not found!\n";
@@ -2150,20 +2153,23 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 		if (vehs_in_edge == nullptr) {
 			continue;
 		}
-		//*vehs_in_edge = edge->getVehicles(); //This should probable be removed
+		//*vehs_in_edge = edge->getVehicles(); //This can now be removed
 		roadwidth = edge->getWidth();
-		std::sort(vehs_in_edge->begin(), vehs_in_edge->end(), less_than_key());
+		std::sort(vehs_in_edge->begin(), vehs_in_edge->end(), less_than_key()); //sorting is essentially performed here only
 		n_v = vehs_in_edge->size();
-		for(i=0;i<n_v;i++){
-			veh1 = (MSVehicle*)(*vehs_in_edge)[i];			
+		for(i=0;i<n_v;i++){ //one potential improvement here is to have a memory for all the info requested, because for each vehicle, same info is requested multiple times
+			veh1 = (MSVehicle*)(*vehs_in_edge)[i];
+			
 			lv1 = veh1->getVehicleType().getLength();
 			wv1 = veh1->getVehicleType().getWidth();
-			lfv1 = find_vehicle_in_edge(veh1->getNumericalID(), edge_id);
+			lfv1 = find_vehicle_in_edge(veh1->getNumericalID(), edge_id); //we could somehow remove the need for this, maybe have the get_position_x, get_position_y as a function that gets the veh object as attribute
 			xv1 = lfv1->get_position_x();
 			yv1 = lfv1->get_position_y();
 			
+			//std::cout << "veh:" << veh1->getID() << " at posx:" << xv1;
+
 			half_vwidth = wv1 / 2;
-			if (yv1 > (roadwidth - half_vwidth) || yv1 < half_vwidth) { //TODO e_accuracy 
+			if (yv1 > (roadwidth - half_vwidth) || yv1 < half_vwidth) {
 				event_vehicle_out_of_bounds(veh1->getNumericalID());
 			}
 			for(j=i+1;j<n_v;j++){
@@ -2171,16 +2177,19 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 				lfv2 = find_vehicle_in_edge(veh2->getNumericalID(), edge_id);
 				dx = abs(xv1-lfv2->get_position_x());
 				dy = abs(yv1-lfv2->get_position_y());
-				if((dx<((lv1+veh2->getVehicleType().getLength())/2)) && (dy<((wv1/2+veh2->getVehicleType().getWidth())/2))){
+				if((dx<((lv1+veh2->getVehicleType().getLength())/2)) && (dy<((wv1+veh2->getVehicleType().getWidth())/2))){
+					//std::cout << "\n";
 					event_vehicles_collide(veh1->getNumericalID(), veh2->getNumericalID());
 					MSNet::getInstance()->getVehicleControl().registerCollision();
 				}
+				
 				if(dx>(lv1+max_vehicle_length)/2){
 					break;
 				}
 			}
 			
 		}
+		//std::cout << "\n";
 		
 	}
 	
