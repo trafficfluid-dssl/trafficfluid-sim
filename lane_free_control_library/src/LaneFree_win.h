@@ -180,6 +180,10 @@ libLaneFreePlugin_EXPORT double (*get_global_position_x)(NumericalID veh_id);
 //returns the global y position of the vehicle
 libLaneFreePlugin_EXPORT double (*get_global_position_y)(NumericalID veh_id);
 
+//returns the destination edge id of the vehicle
+libLaneFreePlugin_EXPORT NumericalID (*get_destination_edge_id)(NumericalID veh_id);
+
+
 //is called once before the first time-step
 libLaneFreePlugin_EXPORT void simulation_initialize();
 

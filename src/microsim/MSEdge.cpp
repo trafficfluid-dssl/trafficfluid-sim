@@ -693,9 +693,28 @@ MSEdge::getInternalFollowingEdge(const MSEdge* followerAfterInternal) const {
 }
 
 // LFPlugin Begin
+
+const MSEdge*
+MSEdge::getInternalFollowingEdgefromLane(const MSLane* l, const MSEdge* followerAfterInternal) const {
+    //@todo to be optimized
+    
+    for (const MSLink* const link : l->getLinkCont()) {
+        if (&link->getLane()->getEdge() == followerAfterInternal) {
+            if (link->getViaLane() != nullptr) {
+                return &link->getViaLane()->getEdge();
+            }
+            else {
+                return nullptr; // network without internal links
+            }
+        }
+    }
+    return nullptr;
+}
 double
 MSEdge::getLateralShiftToFollowingEdge(const MSEdge* followerAfterInternal) const {
     double ls;
+
+    // We probably need to check only for the top right lane of each edge
     for (const MSLane* const l : *myLanes) {
         for (const MSLink* const link : l->getLinkCont()) {
             if (&link->getLane()->getEdge() == followerAfterInternal) {

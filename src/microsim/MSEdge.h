@@ -567,6 +567,9 @@ public:
     const MSEdge* getInternalFollowingEdge(const MSEdge* followerAfterInternal) const;
 
     // LFPlugin Begin
+    const MSEdge* getInternalFollowingEdgefromLane(const MSLane* l, const MSEdge* followerAfterInternal) const;
+
+    
     double getLateralShiftToFollowingEdge(const MSEdge* followeAfterInternal) const;
     // LFPlugin End
 

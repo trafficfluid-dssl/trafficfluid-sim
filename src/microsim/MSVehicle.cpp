@@ -1332,8 +1332,13 @@ MSVehicle::computeAngle() const {
             p2 = myLane->geometryPositionAtOffset(0, posLat);
         }
     }
-    double result = (p1 != p2 ? p2.angleTo2D(p1) :
-                     myLane->getShape().rotationAtOffset(myLane->interpolateLanePosToGeometryPos(getPositionOnLane())));
+    // LFPlugin Begin
+    //std::cout << getID() << "angleee:"<<p2.angleTo2D(p1)<<"\n";
+    //HERE we need another variable, that is the angle wrt the road edge
+    double veh_angle = 0;
+    double result = (p1 != p2 ? veh_angle + p2.angleTo2D(p1) :
+                veh_angle + myLane->getShape().rotationAtOffset(myLane->interpolateLanePosToGeometryPos(getPositionOnLane())));
+    // LFPlugin End
     if (myLaneChangeModel->isChangingLanes()) {
         result += lefthandSign * DEG2RAD(myLaneChangeModel->getAngleOffset());
     }
@@ -3863,7 +3868,7 @@ MSVehicle::executeMove() {
             }
 #endif
         }
-        myAngle = computeAngle();
+        myAngle =  computeAngle();
     }
 
 #ifdef DEBUG_EXEC_MOVE

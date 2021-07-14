@@ -173,6 +173,10 @@ double (*get_global_position_x)(NumericalID veh_id);
 //returns the global y position of the vehicle
 double (*get_global_position_y)(NumericalID veh_id);
 
+//returns the destination edge id of the vehicle
+NumericalID(*get_destination_edge_id)(NumericalID veh_id);
+
+
 //is called once before the first time-step
 void simulation_initialize();
 

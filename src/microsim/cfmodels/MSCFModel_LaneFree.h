@@ -54,7 +54,7 @@ struct less_than_key
 {
     inline bool operator() (const SUMOVehicle* v1, const SUMOVehicle* v2)
     {
-        return (((MSVehicle*)v1)->getPositionOnLane() - ((MSVehicle*)v1)->getLength()/2) < (((MSVehicle*)v2)->getPositionOnLane() - ((MSVehicle*)v2)->getLength() / 2);
+        return (((MSVehicle*)v1)->getPositionOnLane() - ((MSVehicle*)v1)->getLength()/2) < (((MSVehicle*)v2)->getPositionOnLane() - ((MSVehicle*)v2)->getLength()/2);
     }
 };
 
