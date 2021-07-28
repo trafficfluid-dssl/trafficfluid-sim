@@ -725,6 +725,8 @@ public:
     // LFPlugin Begin
     // additional variables needed
     std::string lf_attribute_insertion_policy;
+    double lf_attribute_lat_low;
+    double lf_attribute_lat_high;
     // LFPlugin End
 
 protected:

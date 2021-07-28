@@ -222,7 +222,26 @@ SUMOVehicleParserHelper::parseFlowAttributes(SumoXMLTag tag, const SUMOSAXAttrib
             ret->lf_attribute_insertion_policy = attrs.get<std::string>(SUMO_ATTR_LF_INSERTION_POLICY, id.c_str(), ok);
         }
         //std::cout << "insertion policy:" << ret->lf_attribute_insertion_policy << "\n";
+        if (attrs.hasAttribute(SUMO_ATTR_LF_LAT_LOW)) {
+            ret->lf_attribute_lat_low = attrs.get<double>(SUMO_ATTR_LF_LAT_LOW, id.c_str(), ok);
+            if (ret->lf_attribute_lat_low < 0 || ret->lf_attribute_lat_low > 1) {
+                std::cout << "Error, lower bound latLow:" << ret->lf_attribute_lat_low << " is out of bounds (0-1)!\n";
+            }
+        }
+
+        if (attrs.hasAttribute(SUMO_ATTR_LF_LAT_HIGH)) {
+            ret->lf_attribute_lat_high = attrs.get<double>(SUMO_ATTR_LF_LAT_HIGH, id.c_str(), ok);
+            if (ret->lf_attribute_lat_high < 0 || ret->lf_attribute_lat_high > 1) {
+                std::cout << "Error, upper bound latHigh:" << ret->lf_attribute_lat_high << " is out of bounds (0-1)!\n";
+            }
+        }
+
+        if (ret->lf_attribute_lat_low > ret->lf_attribute_lat_high) {
+            std::cout << "Error, lower bound latLow:" << ret->lf_attribute_lat_low << " is more than the upper bound latHigh:" << ret->lf_attribute_lat_high << "for demand with ID:" << id << "!\n";
+        }
+        
         // LFPlugin End
+
         return ret;
     } else {
         if (hardFail) {

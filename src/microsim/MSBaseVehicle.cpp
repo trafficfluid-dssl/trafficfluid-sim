@@ -616,7 +616,8 @@ MSBaseVehicle::getRouteValidity(bool update, bool silent) {
     // insertion check must be done in any case
     std::string msg;
     if (!hasValidRouteStart(msg)) {
-        if (MSGlobals::gCheckRoutes) {
+ 
+        if (MSGlobals::gCheckRoutes) {            
             throw ProcessError(msg);
         } else if (!silent) {
             // vehicle will be discarded

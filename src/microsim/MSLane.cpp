@@ -793,6 +793,8 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
     //}
     //std::cout << "\n";
     std::string insertion_policy = aVehicle->getParameter().lf_attribute_insertion_policy;
+    double latLow = aVehicle->getParameter().lf_attribute_lat_low;
+    double latHigh = aVehicle->getParameter().lf_attribute_lat_high;
     
     bool desired_speed_alignment = !(insertion_policy=="latExploit" || insertion_policy=="center");
     //add flow speed
@@ -806,8 +808,13 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
         std::vector<std::pair<double, double>> available_lat_space;
         std::vector<std::pair<double, double>> available_lat_space_tmp;
         double vwidth = aVehicle->getWidth();
-        double road_low = vwidth / 2, road_high = getWidth() - vwidth / 2;
-        available_lat_space.push_back(std::make_pair(road_low, road_high));
+        double road_low = vwidth / 2, road_high = getWidth() - vwidth / 2; //TODO, here we shall change the values in order to have what milad needs
+        double latRange = road_high - road_low;
+        if (latRange < 0) {
+            std::cout << "Error, vehicle to be inserted has more width than the road!";
+        }
+        available_lat_space.push_back(std::make_pair(road_low+latLow*(latRange), road_low+latHigh*(latRange)));
+
         double lat_distance = aVehicle->getVehicleType().getMinGapLat();
         double desired_tau = aVehicle->getCarFollowModel().getHeadwayTime(); //Our Lane-Free controller acts as a car follow model
         double avg_speed_front, sum_speed_front=0;

@@ -35,25 +35,27 @@
 
 SUMOVehicleParameter::SUMOVehicleParameter()
     : tag(SUMO_TAG_NOTHING), vtypeid(DEFAULT_VTYPE_ID), color(RGBColor::DEFAULT_COLOR),
-      depart(-1), departProcedure(DEPART_GIVEN),
-      departLane(0), departLaneProcedure(DepartLaneDefinition::DEFAULT),
-      departPos(0), departPosProcedure(DepartPosDefinition::DEFAULT),
-      departPosLat(0), departPosLatProcedure(DepartPosLatDefinition::DEFAULT),
-      departSpeed(-1), departSpeedProcedure(DepartSpeedDefinition::DEFAULT),
-      departEdge(0), departEdgeProcedure(DepartEdgeDefinition::DEFAULT),
-      arrivalLane(0), arrivalLaneProcedure(ArrivalLaneDefinition::DEFAULT),
-      arrivalPos(0), arrivalPosProcedure(ArrivalPosDefinition::DEFAULT),
-      arrivalPosLat(0), arrivalPosLatProcedure(ArrivalPosLatDefinition::DEFAULT),
-      arrivalSpeed(-1), arrivalSpeedProcedure(ArrivalSpeedDefinition::DEFAULT),
-      repetitionNumber(-1), repetitionsDone(-1), repetitionOffset(-1), repetitionProbability(-1), repetitionEnd(-1),
-      line(), fromTaz(), toTaz(), personNumber(0), containerNumber(0),
-      speedFactor(-1),
-      parametersSet(0)
-      // LFPlugin Begin
-      // initialize additional parameters
-      ,
-      lf_attribute_insertion_policy("latExploit")
-      // LFPlugin End
+    depart(-1), departProcedure(DEPART_GIVEN),
+    departLane(0), departLaneProcedure(DepartLaneDefinition::DEFAULT),
+    departPos(0), departPosProcedure(DepartPosDefinition::DEFAULT),
+    departPosLat(0), departPosLatProcedure(DepartPosLatDefinition::DEFAULT),
+    departSpeed(-1), departSpeedProcedure(DepartSpeedDefinition::DEFAULT),
+    departEdge(0), departEdgeProcedure(DepartEdgeDefinition::DEFAULT),
+    arrivalLane(0), arrivalLaneProcedure(ArrivalLaneDefinition::DEFAULT),
+    arrivalPos(0), arrivalPosProcedure(ArrivalPosDefinition::DEFAULT),
+    arrivalPosLat(0), arrivalPosLatProcedure(ArrivalPosLatDefinition::DEFAULT),
+    arrivalSpeed(-1), arrivalSpeedProcedure(ArrivalSpeedDefinition::DEFAULT),
+    repetitionNumber(-1), repetitionsDone(-1), repetitionOffset(-1), repetitionProbability(-1), repetitionEnd(-1),
+    line(), fromTaz(), toTaz(), personNumber(0), containerNumber(0),
+    speedFactor(-1),
+    parametersSet(0)
+    // LFPlugin Begin
+    // initialize additional parameters
+    ,
+    lf_attribute_insertion_policy("latExploit"),
+    lf_attribute_lat_low(0),
+    lf_attribute_lat_high(1)
+    // LFPlugin End
 { }
 
 

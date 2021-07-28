@@ -859,6 +859,8 @@ enum SumoXMLAttr {
     // LFPlugin Begin
     // additional attributes needed
     SUMO_ATTR_LF_INSERTION_POLICY,
+    SUMO_ATTR_LF_LAT_LOW,
+    SUMO_ATTR_LF_LAT_HIGH,
     // LFPlugin End
 
     /// @brief link,node: the traffic light id responsible for this link

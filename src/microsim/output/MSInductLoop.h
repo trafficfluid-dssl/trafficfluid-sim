@@ -297,8 +297,10 @@ public:
 
     // LFPlugin Begin
     int getVehiclesCount(){
-        // TODO consider reseting the value
-        return myTotalEnteredVehicleNumber;
+        // reset the value
+        int counter_value = myTotalEnteredVehicleNumber;
+        myTotalEnteredVehicleNumber = 0;
+        return counter_value;
     }
 
     int getVehiclesCountForType(std::string veh_type) {
@@ -307,7 +309,10 @@ public:
             return 0;
         }
         else {
-            return it->second;
+            // reset the value
+            int counter_value = it->second;
+            it->second = 0;
+            return counter_value;
         }
     }
     // LFPlugin End
