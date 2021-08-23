@@ -193,7 +193,6 @@ MSInsertionControl::checkCandidates(SUMOTime time, const bool preCheck) {
     }
 }
 
-
 void
 MSInsertionControl::determineCandidates(SUMOTime time) {
     MSVehicleControl& vehControl = MSNet::getInstance()->getVehicleControl();
@@ -207,8 +206,13 @@ MSInsertionControl::determineCandidates(SUMOTime time) {
                     && pars->depart <= time
                     && pars->repetitionEnd > time
                     // only call rand if all other conditions are met
-                    && RandHelper::rand(&myFlowRNG) < (pars->repetitionProbability * TS))
+                    // LFPlugin Begin
+                    // original code first
+                    //&& RandHelper::rand(&myFlowRNG) < (pars->repetitionProbability * TS))
+                    && RandHelper::rand(&myFlowRNG) < (pars->repetitionProbability))
+                    // LFPlugin End
               ) {
+
             tryEmitByProb = false; // only emit one per step
             SUMOVehicleParameter* newPars = new SUMOVehicleParameter(*pars);
             newPars->id = pars->id + "." + toString(i->index);

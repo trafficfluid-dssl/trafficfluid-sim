@@ -712,13 +712,14 @@ MSEdge::getInternalFollowingEdgefromLane(const MSLane* l, const MSEdge* follower
 }
 double
 MSEdge::getLateralShiftToFollowingEdge(const MSEdge* followerAfterInternal) const {
-    double ls;
+    double ls=0;
 
-    // We probably need to check only for the top right lane of each edge
+    // We probably need to check only for the furthest right lane of each edge
     for (const MSLane* const l : *myLanes) {
         for (const MSLink* const link : l->getLinkCont()) {
-            if (&link->getLane()->getEdge() == followerAfterInternal) {
+            if (link->getLane()->getEdge().getNumericalID() == followerAfterInternal->getNumericalID()) {
                 ls = link->getLateralShift_lf();
+                //std::cout <<"lateral shift between:"<<  getID() << " and:"<< followerAfterInternal->getID() << "is:" << ls << "\n";
                 /*
                 if (link->getViaLane() != nullptr) {                    
                     ls2 += link->getViaLane()->getLinkTo(link->getLane())->getLateralShift_lf();
@@ -732,7 +733,7 @@ MSEdge::getLateralShiftToFollowingEdge(const MSEdge* followerAfterInternal) cons
             }
         }
     }    
-    return 0;
+    return ls;
 }
 // LFPlugin End
 

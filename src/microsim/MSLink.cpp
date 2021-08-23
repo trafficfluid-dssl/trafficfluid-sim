@@ -138,6 +138,7 @@ MSLink::MSLink(MSLane* predLane, MSLane* succLane, MSLane* via, LinkDirection di
         catch (InvalidArgument&) {
         }
         double latshiftlf = (from.back().distanceTo2D(to.front()) < dist) ? dist : -dist;
+        //std::cout <<"from lane:"<<prevLane->getID()<<" to lane:"<< nextLane->getID()<< " latshift:"<< latshiftlf << " and default latshift:"<<myLateralShift << "\n";
         /*
         if (myLateralShift > 0) {
             myLateralShift = 2 * (myLateralShift - prevLane->getWidth()/2);
@@ -146,6 +147,7 @@ MSLink::MSLink(MSLane* predLane, MSLane* succLane, MSLane* via, LinkDirection di
             myLateralShift = - 2 * (-myLateralShift - nextLane->getWidth() / 2);
         }*/
         myLateralShift_lf = latshiftlf + nextLane->getWidth()/2 - prevLane->getWidth() / 2;
+        //std::cout << "adjusted:" << myLateralShift_lf <<"\n";
         //std::cout << " lateral shift link=" << myLaneBefore->getID() << "->" << myLane->getID() << " dist=" << dist << " shift=" << myLateralShift_lf << "\n";
     }
     // LFPlugin End

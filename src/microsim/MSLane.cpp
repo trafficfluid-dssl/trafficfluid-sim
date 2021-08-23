@@ -740,7 +740,7 @@ void update_available_space(std::vector<std::pair<double, double>>* available_la
 //random value within [fMin, fMax] (uniform distribution)
 double dRand(double fMin, double fMax)
 {
-    double f = (double)rand() / RAND_MAX;
+    double f = (double)RandHelper::rand(); //(double)rand()/ RAND_MAX;
     return fMin + f * (fMax - fMin);
     //return LaneFreeSimulationPlugin::getInstance()->get_uniform_distribution_sample(fMin, fMax);
     //std::default_random_engine generator;
@@ -756,7 +756,7 @@ int iRand(int iMin, int iMax) {
 double random_lateral_position_available_region(std::vector<std::pair<double, double>>* available_lat_space) {
     
     //first select randomly one of the available regions
-    int selected_region = iRand(0, available_lat_space->size());
+    int selected_region = RandHelper::rand((int)available_lat_space->size());//iRand(0, available_lat_space->size());
     double low = available_lat_space->at(selected_region).first;
     double high = available_lat_space->at(selected_region).second;
 

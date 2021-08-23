@@ -539,6 +539,7 @@ NumericalID* lf_plugin_get_all_neighbor_ids_front(NumericalID veh_id, double fro
 
 
 	*/
+	//std::cout << "START\n";
 
 	MSLaneFreeVehicle* lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(veh_id);
 	
@@ -549,8 +550,8 @@ NumericalID* lf_plugin_get_all_neighbor_ids_front(NumericalID veh_id, double fro
 	}
 
 	const MSRoute veh_route = lfveh->get_vehicle()->getRoute();
-	const ConstMSEdgeVector veh_edges = veh_route.getEdges();
-	
+	//const ConstMSEdgeVector veh_edges = veh_route.getEdges();
+	const ConstMSEdgeVector veh_edges = veh_route.getEdgeswInternal();
 
 	double x_vid = lfveh->get_position_x();
 	double remaining_distance = front_distance;
@@ -559,20 +560,25 @@ NumericalID* lf_plugin_get_all_neighbor_ids_front(NumericalID veh_id, double fro
 	NumericalID edge_id = lfveh->get_vehicle()->getLane()->getEdge().getNumericalID();//this will contain the edge, also accounting for intersection
 	
 	size_t route_edge_index = 0;//-1;
-	const MSEdge* tmp_edge = veh_edges.at(0);
-	const MSEdge* tmp_edge_next;
-	const MSEdge* tmp_internal_edge;
+	const MSEdge* tmp_edge = veh_edges.at(veh_edges.size()-1);
+	//const MSEdge* tmp_edge_next;
+	//const MSEdge* tmp_internal_edge;
 
 	bool found_edge = false;
 	//std::cout << "Route of " << lfveh->get_vehicle()->getID()<<", with current edge:"<< lfveh->get_vehicle()->getLane()->getEdge().getID() <<", reg:"<< lfveh->get_vehicle()->getEdge()->getID()<<", and position:"<< lfveh->get_position_x() <<" :";
 	//TODO this can be done once in the beginning
 	//NumericalID non_junction_edge_id = lfveh->get_vehicle()->getEdge()->getNumericalID();
 	//std::string route_full_str = tmp_edge->getID();
+	/*
 	for (size_t i = 0; i < veh_edges.size()-1; i++) {		
 		tmp_edge_next = veh_edges.at(i + 1);
+		tmp_internal_edge = tmp_edge->getInternalFollowingEdge(tmp_edge_next);
+		if (tmp_internal_edge == nullptr) {
+			std::cout << "ERRORRORORORO\n";
+		}
 		//if (edge_id != non_junction_edge_id && tmp_edge->getNumericalID() == non_junction_edge_id) {
 		//	const MSLane* l = lfveh->get_vehicle()->getLane();
-		//	//std::cout <<"lane id:"<< l->getID() <<"\n";
+			//std::cout <<"lane id:"<< l->getID() <<"\n";
 		//	tmp_internal_edge = tmp_edge->getInternalFollowingEdge(tmp_edge_next);
 		//}
 		//else {
@@ -581,7 +587,7 @@ NumericalID* lf_plugin_get_all_neighbor_ids_front(NumericalID veh_id, double fro
 		if (found_edge) {
 			all_veh_edges.push_back(tmp_edge);
 			all_veh_edges.push_back(tmp_internal_edge);
-			//std::cout << " "<<tmp_edge->getID()<<" "<<tmp_internal_edge->getID();
+			std::cout << " "<<tmp_edge->getID()<<" "<<tmp_internal_edge->getID();
 		}
 		else if (tmp_edge->getNumericalID() == edge_id) {
 			found_edge = true;
@@ -601,15 +607,23 @@ NumericalID* lf_plugin_get_all_neighbor_ids_front(NumericalID veh_id, double fro
 	}
 
 	all_veh_edges.push_back(tmp_edge);	
-	//std::cout << " " << tmp_edge->getID() << " ";
-	//std::cout << "\n";
+	std::cout << " " << tmp_edge->getID() << " ";
+	std::cout << "\n";
+	*/
+	int my_edge_index = veh_route.edge_index(&(lfveh->get_vehicle()->getLane()->getEdge()));//veh_route.edge_index(lfveh->get_vehicle()->getEdge());
+	if (my_edge_index != -1) {
+		found_edge = true;
+	}
+	for (int i = my_edge_index; i < veh_edges.size(); i++) {
+		all_veh_edges.push_back(veh_edges.at(i));
+	}
 	if (!found_edge) {
 		//this is an error only if the vehicle is not in the last edge already
-		//if (tmp_edge->getNumericalID() != edge_id) {
-		//	std::cout << "Edge "<< lfveh->get_vehicle()->getLane()->getEdge().getID() <<" not found in route for vehicle " << lfveh->get_vehicle()->getID() << "!\n";
+		if (tmp_edge->getNumericalID() != edge_id) {
+			std::cout << "Edge "<< lfveh->get_vehicle()->getLane()->getEdge().getID() <<" not found in route for vehicle " << lfveh->get_vehicle()->getID() << "!\n";
 		//	std::cout << "Veh route:" << route_full_str << "\n";
 		//	std::cout << "Current Edge:" << lfveh->get_vehicle()->getEdge()->getID() << "\n";
-		//}
+		}
 			
 	}
 	/*
@@ -630,11 +644,11 @@ NumericalID* lf_plugin_get_all_neighbor_ids_front(NumericalID veh_id, double fro
 	
 	double edge_length = lf_plugin_get_edge_length(edge_id);
 	SortedVehiclesVector* sorted_vehs = LaneFreeSimulationPlugin::getInstance()->get_sorted_vehicles_in_edge(edge_id);
-	/*
-	for (auto v : *sorted_vehs) {
-		std::cout << " veh " << v->getID();
-	}
-	std::cout << "\n ";*/
+	//std::cout << "size:" << sorted_vehs->size()<<"\n";
+	//for (auto v : *sorted_vehs) {
+	//	std::cout << " veh " << v->getID();
+	//}
+	//std::cout << "\n ";
 	size_t size_edge = sorted_vehs->size();
 	if (size_edge == 0) {
 		std::cout << "Sorted edge of vehicle found empty!\n";
@@ -657,23 +671,32 @@ NumericalID* lf_plugin_get_all_neighbor_ids_front(NumericalID veh_id, double fro
 	NumericalID neighbor_id;
 	const SUMOVehicle* neighbor_veh;
 
-	
+	route_edge_index = 0;
 	//std::cout << "\n\nvehicle:" << lfveh->get_vehicle()->getID() << " in edge:"<< all_veh_edges[route_edge_index]->getID()<<":";
 	while (true) {
 		//std::cout << "iter!\t";
 		if (vehicle_index >= size_edge) {
-
+			//std::cout << "final!\t";
 			my_pos = my_pos - edge_length;
 			route_edge_index++;
-			if (!cross_edge || my_pos < -front_distance || route_edge_index == all_veh_edges.size()) {
+			if (!cross_edge || my_pos < -front_distance || route_edge_index >= all_veh_edges.size()) {
+				//std::cout << "next final!\t";
 				break;
 			}
 			vehicle_index = 0;
-
+			//std::cout << "next!\t";
+			if (all_veh_edges[route_edge_index] == nullptr) {
+				size_edge = 0;
+				edge_length = 0;
+				
+				continue;
+			}
 			edge_id = all_veh_edges[route_edge_index]->getNumericalID();
+			//std::cout << "next get length!\t";
 			edge_length = lf_plugin_get_edge_length(edge_id);
+			//std::cout << "next get bef!\t";
 			sorted_vehs = LaneFreeSimulationPlugin::getInstance()->get_sorted_vehicles_in_edge(edge_id);
-			
+			//std::cout << "next get!\t";
 			if (sorted_vehs == nullptr) {//(sorted_vehs==nullptr)edge_id may not be initialized if no vehicles have entered
 				size_edge = 0;
 				continue;
@@ -685,7 +708,7 @@ NumericalID* lf_plugin_get_all_neighbor_ids_front(NumericalID veh_id, double fro
 			
 			
 		}
-
+		
 		neighbor_veh = sorted_vehs->at(vehicle_index);
 		neighbor_id = neighbor_veh->getNumericalID();
 		neighbor_pos = get_position_x(neighbor_id);
@@ -693,18 +716,18 @@ NumericalID* lf_plugin_get_all_neighbor_ids_front(NumericalID veh_id, double fro
 
 		if (neighbor_distance <= front_distance) {
 			neighbors.push_back(neighbor_id);
-			//std::cout << " " << neighbor_veh->getID() << " dist:" << neighbor_distance << "lat dist:" <<get_relative_distance_y(veh_id, neighbor_id);
+			//std::cout << " " << neighbor_veh->getID() << " dist:" << neighbor_distance << "lat dist:" << get_relative_distance_y(veh_id, neighbor_id);
 		}
 		else {
 			break;
 		}
-
+		
 		vehicle_index++;
 
 		
 	
 	}
-
+	
 	arrayMemStruct* all_neighbor_ids_front_ams = LaneFreeSimulationPlugin::getInstance()->get_all_neighbor_ids_front_mem();
 
 	size_t n_size = neighbors.size();
@@ -798,7 +821,7 @@ NumericalID* lf_plugin_get_all_neighbor_ids_back(NumericalID veh_id, double back
 		tmp_edge = tmp_edge_prev;
 	}
 	*/
-	int my_edge_index = veh_route.edge_index(lfveh->get_vehicle()->getEdge());
+	int my_edge_index = veh_route.edge_index(&(lfveh->get_vehicle()->getLane()->getEdge()));//veh_route.edge_index(lfveh->get_vehicle()->getEdge());
 	if (my_edge_index != -1) {
 		found_edge = true;
 	}
@@ -843,19 +866,22 @@ NumericalID* lf_plugin_get_all_neighbor_ids_back(NumericalID veh_id, double back
 	const SUMOVehicle* neighbor_veh;
 
 	
-	//std::cout << "\n\nvehicle:" << lfveh->get_vehicle()->getID() << " in edge:"<< all_veh_edges[route_edge_index]->getID()<<":";
+	//std::cout << "\n\nvehicle(back):" << lfveh->get_vehicle()->getID() << " in edge:"<< all_veh_edges[route_edge_index]->getID()<<":";
 	while (true) {
 		//std::cout << "iter-> vindex:"<< vehicle_index<< " edge:"<< lf_plugin_get_edge_name(edge_id) <<"!\n";
 		if (vehicle_index < 0) {
 
 			//std::cout << "negative!\n";
 			route_edge_index++;
-			if (!cross_edge || route_edge_index >= all_veh_edges.size()) {
+			if (!cross_edge || my_pos > back_distance ||route_edge_index >= all_veh_edges.size()) {
 				//std::cout << "break!\n";
 				break;
 			}
 			
-
+			if (all_veh_edges[route_edge_index] == nullptr) {
+				size_edge = 0;
+				continue;
+			}
 			edge_id = all_veh_edges[route_edge_index]->getNumericalID();
 			
 			edge_length = lf_plugin_get_edge_length(edge_id);
@@ -883,7 +909,7 @@ NumericalID* lf_plugin_get_all_neighbor_ids_back(NumericalID veh_id, double back
 		//std::cout << "new neighbor cont\n";
 		if (neighbor_distance > - back_distance) {
 			neighbors.push_back(neighbor_id);
-			//std::cout << " " << neighbor_veh->getID() << " dist:" << neighbor_distance;
+			//std::cout << " " << neighbor_veh->getID() << " dist:" << neighbor_distance << "lat dist:" << get_relative_distance_y(veh_id, neighbor_id);
 		}
 		else {
 			//std::cout << "new neighbor break\n";
@@ -1221,21 +1247,22 @@ double lf_plugin_get_relative_distance_y(NumericalID ego_id, NumericalID other_i
 
 		const MSEdge* tmp_edge = route_edges.at(start_index);
 		const MSEdge* tmp_edge_next;
-		for (int i = start_index + 1; i <= end_index; i++) {
+		//printf("latshift:");
+		for (int i = start_index +1 ; i <= end_index; i++) {
 			tmp_edge_next = route_edges.at(i);
 			
 			latShift = tmp_edge->getLateralShiftToFollowingEdge(tmp_edge_next);
-			if (latShift == 0 && i < end_index && tmp_edge_next->isInternal()) {
+			if (latShift == 0 && i <= end_index && tmp_edge_next->isInternal()) {
 				latShift = tmp_edge->getLateralShiftToFollowingEdge(route_edges.at(i + 1));				
 			}
-			//printf("latshift:%f", latShift);
+			//printf("%f\t", latShift);
 			total_latShift += latShift;
 			tmp_edge = tmp_edge_next;
 		}
-
+		//printf("\n");
 
 		total_latShift = coeff * total_latShift;
-
+		
 	}
 
 	double dy = other_lfveh->get_position_y() - ego_lfveh->get_position_y() + total_latShift;
