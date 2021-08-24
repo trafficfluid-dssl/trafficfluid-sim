@@ -70,6 +70,9 @@ const int VTYPEPARS_LOCOMOTIVE_LENGTH_SET = 1 << 26;
 const int VTYPEPARS_CARRIAGE_GAP_SET = 1 << 27;
 const int VTYPEPARS_MANEUVER_ANGLE_TIMES_SET = 1 << 28;
 
+// LFPlugin Begin
+const int VTYPEPARS_LF_CAR_MOVEMENT_DYNAMICS = 1 << 29;
+// LFPlugin End
 
 const int VTYPEPARS_DEFAULT_EMERGENCYDECEL_DEFAULT = -1;
 const int VTYPEPARS_DEFAULT_EMERGENCYDECEL_DECEL = -2;
@@ -274,6 +277,10 @@ public:
 
     /// @brief The enum-representation of the car-following model to use
     SumoXMLTag cfModel;
+
+    // LFPlugin Begin
+    SumoXMLTag cmdModel;
+    // LFPlugin End
 
     /// @brief Car-following parameter
     SubParams cfParameter;

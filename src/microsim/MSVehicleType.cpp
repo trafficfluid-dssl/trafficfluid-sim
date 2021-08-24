@@ -315,9 +315,11 @@ MSVehicleType::build(SUMOVTypeParameter& from) {
         case SUMO_TAG_CF_KRAUSSX:
             vtype->myCarFollowModel = new MSCFModel_KraussX(vtype);
             break;
+        // LFPlugin Begin
         case SUMO_TAG_CF_LANEFREE:
             vtype->myCarFollowModel = new MSCFModel_LaneFree(vtype, false);
             break;
+        // LFPlugin End
         case SUMO_TAG_CF_SMART_SK:
             vtype->myCarFollowModel = new MSCFModel_SmartSK(vtype);
             break;

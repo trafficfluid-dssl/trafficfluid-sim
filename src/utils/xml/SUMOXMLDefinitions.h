@@ -294,7 +294,9 @@ enum SumoXMLTag {
     SUMO_TAG_CF_KRAUSS_PLUS_SLOPE,
     SUMO_TAG_CF_KRAUSS_ORIG1,
     SUMO_TAG_CF_KRAUSSX,
-    SUMO_TAG_CF_LANEFREE,
+    // LFPlugin Begin
+    SUMO_TAG_CF_LANEFREE,\
+    // LFPlugin End
     SUMO_TAG_CF_SMART_SK,
     SUMO_TAG_CF_DANIEL1,
     SUMO_TAG_CF_IDM,
@@ -308,6 +310,14 @@ enum SumoXMLTag {
     SUMO_TAG_CF_RAIL,
     SUMO_TAG_CF_CC,
     /// @}
+    
+    // LFPlugin Begin
+    //  @name Movement Dynamics models
+    /// @{
+    SUMO_TAG_LF_CMD_DOUBLEINTEGRATOR,
+    SUMO_TAG_LF_CMD_BICYCLE,
+    /// @}
+    // LFPlugin End
 
     /// @name Persons
     /// @{
@@ -575,6 +585,9 @@ enum SumoXMLAttr {
     SUMO_ATTR_SPEEDDEV,
     SUMO_ATTR_LANE_CHANGE_MODEL,
     SUMO_ATTR_CAR_FOLLOW_MODEL,
+    // LFPlugin Begin
+    SUMO_ATTR_LF_CAR_MOVEMENT_DYNAMICS,
+    // LFPlugin End
     SUMO_ATTR_MINGAP,
     SUMO_ATTR_COLLISION_MINGAP_FACTOR,
     SUMO_ATTR_BOARDING_DURATION,
@@ -1618,6 +1631,11 @@ public:
     /// @brief car following models
     static StringBijection<SumoXMLTag> CarFollowModels;
 
+    // LFPlugin Begin
+    /// @brief car movement dynamics
+    static StringBijection<SumoXMLTag> CarMovementDynamics;
+    // LFPlugin End
+
     /// @brief lateral alignments
     static StringBijection<LateralAlignment> LateralAlignments;
 
@@ -1712,6 +1730,10 @@ private:
 
     /// @brief car follwing model values
     static StringBijection<SumoXMLTag>::Entry carFollowModelValues[];
+
+    // LFPlugin Begin
+    static StringBijection<SumoXMLTag>::Entry carMovementDynamicsValues[];
+    // LFPlugin End
 
     /// @brief lanteral alignment values
     static StringBijection<LateralAlignment>::Entry lateralAlignmentValues[];

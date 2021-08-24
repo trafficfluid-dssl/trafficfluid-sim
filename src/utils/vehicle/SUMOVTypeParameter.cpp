@@ -431,10 +431,17 @@ SUMOVTypeParameter::write(OutputDevice& dev) const {
     if (wasSet(VTYPEPARS_CAR_FOLLOW_MODEL)) {
         dev.writeAttr(SUMO_ATTR_CAR_FOLLOW_MODEL, SUMOXMLDefinitions::CarFollowModels.getString(cfModel));
     }
+    
     // Write Car Following Model parameters
     for (const auto& i : cfParameter) {
         dev.writeAttr(i.first, i.second);
     }
+    // LFPlugin Begin
+    if (wasSet(VTYPEPARS_LF_CAR_MOVEMENT_DYNAMICS)) {
+        dev.writeAttr(SUMO_ATTR_LF_CAR_MOVEMENT_DYNAMICS, SUMOXMLDefinitions::CarMovementDynamics.getString(cmdModel));
+    }
+    // LFPLugin End
+    
     // Write rest of parameters
     writeParams(dev);
     // close tag

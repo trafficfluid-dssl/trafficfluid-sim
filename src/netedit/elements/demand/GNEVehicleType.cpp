@@ -366,6 +366,15 @@ GNEVehicleType::getAttribute(SumoXMLAttr key) const {
             } else {
                 return myTagProperty.getDefaultValue(SUMO_ATTR_CAR_FOLLOW_MODEL);
             }
+        // LFPlugin Begin
+        case SUMO_ATTR_LF_CAR_MOVEMENT_DYNAMICS:
+            if (wasSet(VTYPEPARS_LF_CAR_MOVEMENT_DYNAMICS)) {
+                return SUMOXMLDefinitions::CarMovementDynamics.getString(cmdModel);
+            }
+            else {
+                return myTagProperty.getDefaultValue(SUMO_ATTR_LF_CAR_MOVEMENT_DYNAMICS);
+            }
+        // LFPLugin End
         case SUMO_ATTR_BOARDING_DURATION:
             if (wasSet(VTYPEPARS_BOARDING_DURATION)) {
                 return time2string(boardingDuration);
@@ -736,6 +745,10 @@ GNEVehicleType::isValid(SumoXMLAttr key, const std::string& value) {
             return SUMOXMLDefinitions::LaneChangeModels.hasString(value);
         case SUMO_ATTR_CAR_FOLLOW_MODEL:
             return SUMOXMLDefinitions::CarFollowModels.hasString(value);
+        // LFPlugin Begin
+        case SUMO_ATTR_LF_CAR_MOVEMENT_DYNAMICS:
+            return SUMOXMLDefinitions::CarMovementDynamics.hasString(value);
+        // LFPlugin End
         case SUMO_ATTR_PERSON_CAPACITY:
             return canParse<int>(value);
         case SUMO_ATTR_CONTAINER_CAPACITY:
@@ -1040,6 +1053,11 @@ GNEVehicleType::overwriteVType(GNEDemandElement* vType, SUMOVTypeParameter* newV
     if (newVTypeParameter->wasSet(VTYPEPARS_CAR_FOLLOW_MODEL)) {
         vType->setAttribute(SUMO_ATTR_CAR_FOLLOW_MODEL, SUMOXMLDefinitions::CarFollowModels.getString(newVTypeParameter->cfModel), undoList);
     }
+    // LFPlugin Begin
+    if (newVTypeParameter->wasSet(VTYPEPARS_LF_CAR_MOVEMENT_DYNAMICS)) {
+        vType->setAttribute(SUMO_ATTR_LF_CAR_MOVEMENT_DYNAMICS, SUMOXMLDefinitions::CarMovementDynamics.getString(newVTypeParameter->cmdModel), undoList);
+    }
+    // LFPlugin End
     if (newVTypeParameter->wasSet(VTYPEPARS_PERSON_CAPACITY)) {
         vType->setAttribute(SUMO_ATTR_PERSON_CAPACITY, toString(newVTypeParameter->personCapacity), undoList);
     }
@@ -1433,6 +1451,21 @@ GNEVehicleType::setAttribute(SumoXMLAttr key, const std::string& value) {
                 parametersSet &= ~VTYPEPARS_CAR_FOLLOW_MODEL;
             }
             break;
+        // LFPLugin Begin
+        case SUMO_ATTR_LF_CAR_MOVEMENT_DYNAMICS:
+            if (!value.empty() && (value != myTagProperty.getDefaultValue(key))) {
+                cmdModel = SUMOXMLDefinitions::CarMovementDynamics.get(value);
+                // mark parameter as set
+                parametersSet |= VTYPEPARS_LF_CAR_MOVEMENT_DYNAMICS;
+            }
+            else {
+                // set default value
+                cmdModel = SUMOXMLDefinitions::CarMovementDynamics.get(myTagProperty.getDefaultValue(key));
+                // unset parameter
+                parametersSet &= ~VTYPEPARS_LF_CAR_MOVEMENT_DYNAMICS;
+            }
+            break;
+        // LFPlugin End
         case SUMO_ATTR_PERSON_CAPACITY:
             if (!value.empty() && (value != toString(defaultValues.personCapacity))) {
                 personCapacity = parse<int>(value);

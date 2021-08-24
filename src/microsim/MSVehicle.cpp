@@ -940,6 +940,8 @@ MSVehicle::MSVehicle(SUMOVehicleParameter* pars, const MSRoute* route,
     myNextDriveItem = myLFLinkLanes.begin();
     //LFPlugin Begin
     myDesiredSpeed = 0;
+    myAngleRelative = 0;
+    deltaPos_LF = 0;
     //LFPlugin End
 }
 
@@ -1335,9 +1337,10 @@ MSVehicle::computeAngle() const {
     // LFPlugin Begin
     //std::cout << getID() << "angleee:"<<p2.angleTo2D(p1)<<"\n";
     //HERE we need another variable, that is the angle wrt the road edge
-    double veh_angle = 0;
-    double result = (p1 != p2 ? veh_angle + p2.angleTo2D(p1) :
-                veh_angle + myLane->getShape().rotationAtOffset(myLane->interpolateLanePosToGeometryPos(getPositionOnLane())));
+    // myAngleRelative changes values according to the bicycle model, relative to the residing road segment
+    double result = (p1 != p2 ? myAngleRelative + p2.angleTo2D(p1) :
+        myAngleRelative + myLane->getShape().rotationAtOffset(myLane->interpolateLanePosToGeometryPos(getPositionOnLane())));
+    
     // LFPlugin End
     if (myLaneChangeModel->isChangingLanes()) {
         result += lefthandSign * DEG2RAD(myLaneChangeModel->getAngleOffset());
@@ -3804,7 +3807,25 @@ MSVehicle::executeMove() {
     updateWaitingTime(vNext);
 
     // update position and speed
-    updateState(vNext);
+    // LFPlugin Begin
+    // original code below in comment
+    //updateState(vNext);
+    if (getVehicleType().getParameter().cmdModel == SUMO_TAG_LF_CMD_DOUBLEINTEGRATOR) {
+        // double integrator model, lateral position and speed is updated appropriately within the MSLaneFreeVehicle class objects
+        updateState(vNext);
+    }
+    else {
+        // bicycle model, whole state updated appropriately within the MSLaneFreeVehicle class objects. Additional variable delatPos_LF defined for easier compliance with this method
+        myState.myPreviousSpeed = myState.mySpeed;
+        myState.mySpeed = MAX2(vNext, 0.);
+
+        myState.myPos += deltaPos_LF;
+        myState.myLastCoveredDist = deltaPos_LF;
+        myNextTurn.first -= deltaPos_LF;
+
+        myCachedPosition = Position::INVALID;
+    }
+    // LFPlugin End
 
     // Lanes, which the vehicle touched at some moment of the executed simstep
     std::vector<MSLane*> passedLanes;

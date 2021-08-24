@@ -732,6 +732,19 @@ SUMOVehicleParserHelper::beginVTypeParsing(const SUMOSAXAttributes& attrs, const
                     handleError(hardFail, abortCreation, "Unknown car following model '" + cfmValue + "' when parsing vType '" + vtype->id + "'");
                 }
             }
+            // LFPlugin Begin            
+            if (attrs.hasAttribute(SUMO_ATTR_LF_CAR_MOVEMENT_DYNAMICS)) {
+                bool ok = true;
+                const std::string lf_movement_dynamics = attrs.get<std::string>(SUMO_ATTR_LF_CAR_MOVEMENT_DYNAMICS, vtype->id.c_str(), ok);
+                if (ok && SUMOXMLDefinitions::CarMovementDynamics.hasString(lf_movement_dynamics)) {
+                    vtype->cmdModel = SUMOXMLDefinitions::CarMovementDynamics.get(lf_movement_dynamics);
+                    vtype->parametersSet |= VTYPEPARS_LF_CAR_MOVEMENT_DYNAMICS;
+                }
+                else {
+                    handleError(hardFail, abortCreation, "Unknown car movement dynamics '" + lf_movement_dynamics + "' when parsing vType '" + vtype->id + "'");
+                }
+            }
+            // LFPlugin End
             if (attrs.hasAttribute(SUMO_ATTR_PERSON_CAPACITY)) {
                 bool ok = true;
                 int personCapacity = attrs.get<int>(SUMO_ATTR_PERSON_CAPACITY, vtype->id.c_str(), ok);
@@ -1116,6 +1129,7 @@ SUMOVehicleParserHelper::getAllowedCFModelAttrs() {
         allowedCFModelAttrs[SUMO_TAG_CF_IDM] = idmParams;
         allParams.insert(idmParams.begin(), idmParams.end());
 
+        // LFPlugin Begin
         std::set<SumoXMLAttr> laneFreeParams;
         laneFreeParams.insert(SUMO_ATTR_ACCEL);
         laneFreeParams.insert(SUMO_ATTR_DECEL);
@@ -1126,6 +1140,7 @@ SUMOVehicleParserHelper::getAllowedCFModelAttrs() {
         laneFreeParams.insert(SUMO_ATTR_CF_IDM_STEPPING);
         allowedCFModelAttrs[SUMO_TAG_CF_LANEFREE] = laneFreeParams;
         allParams.insert(laneFreeParams.begin(), laneFreeParams.end());
+        // LFPlugin End
 
         std::set<SumoXMLAttr> idmmParams;
         idmmParams.insert(SUMO_ATTR_ACCEL);

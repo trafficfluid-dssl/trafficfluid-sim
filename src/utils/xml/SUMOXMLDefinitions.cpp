@@ -185,7 +185,9 @@ StringBijection<int>::Entry SUMOXMLDefinitions::tags[] = {
     { "carFollowing-KraussPS",          SUMO_TAG_CF_KRAUSS_PLUS_SLOPE },
     { "carFollowing-KraussOrig1",       SUMO_TAG_CF_KRAUSS_ORIG1 },
     { "carFollowing-KraussX",           SUMO_TAG_CF_KRAUSSX },
+    // LFPlugin Begin
     { "carFollowing-LaneFree",           SUMO_TAG_CF_LANEFREE },
+    // LFPlugin End
     { "carFollowing-SmartSK",           SUMO_TAG_CF_SMART_SK },
     { "carFollowing-Daniel1",           SUMO_TAG_CF_DANIEL1 },
     { "carFollowing-PWagner2009",       SUMO_TAG_CF_PWAGNER2009 },
@@ -399,6 +401,9 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
     { "speedDev",               SUMO_ATTR_SPEEDDEV },
     { "laneChangeModel",        SUMO_ATTR_LANE_CHANGE_MODEL },
     { "carFollowModel",         SUMO_ATTR_CAR_FOLLOW_MODEL },
+    // LFPlugin Begin
+    { "carMovementDynamics",    SUMO_ATTR_LF_CAR_MOVEMENT_DYNAMICS },
+    // LFPlugin End
     { "minGap",                 SUMO_ATTR_MINGAP },
     { "collisionMinGapFactor",  SUMO_ATTR_COLLISION_MINGAP_FACTOR },
     { "boardingDuration",       SUMO_ATTR_BOARDING_DURATION },
@@ -999,7 +1004,9 @@ StringBijection<SumoXMLTag>::Entry SUMOXMLDefinitions::carFollowModelValues[] = 
     { "KraussPS",    SUMO_TAG_CF_KRAUSS_PLUS_SLOPE },
     { "KraussOrig1", SUMO_TAG_CF_KRAUSS_ORIG1 },
     { "KraussX",     SUMO_TAG_CF_KRAUSSX }, // experimental extensions to the Krauss model
+    // LFPlugin Begin
     { "LaneFree",     SUMO_TAG_CF_LANEFREE },
+    // LFPlugin End
     { "SmartSK",     SUMO_TAG_CF_SMART_SK },
     { "Daniel1",     SUMO_TAG_CF_DANIEL1 },
     { "PWagner2009", SUMO_TAG_CF_PWAGNER2009 },
@@ -1011,6 +1018,14 @@ StringBijection<SumoXMLTag>::Entry SUMOXMLDefinitions::carFollowModelValues[] = 
     { "W99",         SUMO_TAG_CF_W99 },
     { "Wiedemann",   SUMO_TAG_CF_WIEDEMANN } //< must be the last one
 };
+
+// LFPlugin Begin
+StringBijection<SumoXMLTag>::Entry SUMOXMLDefinitions::carMovementDynamicsValues[] = {
+    { "Bicycle",            SUMO_TAG_LF_CMD_BICYCLE },
+    { "DoubleIntegrator",   SUMO_TAG_LF_CMD_DOUBLEINTEGRATOR }    
+    
+};
+// LFPlugin End
 
 StringBijection<LateralAlignment>::Entry SUMOXMLDefinitions::lateralAlignmentValues[] = {
     { "right",         LATALIGN_RIGHT },
@@ -1097,7 +1112,10 @@ StringBijection<LaneChangeModel> SUMOXMLDefinitions::LaneChangeModels(
 
 StringBijection<SumoXMLTag> SUMOXMLDefinitions::CarFollowModels(
     SUMOXMLDefinitions::carFollowModelValues, SUMO_TAG_CF_WIEDEMANN);
-
+// LFPlugin Begin
+StringBijection<SumoXMLTag> SUMOXMLDefinitions::CarMovementDynamics(
+    SUMOXMLDefinitions::carMovementDynamicsValues, SUMO_LF_TAG_MD_DOUBLEINTEGRATOR);
+// LFPlugin End
 StringBijection<LateralAlignment> SUMOXMLDefinitions::LateralAlignments(
     SUMOXMLDefinitions::lateralAlignmentValues, LATALIGN_LEFT);
 

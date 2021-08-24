@@ -184,9 +184,9 @@ public:
         return speed_y;
     }
 
-    double get_position_x(){
+    double get_position_x(){ // generalize here for angle!
 
-        double pos_x = myveh->getPositionOnLane()-myveh->getLength()/2;
+        double pos_x = myveh->getPositionOnLane()-(myveh->getLength()/2)*cos(myveh->getAngleRelative());
 
         //avoid negative positions when circular movement
         if (pos_x < 0 && is_circular()) {
@@ -195,7 +195,7 @@ public:
         return pos_x;
     }
 
-    double get_position_y(){
+    double get_position_y(){ // generalize here for angle!
         double latOffset = 0;
         MSLane *mylane = myveh->getLane();
         MSEdge *myedge = &(mylane->getEdge());
@@ -203,7 +203,7 @@ public:
         while((mylane = myedge->rightLane(mylane))){
             latOffset += mylane->getWidth();
         }
-        return myveh->getLateralPositionOnLane()+((myveh->getLane()->getWidth())/2) + latOffset;        
+        return myveh->getLateralPositionOnLane()+((myveh->getLane()->getWidth())/2) + latOffset - (myveh->getLength() / 2) * sin(myveh->getAngleRelative());
     }
 
     void apply_acceleration(double ux, double uy){
@@ -213,17 +213,31 @@ public:
         
     }
 
+    void apply_acceleration_bicycle(double F, double delta) {
+
+        // no need to define more parameters
+        accel_x = F;
+        accel_y = delta;
+    }
+
     // Complies with the CF model, returns the next speed of the vehicle. Lateral position is updated internally here
     double apply_acceleration_internal(){
-                
+        if (myveh->getVehicleType().getParameter().cmdModel == SUMO_TAG_LF_CMD_BICYCLE) {
+            apply_acceleration_internal_bicycle();
+            accel_y = 0;
+            accel_x = 0;
+            return speed_x;
+        }
         update_y(accel_y);
         update_x(accel_x);
-
+        
         accel_y = 0;
         accel_x = 0;
         // std::cout<<"actual pos for veh " <<myveh->getID()<< " is:" <<myveh->getPosition() << "\n";
         return speed_x;
     }
+
+    
 
     bool is_lanefree(){
         return ((myveh->getCarFollowModel().getModelID())==SUMO_TAG_CF_LANEFREE);
@@ -235,6 +249,56 @@ public:
 
 
 protected:
+
+    void update_lane(double new_pos_y) {
+        //check whether we need to update the current lane
+        if ((abs(new_pos_y) > ((myveh->getLane()->getWidth()) / 2))) {
+            MSLane* veh_lane = myveh->getLane();
+            const MSEdge* veh_edge = myveh->getEdge();
+            MSLane* new_lane = nullptr;
+            int direction = 0;
+            if (new_pos_y > 0) {
+                new_lane = veh_edge->leftLane(veh_lane);
+                direction = 1;
+                //std::cout << "go to left lane "<< new_lane->getID() <<" for " << myveh->getID() << "\n";
+            }
+            else if (new_pos_y < 0) {
+                direction = -1;
+                new_lane = veh_edge->rightLane(veh_lane);
+                //std::cout << "go to right lane " << new_lane->getID() << " for " << myveh->getID() << "\n";
+            }
+
+            if (new_lane != nullptr && !(new_lane->isAccelLane())) {
+                //myveh->leaveLane(MSMoveReminder::NOTIFICATION_LANE_CHANGE, new_lane);
+                //myveh->enterLaneAtLaneChange(new_lane);
+                //veh_lane->removeVehicle(myveh, MSMoveReminder::NOTIFICATION_LANE_CHANGE);
+                //new_lane->enteredByLaneChange(myveh);
+                //myveh->setLane(new_lane);
+                //
+
+
+
+                //myveh->getLaneChangeModel().primaryLaneChanged(veh_lane, new_lane, 1);
+
+                //myveh->getLaneChangeModel().endLaneChangeManeuver();
+
+                //myveh->getLaneChangeModel().updateShadowLane();
+                std::vector<std::pair<SUMOTime, int> > laneTimeLine;
+                int laneIndex = myveh->getLaneIndex() + direction;
+                laneTimeLine.push_back(std::make_pair(MSNet::getInstance()->getCurrentTimeStep(), laneIndex));
+                laneTimeLine.push_back(std::make_pair(MSNet::getInstance()->getCurrentTimeStep(), laneIndex));
+                myveh->getInfluencer().setLaneTimeLine(laneTimeLine);
+
+
+                new_pos_y = new_pos_y - direction * (veh_lane->getWidth() + new_lane->getWidth()) / 2;
+                //myveh->setLateralPositionOnLane(new_pos_y);
+                //std::cout<<"change lane for "<< myveh->getID()<<"\n";
+            }
+
+        }
+
+        myveh->setLateralPositionOnLane(new_pos_y);
+    }
 
     void update_y(double lateral_acceleration){
         double pos_on_lane = myveh->getLateralPositionOnLane();
@@ -254,52 +318,8 @@ protected:
         
         
         //check whether we need to update the current lane
-        if ((abs(new_pos_y) > ((myveh->getLane()->getWidth()) / 2))) {
-            MSLane* veh_lane = myveh->getLane();
-            const MSEdge* veh_edge = myveh->getEdge();
-            MSLane* new_lane = nullptr;
-            int direction = 0;
-            if (new_pos_y > 0) {
-                new_lane = veh_edge->leftLane(veh_lane);
-                direction = 1;
-                //std::cout << "go to left lane "<< new_lane->getID() <<" for " << myveh->getID() << "\n";
-            }
-            else if (new_pos_y < 0) {
-                direction = -1;
-                new_lane = veh_edge->rightLane(veh_lane);
-                //std::cout << "go to right lane " << new_lane->getID() << " for " << myveh->getID() << "\n";
-            }
-            
-            if (new_lane != nullptr && !(new_lane->isAccelLane())) {
-                //myveh->leaveLane(MSMoveReminder::NOTIFICATION_LANE_CHANGE, new_lane);
-                //myveh->enterLaneAtLaneChange(new_lane);
-                //veh_lane->removeVehicle(myveh, MSMoveReminder::NOTIFICATION_LANE_CHANGE);
-                //new_lane->enteredByLaneChange(myveh);
-                //myveh->setLane(new_lane);
-                //
-                
-                
-                
-                //myveh->getLaneChangeModel().primaryLaneChanged(veh_lane, new_lane, 1);
-                
-                //myveh->getLaneChangeModel().endLaneChangeManeuver();
-                
-                //myveh->getLaneChangeModel().updateShadowLane();
-                std::vector<std::pair<SUMOTime, int> > laneTimeLine;
-                int laneIndex = myveh->getLaneIndex() + direction;                
-                laneTimeLine.push_back(std::make_pair(MSNet::getInstance()->getCurrentTimeStep(), laneIndex));
-                laneTimeLine.push_back(std::make_pair(MSNet::getInstance()->getCurrentTimeStep(), laneIndex));
-                myveh->getInfluencer().setLaneTimeLine(laneTimeLine);
-                
-                
-                new_pos_y = new_pos_y - direction*(veh_lane->getWidth()+new_lane->getWidth())/2;
-                //myveh->setLateralPositionOnLane(new_pos_y);
-                //std::cout<<"change lane for "<< myveh->getID()<<"\n";
-            }
-            
-        }
-
-        myveh->setLateralPositionOnLane(new_pos_y);
+        update_lane(new_pos_y);
+        
         speed_y = speed_y + lateral_acceleration * TS;
         
     }
@@ -318,6 +338,80 @@ protected:
             new_pos_x = myveh->getPositionOnLane()-edge_length;
             myveh->setPositionOnLane(new_pos_x);
         }
+    }
+
+
+    void apply_acceleration_internal_bicycle() {
+        // do all the updates here!, convert to positions on the back, update these first, and then convert them to the ones on the front
+
+        double x_cur_back, y_cur_back, x_next_back, y_next_back, deltaPos_x_back, deltaPos_y_back, x_next_front, y_next_front, deltaPos_x_front, deltaPos_y_front, v_cur, v_next, theta_cur, theta_next, F, delta, sigma;
+        F = accel_x;
+        delta = accel_y;
+        v_cur = myveh->getSpeed();
+        theta_cur = myveh->getAngleRelative();
+
+        sigma = myveh->getLength();
+
+        double tan_delta = tan(delta);
+
+        double theta_next_elem_2 = v_cur * (tan_delta / sigma) * SIMSTEP;
+        double theta_next_elem_3 = F * (tan_delta / (2 * sigma)) * pow(SIMSTEP, 2);
+
+        theta_next = theta_cur + theta_next_elem_2 + theta_next_elem_3;
+
+
+
+        v_next = v_cur + F * SIMSTEP;
+
+        x_cur_back = get_position_x() - (sigma / 2) * cos(theta_cur); // convert to the positions on the back
+        y_cur_back = get_position_y() - (sigma / 2) * sin(theta_cur); // convert to the positions on the back
+
+        deltaPos_x_back = (sigma / tan_delta) * (sin(theta_next) - sin(theta_cur));
+        x_next_back = x_cur_back + deltaPos_x_back;
+
+        deltaPos_y_back = (sigma / tan_delta) * (cos(theta_cur) - cos(theta_next));
+        y_next_back = y_cur_back + deltaPos_y_back;
+
+
+        x_next_front = x_next_back + (sigma)*cos(theta_next); // convert to the front bumper positions again to comply with sumo
+        y_next_front = y_next_back + (sigma)*sin(theta_next); // convert to the front bumper positions again to comply with sumo
+
+        // need to update speed_x parameter! It is more convenient to use the v speed value instead of the actual longitudinal speed of the vehicle
+        speed_x = v_next;
+
+        // used to update properly the new position of the vehicle (corresponds to the front bumper)
+        deltaPos_x_front = x_next_front - myveh->getPositionOnLane();
+
+        // useful for compliance with existing structure, will update properly the longitudinal position
+        myveh->setDeltaPosLF(deltaPos_x_front);
+
+        //update lane properly, and set new latpos on lane etc
+        double y_lane_cur_back = myveh->getLateralPositionOnLane() - (sigma) * sin(theta_cur);
+        
+        double y_lane_next_back = y_lane_cur_back + deltaPos_y_back;
+
+        double y_lane_next_front = y_lane_next_back + (sigma)*sin(theta_next);
+
+        update_lane(y_lane_next_front);
+
+        myveh->setLateralPositionOnLane(y_lane_next_front);
+
+        
+        // update theta angle
+        myveh->setAngleRelative(theta_next);
+
+
+        if (!ring_road) {
+            return;
+        }
+        // if vehicle is in ring road
+        double edge_length = myveh->getEdge()->getLength();
+        double threshold = myveh->getLength() / 2;
+        if (x_next_front >= edge_length - threshold) {
+            x_next_front = myveh->getPositionOnLane() - edge_length;
+            myveh->setPositionOnLane(x_next_front);
+        }
+
     }
 
 

@@ -2182,11 +2182,27 @@ LaneFreeSimulationPlugin::add_new_lat_stats(NumericalID veh_id, double pos_y, do
 	insertedLatInitStatus.insert(std::make_pair(veh_id,lat_array));
 }
 
+// we utilize an approximate procedure, where we consider the vehicle as a larger rectangle (without orientation) that contains inside it the oriented rectangle that is our vehicle, veh1 see: https://math.stackexchange.com/questions/2179500/calculating-the-dimensions-of-a-rectangle-inside-another-rectangle 
+void update_vehicle_dimensions(double* length, double* width, double phi_angle) {
+	
+	double length_large, width_large;
 
+	double length_tmp, width_tmp;
+	
+	length_tmp = *length;
+	width_tmp = *width;
+
+	length_large = sin(phi_angle) * width_tmp + cos(phi_angle) * length_tmp;
+	width_large = cos(phi_angle) * width_tmp + sin(phi_angle) * length_tmp;
+
+	*length = length_large;
+	*width = width_large;
+}
 
 void
 LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
-
+	//TODO approximate generalization according to bicycle model. while this is a generalization, i.e., it includes the standard case, since it requires more computational effort, we will have them as separate cases when estimating length and width for any given vehicle!
+	
 	MSEdgeVector edges_v = MSNet::getInstance()->getEdgeControl().getEdges();
 	// NumericalID edges_size = edges_v.size();
 	
@@ -2198,8 +2214,9 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 	MSVehicle* veh2;
 	MSLaneFreeVehicle* lfv1;
 	MSLaneFreeVehicle* lfv2;
-	double xv1, yv1, lv1, wv1, half_vwidth, dx, dy,roadwidth;
-	
+	double xv1, yv1, lv1, wv1, lv2, wv2, half_vwidth, dx, dy,roadwidth;
+	double phi_angle;
+	double lv1_large, lv2_large, wv1_large, wv2_large;
 	for (MSEdge* edge : edges_v) {
 		edge_id = edge->getNumericalID();
 
@@ -2227,6 +2244,10 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 			xv1 = lfv1->get_position_x();
 			yv1 = lfv1->get_position_y();
 			
+			if (veh1->getVehicleType().getParameter().cmdModel == SUMO_TAG_LF_CMD_BICYCLE) {
+				// this vehicle uses the bicycle model, meaning that we should consider the fact that it may have a non-zero orientation
+				update_vehicle_dimensions(&lv1, &wv1, veh1->getAngleRelative());				
+			}
 			//std::cout << "veh:" << veh1->getID() << " at posx:" << xv1;
 			//std::cout << "veh:" << veh1->getID() << " angle:" << veh1->computeAngle() * (180.0 / 3.141592653589793238463)<<"\n";
 			
@@ -2239,7 +2260,16 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 				lfv2 = find_vehicle_in_edge(veh2->getNumericalID(), edge_id);
 				dx = abs(xv1-lfv2->get_position_x());
 				dy = abs(yv1-lfv2->get_position_y());
-				if((dx<((lv1+veh2->getVehicleType().getLength())/2)) && (dy<((wv1+veh2->getVehicleType().getWidth())/2))){
+				lv2 = veh2->getVehicleType().getLength();
+				wv2 = veh2->getVehicleType().getWidth();
+
+				if (veh2->getVehicleType().getParameter().cmdModel == SUMO_TAG_LF_CMD_BICYCLE) {
+					// this vehicle also uses the bicycle model, meaning that we should consider the fact that it may have a non-zero orientation
+					update_vehicle_dimensions(&lv2, &wv2, veh2->getAngleRelative());
+				}
+
+
+				if((dx<((lv1 + lv2)/2)) && (dy<((wv1 + wv2)/2))){
 					//std::cout << "\n";
 					event_vehicles_collide(veh1->getNumericalID(), veh2->getNumericalID());
 					MSNet::getInstance()->getVehicleControl().registerCollision();
@@ -2250,11 +2280,9 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 				}
 			}
 			
-		}
-		//std::cout << "\n";
+		}		
 		
-	}
-	
+	}	
 	
 }
 
@@ -2577,11 +2605,14 @@ MSCFModel_LaneFree::~MSCFModel_LaneFree() {}
 
 double
 MSCFModel_LaneFree::finalizeSpeed(MSVehicle* const veh, double vPos) const {
-    double vNext = MSCFModel::finalizeSpeed(veh, vPos);
+    
+	/*
+	double vNext = MSCFModel::finalizeSpeed(veh, vPos);
     if (myAdaptationFactor != 1.) {
         VehicleVariables* vars = (VehicleVariables*)veh->getCarFollowVariables();
         vars->levelOfService += (vNext / veh->getLane()->getVehicleMaxSpeed(veh) - vars->levelOfService) / myAdaptationTime * TS;
     }
+	*/
 
     // if(vNext>25){
     // 	vNext = 25;
@@ -2589,6 +2620,9 @@ MSCFModel_LaneFree::finalizeSpeed(MSVehicle* const veh, double vPos) const {
     // vNext = 25;
     // double v_lf_model = LaneFreeSimulationPlugin::getInstance()->get_veh_speed(veh->getNumericalID());
     // MSLaneFreeVehicle *lfveh =  LaneFreeSimulationPlugin::getInstance()->find_vehicle_in_edge(veh->getLane()->getEdge().getNumericalID(),veh->getNumericalID());
+
+
+	double vNext(0);
     MSLaneFreeVehicle *lfveh =  LaneFreeSimulationPlugin::getInstance()->find_vehicle(veh->getNumericalID());
     if(lfveh==nullptr){
     	std::cout<<"Issue\n";

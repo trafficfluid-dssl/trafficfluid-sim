@@ -503,6 +503,29 @@ public:
     void setDesiredSpeed(double newdspeed) {
         myDesiredSpeed = newdspeed;
     }
+
+    double getAngleRelative() const {
+        return myAngleRelative;
+    }
+
+    void setAngleRelative(double newangle) {
+        // angle should always be within the range of [-pi/2,pi/2], since we only allow vehicles to move according to the road's direction
+        double pi_2 = acos(0);
+
+        //bound the angle within the desired range
+        newangle = std::max(newangle, -pi_2);
+        newangle = std::min(newangle, pi_2);
+
+        myAngleRelative = newangle;
+    }
+    
+    double getDeltaPosLF() {
+        return deltaPos_LF;
+    }
+
+    void setDeltaPosLF(double newdeltaPos_LF) {
+        deltaPos_LF = newdeltaPos_LF;
+    }
     // LFPlugin End
 
 
@@ -1951,6 +1974,8 @@ protected:
 
     // LFPlugin Begin
     double myDesiredSpeed;
+    double myAngleRelative;
+    double deltaPos_LF;
     // LFPlugin End
 
 protected:
