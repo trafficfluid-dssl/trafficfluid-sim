@@ -162,7 +162,7 @@ NumericalID* (*get_all_neighbor_ids_front)(NumericalID veh_id, double front_dist
 NumericalID* (*get_all_neighbor_ids_back)(NumericalID veh_id, double back_distance, int cross_edge, size_t* neighbors_size);
 
 //insert a new vehicle (route_id and type_id need to be defined in the scenario tested)
-NumericalID(*insert_new_vehicle)(char* veh_name, char* route_id, char* type_id, double pos_x, double pos_y, double speed_x, double speed_y);
+NumericalID(*insert_new_vehicle)(char* veh_name, char* route_id, char* type_id, double pos_x, double pos_y, double speed_x, double speed_y, double theta);
 
 //returns 1 if the vehicle is currently on an acceleration lane and needs to merge
 int (*am_i_on_acceleration_lane)(NumericalID veh_id);
@@ -175,6 +175,17 @@ double (*get_global_position_y)(NumericalID veh_id);
 
 //returns the destination edge id of the vehicle
 NumericalID(*get_destination_edge_id)(NumericalID veh_id);
+
+//returns the current orientation of the vehicle, in radians, with respect to the residing road
+double (*get_veh_orientation)(NumericalID veh_id);
+
+//apply control for vehicles adhering to the bicycle model by providing the F, and delta values for vehicle with numerical id veh_id
+void (*apply_control_bicycle_model)(NumericalID veh_id, double F, double delta);
+
+//return the speed of vehicle with numerical id veh_id which adheres to the bicycle model
+double (*get_speed_bicycle_model)(NumericalID veh_id);
+
+
 
 
 //is called once before the first time-step

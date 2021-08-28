@@ -147,6 +147,11 @@ public:
         double new_dist_from_lane = new_pos_y - transformation;
         myveh->setLateralPositionOnLane(new_dist_from_lane);   
     }
+
+    void set_angle_relative(double new_angle_theta) {
+        std::cout << "initial angle:" << new_angle_theta << "\n";
+        myveh->setAngleRelative(new_angle_theta);
+    }
     void set_speed_x(double new_speed_x){
         myveh->setSpeed(new_speed_x);
     }
@@ -184,9 +189,12 @@ public:
         return speed_y;
     }
 
-    double get_position_x(){ // generalize here for angle!
+    double get_position_x(){ 
 
-        double pos_x = myveh->getPositionOnLane()-(myveh->getLength()/2)*cos(myveh->getAngleRelative());
+        // consider non-zero orientation only for the bicycle model
+        double cos_angle = (myveh->getVehicleType().getParameter().cmdModel != SUMO_TAG_LF_CMD_BICYCLE)  ? 1 : cos(myveh->getAngleRelative());
+
+        double pos_x = myveh->getPositionOnLane() - (myveh->getLength() / 2)* cos_angle;
 
         //avoid negative positions when circular movement
         if (pos_x < 0 && is_circular()) {
@@ -203,11 +211,15 @@ public:
         while((mylane = myedge->rightLane(mylane))){
             latOffset += mylane->getWidth();
         }
-        return myveh->getLateralPositionOnLane()+((myveh->getLane()->getWidth())/2) + latOffset - (myveh->getLength() / 2) * sin(myveh->getAngleRelative());
+
+        // consider non-zero orientation only for the bicycle model
+        double sin_angle = (myveh->getVehicleType().getParameter().cmdModel != SUMO_TAG_LF_CMD_BICYCLE) ? 0 : sin(myveh->getAngleRelative());
+
+        return myveh->getLateralPositionOnLane() + ((myveh->getLane()->getWidth()) / 2) + latOffset - (myveh->getLength() / 2) * sin_angle;
     }
 
     void apply_acceleration(double ux, double uy){
-        speed_x = myveh->getSpeed() + ux*TS;
+        
         accel_y = uy;
         accel_x = ux;
         
@@ -228,6 +240,7 @@ public:
             accel_x = 0;
             return speed_x;
         }
+        
         update_y(accel_y);
         update_x(accel_x);
         
@@ -338,13 +351,15 @@ protected:
             new_pos_x = myveh->getPositionOnLane()-edge_length;
             myveh->setPositionOnLane(new_pos_x);
         }
+
+        speed_x = myveh->getSpeed() + longitudinal_acceleration * TS;
     }
 
 
     void apply_acceleration_internal_bicycle() {
         // do all the updates here!, convert to positions on the back, update these first, and then convert them to the ones on the front
 
-        double x_cur_back, y_cur_back, x_next_back, y_next_back, deltaPos_x_back, deltaPos_y_back, x_next_front, y_next_front, deltaPos_x_front, deltaPos_y_front, v_cur, v_next, theta_cur, theta_next, F, delta, sigma;
+        double x_cur_back, y_cur_back, x_next_back, y_next_back, deltaPos_x_back, deltaPos_y_back, x_next_front, y_next_front, deltaPos_x_front, v_cur, v_next, theta_cur, theta_next, F, delta, sigma;
         F = accel_x;
         delta = accel_y;
         v_cur = myveh->getSpeed();
@@ -354,34 +369,50 @@ protected:
 
         double tan_delta = tan(delta);
 
-        double theta_next_elem_2 = v_cur * (tan_delta / sigma) * SIMSTEP;
-        double theta_next_elem_3 = F * (tan_delta / (2 * sigma)) * pow(SIMSTEP, 2);
+        double theta_next_elem_2 = v_cur * (tan_delta / sigma) * TS;
+        double theta_next_elem_3 = F * (tan_delta / (2 * sigma)) * pow(TS, 2);
 
         theta_next = theta_cur + theta_next_elem_2 + theta_next_elem_3;
 
 
 
-        v_next = v_cur + F * SIMSTEP;
+        v_next = v_cur + F * TS;
 
+        //std::cout << "F:" << F << ",delta:" << delta << "\n";
+        //std::cout << "speed:" << v_cur << ", theta:"<< theta_cur << ",timestep:"<< TS <<"\n";
         x_cur_back = get_position_x() - (sigma / 2) * cos(theta_cur); // convert to the positions on the back
         y_cur_back = get_position_y() - (sigma / 2) * sin(theta_cur); // convert to the positions on the back
+        //std::cout << "x:" << x_cur_back << ",y:" << y_cur_back << "\n";
+        
+        if (delta == 0) {
+            deltaPos_x_back = v_cur * cos(theta_cur) * TS + F * cos(theta_cur) * pow(TS, 2);
 
-        deltaPos_x_back = (sigma / tan_delta) * (sin(theta_next) - sin(theta_cur));
+
+            deltaPos_y_back = v_cur * sin(theta_cur) * TS + F * sin(theta_cur) * pow(TS, 2);
+        }
+        else {
+            deltaPos_x_back = (sigma / tan_delta) * (sin(theta_next) - sin(theta_cur));
+            
+
+            deltaPos_y_back = (sigma / tan_delta) * (cos(theta_cur) - cos(theta_next));
+            
+        }
+
+        // vehicles are now allowed to move backwards
+        deltaPos_x_back = (deltaPos_x_back < 0 ) ? 0 : deltaPos_x_back;
         x_next_back = x_cur_back + deltaPos_x_back;
-
-        deltaPos_y_back = (sigma / tan_delta) * (cos(theta_cur) - cos(theta_next));
         y_next_back = y_cur_back + deltaPos_y_back;
-
-
+       // std::cout << "x_next:" << x_next_back << ",y_next:" << y_next_back << "\n";
+        //std::cout << "theta_next:" << theta_next << "speed_next:" << v_next << "\n";
         x_next_front = x_next_back + (sigma)*cos(theta_next); // convert to the front bumper positions again to comply with sumo
         y_next_front = y_next_back + (sigma)*sin(theta_next); // convert to the front bumper positions again to comply with sumo
 
         // need to update speed_x parameter! It is more convenient to use the v speed value instead of the actual longitudinal speed of the vehicle
-        speed_x = v_next;
+        speed_x = (v_next < 0) ? 0 : v_next;
 
         // used to update properly the new position of the vehicle (corresponds to the front bumper)
         deltaPos_x_front = x_next_front - myveh->getPositionOnLane();
-
+        //std::cout << "delta x:" << deltaPos_x_front<<"\n";
         // useful for compliance with existing structure, will update properly the longitudinal position
         myveh->setDeltaPosLF(deltaPos_x_front);
 
@@ -432,7 +463,7 @@ typedef std::unordered_map<NumericalID,VehicleMap*> VehicleMapEdges;
 typedef std::vector<const SUMOVehicle*> SortedVehiclesVector;
 typedef std::unordered_map<NumericalID, SortedVehiclesVector*> SortedVehiclesVectorEdges;
 
-typedef std::unordered_map<NumericalID,std::vector<double>> InsertedLateralInitStatus;
+typedef std::unordered_map<NumericalID,std::vector<double>> InsertedAdditionalInitStatus;
 
 class LaneFreeSimulationPlugin{
 
@@ -478,7 +509,7 @@ public:
     MSLaneFreeVehicle* find_vehicle_in_edge(NumericalID veh_id, NumericalID edge_id);
     NumericalID find_edge(NumericalID veh_id);
 
-    void add_new_lat_stats(NumericalID veh_id, double pos_y, double speed_y);
+    void add_new_veh_additional_stats(NumericalID veh_id, double pos_y, double speed_y, double theta);
 
 
     arrayMemStruct* get_all_ids_mem() {
@@ -554,7 +585,7 @@ protected:
     
     VehicleMapEdges allVehiclesMapEdges;
 
-    InsertedLateralInitStatus insertedLatInitStatus;
+    InsertedAdditionalInitStatus insertedAdditionalInitStatus;
 
     SortedVehiclesVectorEdges sortedVehiclesVectorEdges;
 

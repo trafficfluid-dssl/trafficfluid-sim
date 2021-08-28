@@ -1114,7 +1114,7 @@ StringBijection<SumoXMLTag> SUMOXMLDefinitions::CarFollowModels(
     SUMOXMLDefinitions::carFollowModelValues, SUMO_TAG_CF_WIEDEMANN);
 // LFPlugin Begin
 StringBijection<SumoXMLTag> SUMOXMLDefinitions::CarMovementDynamics(
-    SUMOXMLDefinitions::carMovementDynamicsValues, SUMO_LF_TAG_MD_DOUBLEINTEGRATOR);
+    SUMOXMLDefinitions::carMovementDynamicsValues, SUMO_TAG_LF_CMD_DOUBLEINTEGRATOR);
 // LFPlugin End
 StringBijection<LateralAlignment> SUMOXMLDefinitions::LateralAlignments(
     SUMOXMLDefinitions::lateralAlignmentValues, LATALIGN_LEFT);

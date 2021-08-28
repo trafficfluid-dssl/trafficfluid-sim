@@ -247,6 +247,9 @@ SUMOVTypeParameter::SUMOVTypeParameter(const std::string& vtid, const SUMOVehicl
     vehicleClass(vclass), impatience(0.0), personCapacity(4), containerCapacity(0), boardingDuration(500),
     loadingDuration(90000), width(1.8), height(1.5), shape(SVS_UNKNOWN), osgFile("car-normal-citrus.obj"),
     cfModel(SUMO_TAG_CF_KRAUSS),
+    // LFPlugin Begin
+    cmdModel(SUMO_TAG_LF_CMD_DOUBLEINTEGRATOR),
+    // LFPlugin End
     lcModel(LCM_DEFAULT),
     maxSpeedLat(1.0), latAlignment(LATALIGN_CENTER), minGapLat(0.6),
     carriageLength(-1), locomotiveLength(-1), carriageGap(1),

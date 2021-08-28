@@ -983,7 +983,7 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
         
         
         double myfrontpos = aVehicle->getPositionOnLane();
-        double other_vwidth;
+        //double other_vwidth;
         std::pair<double, double> space_restriction;
         
         double max_veh_length = LaneFreeSimulationPlugin::getInstance()->get_max_vehicle_length();

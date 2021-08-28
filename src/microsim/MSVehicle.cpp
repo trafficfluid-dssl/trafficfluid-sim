@@ -1338,6 +1338,7 @@ MSVehicle::computeAngle() const {
     //std::cout << getID() << "angleee:"<<p2.angleTo2D(p1)<<"\n";
     //HERE we need another variable, that is the angle wrt the road edge
     // myAngleRelative changes values according to the bicycle model, relative to the residing road segment
+    //std::cout << "myanglerelative:" << myAngleRelative << "\n";
     double result = (p1 != p2 ? myAngleRelative + p2.angleTo2D(p1) :
         myAngleRelative + myLane->getShape().rotationAtOffset(myLane->interpolateLanePosToGeometryPos(getPositionOnLane())));
     
@@ -3812,9 +3813,11 @@ MSVehicle::executeMove() {
     //updateState(vNext);
     if (getVehicleType().getParameter().cmdModel == SUMO_TAG_LF_CMD_DOUBLEINTEGRATOR) {
         // double integrator model, lateral position and speed is updated appropriately within the MSLaneFreeVehicle class objects
+       
         updateState(vNext);
     }
     else {
+        
         // bicycle model, whole state updated appropriately within the MSLaneFreeVehicle class objects. Additional variable delatPos_LF defined for easier compliance with this method
         myState.myPreviousSpeed = myState.mySpeed;
         myState.mySpeed = MAX2(vNext, 0.);

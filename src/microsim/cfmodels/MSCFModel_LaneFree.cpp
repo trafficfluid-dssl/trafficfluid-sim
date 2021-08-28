@@ -792,8 +792,8 @@ NumericalID* lf_plugin_get_all_neighbor_ids_back(NumericalID veh_id, double back
 
 	size_t route_edge_index = 0;//-1;
 	const MSEdge* tmp_edge = veh_edges.at(veh_edges.size() - 1);
-	const MSEdge* tmp_edge_prev;
-	const MSEdge* tmp_internal_edge;
+	//const MSEdge* tmp_edge_prev;
+	//const MSEdge* tmp_internal_edge;
 
 	bool found_edge = false;
 	//std::cout << "Route of " << lfveh->get_vehicle()->getID()<<", with current edge:"<< lfveh->get_vehicle()->getLane()->getEdge().getID() <<", reg:"<< lfveh->get_vehicle()->getEdge()->getID()<<", and position:"<< lfveh->get_position_x() <<" :";
@@ -1275,7 +1275,7 @@ double lf_plugin_get_relative_distance_y(NumericalID ego_id, NumericalID other_i
 void lf_plugin_set_circular_movement(NumericalID veh_id, bool circular) {
 	MSLaneFreeVehicle* lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(veh_id);
 	if (lfveh == nullptr) {
-		std::cout << "Vehicle not found!\n";
+		std::cout << "Vehicle with veh id:" << veh_id << " not found!\n";
 		return;
 	}
 
@@ -1288,6 +1288,7 @@ double lf_plugin_get_position_y(NumericalID veh_id){
 
 	MSLaneFreeVehicle* lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(veh_id);
 	if(lfveh==nullptr){
+		std::cout << "Vehicle with veh id:"<< veh_id <<" not found!\n";
 		return -1;
 	}
 
@@ -1299,6 +1300,7 @@ double lf_plugin_get_position_y(NumericalID veh_id){
 double lf_plugin_get_speed_x(NumericalID veh_id){
 	MSLaneFreeVehicle* lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(veh_id);
 	if(lfveh==nullptr){
+		std::cout << "Vehicle with veh id:" << veh_id << " not found!\n";
 		return -1;
 	}
 
@@ -1311,6 +1313,7 @@ double lf_plugin_get_speed_y(NumericalID veh_id){
 
 	MSLaneFreeVehicle* lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(veh_id);
 	if(lfveh==nullptr){
+		std::cout << "Vehicle with veh id:" << veh_id << " not found!\n";
 		return -1;
 	}
 
@@ -1322,6 +1325,7 @@ double lf_plugin_get_speed_y(NumericalID veh_id){
 void lf_plugin_set_desired_speed(NumericalID veh_id, double new_d_speed){
 	MSLaneFreeVehicle* lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(veh_id);
 	if(lfveh==nullptr){
+		std::cout << "Vehicle with veh id:" << veh_id << " not found!\n";
 		return;
 	}
 
@@ -1333,6 +1337,7 @@ void lf_plugin_set_desired_speed(NumericalID veh_id, double new_d_speed){
 double lf_plugin_get_desired_speed(NumericalID veh_id){
 	MSLaneFreeVehicle* lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(veh_id);
 	if(lfveh==nullptr){
+		std::cout << "Vehicle with veh id:" << veh_id << " not found!\n";
 		return -1;
 	}
 
@@ -1344,6 +1349,17 @@ double lf_plugin_get_desired_speed(NumericalID veh_id){
 // apply longitudinal & lateral acceleration on a given vehicle
 void lf_plugin_apply_acceleration(NumericalID veh_id, double accel_x, double accel_y){
 	MSLaneFreeVehicle* lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(veh_id);
+	if (lfveh == nullptr) {
+		std::cout << "Vehicle with veh id:" << veh_id << " not found!\n";
+		return;
+	}
+
+	// report if this vehicle adheres to the bicycle model
+	if (lfveh->get_vehicle()->getVehicleType().getParameter().cmdModel == SUMO_TAG_LF_CMD_BICYCLE) {
+		std::cout << "Error! Function call apply_acceleration(veh_id, accel_x, accel_y) is not appropriate for Vehicle with id:" << lfveh->get_vehicle()->getID() << " since it adheres to the bicycle model!\n";
+		return;
+	}
+
 	lfveh->apply_acceleration(accel_x, accel_y);
 
 }
@@ -1404,7 +1420,7 @@ int lf_plugin_get_seed(){
 	return oc.getInt("seed");
 }
 
-NumericalID lf_plugin_insert_new_vehicle(char* veh_name, char* route_id, char* type_id, double pos_x, double pos_y, double speed_x, double speed_y){
+NumericalID lf_plugin_insert_new_vehicle(char* veh_name, char* route_id, char* type_id, double pos_x, double pos_y, double speed_x, double speed_y, double theta){
 	
 	// 
 	std::string id(veh_name);
@@ -1416,9 +1432,10 @@ NumericalID lf_plugin_insert_new_vehicle(char* veh_name, char* route_id, char* t
 	double depart_pos_front = pos_x + vehicleType->getLength()/2;
 	std::string departPos = std::to_string(depart_pos_front);
 	std::string departSpeed = std::to_string(speed_x);	
+	
 	NumericalID new_vid = libsumo::Vehicle::addR(id, routeID, vTypeID, depart, departLane, departPos, departSpeed);
 	
-	LaneFreeSimulationPlugin::getInstance()->add_new_lat_stats(new_vid, pos_y, speed_y);
+	LaneFreeSimulationPlugin::getInstance()->add_new_veh_additional_stats(new_vid, pos_y, speed_y, theta);
 
 	
 	// MSLaneFreeVehicle* lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(new_vid);
@@ -1582,7 +1599,7 @@ int* lf_plugin_get_detectors_values(){
 int lf_plugin_get_detector_value(NumericalID detector_id) {
 
 	MSDetectorControl* detectorControl = &MSNet::getInstance()->getDetectorControl();
-	int count;
+	
 	std::vector<int> values;
 	int c_i = 0;
 	int c_id = (int)detector_id;
@@ -1978,12 +1995,62 @@ NumericalID lf_plugin_get_destination_edge_id(NumericalID veh_id) {
 	
 	return veh_edges.back()->getNumericalID();
 }
+
+
+// returns the current orientation of the vehicle, in radians with respect to the residing road
+double lf_plugin_get_veh_orientation(NumericalID veh_id) {
+	MSLaneFreeVehicle* lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(veh_id);
+	if (lfveh == nullptr) {
+		std::cout << "Vehicle with veh id:" << veh_id << " not found!\n";
+		return -1;
+	}
+
+	return lfveh->get_vehicle()->getAngleRelative();
+}
+
+
+void lf_plugin_apply_control_bicycle_model(NumericalID veh_id, double F, double delta) {
+	MSLaneFreeVehicle* lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(veh_id);
+	if (lfveh == nullptr) {
+		std::cout << "Vehicle with veh id:" << veh_id << " not found!\n";
+		return;
+	}
+
+	if (lfveh->get_vehicle()->getVehicleType().getParameter().cmdModel != SUMO_TAG_LF_CMD_BICYCLE) {
+		std::cout << "Vehicle with id:" << lfveh->get_vehicle()->getID() << " is nod defined to operate with the bicycle model!\n";
+		return;
+	}
+
+	lfveh->apply_acceleration(F, delta);
+
+}
+
+
+//return the speed of vehicle with numerical id veh_id which adheres to the bicycle model
+double lf_plugin_get_speed_bicycle_model(NumericalID veh_id) {
+	MSLaneFreeVehicle* lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(veh_id);
+	if (lfveh == nullptr) {
+		std::cout << "Vehicle with veh id:" << veh_id << " not found!\n";
+		return -1;
+	}
+
+	if (lfveh->get_vehicle()->getVehicleType().getParameter().cmdModel != SUMO_TAG_LF_CMD_BICYCLE) {
+		std::cout << "Vehicle with id:" << lfveh->get_vehicle()->getID() << " is nod defined to operate with the bicycle model!\n";
+		return -1;
+	}
+
+	return lfveh->get_speed_x();
+
+}
+
 double
 LaneFreeSimulationPlugin::get_uniform_distribution_sample(double from, double to) {
 	double val = uniform_real_dis(random_engine);
 
 	return val * (to - from) + from;
 }
+
+
 
 LaneFreeSimulationPlugin::LaneFreeSimulationPlugin(){
 
@@ -2041,6 +2108,12 @@ LaneFreeSimulationPlugin::LaneFreeSimulationPlugin(){
 	get_edge_of_vehicle = &lf_plugin_get_edge_of_vehicle;
 	get_edge_name = &lf_plugin_get_edge_name;
 	get_destination_edge_id = &lf_plugin_get_destination_edge_id;
+
+	get_veh_orientation = &lf_plugin_get_veh_orientation;
+	apply_control_bicycle_model = &lf_plugin_apply_control_bicycle_model;
+	get_speed_bicycle_model = &lf_plugin_get_speed_bicycle_model;
+
+
 	srand(lf_plugin_get_seed());
 	max_vehicle_length = 0;
 	
@@ -2175,14 +2248,17 @@ LaneFreeSimulationPlugin::lf_simulation_step(){
 
 
 void
-LaneFreeSimulationPlugin::add_new_lat_stats(NumericalID veh_id, double pos_y, double speed_y){
-	std::vector<double> lat_array = {pos_y,speed_y};
-	lat_array.push_back(pos_y);
-	lat_array.push_back(speed_y);
-	insertedLatInitStatus.insert(std::make_pair(veh_id,lat_array));
+LaneFreeSimulationPlugin::add_new_veh_additional_stats(NumericalID veh_id, double pos_y, double speed_y, double theta){
+	std::vector<double> additionals_array = {pos_y,speed_y,theta};
+	//additionals_array.push_back(pos_y);
+	//additionals_array.push_back(speed_y);
+	//additionals_array.push_back(theta);
+	insertedAdditionalInitStatus.insert(std::make_pair(veh_id, additionals_array));
 }
 
-// we utilize an approximate procedure, where we consider the vehicle as a larger rectangle (without orientation) that contains inside it the oriented rectangle that is our vehicle, veh1 see: https://math.stackexchange.com/questions/2179500/calculating-the-dimensions-of-a-rectangle-inside-another-rectangle 
+// we utilize an approximate procedure, where we consider the vehicle as a larger rectangle (without orientation)
+// that contains inside it the oriented rectangle that is our vehicle, veh1 
+// see: https://math.stackexchange.com/questions/2179500/calculating-the-dimensions-of-a-rectangle-inside-another-rectangle 
 void update_vehicle_dimensions(double* length, double* width, double phi_angle) {
 	
 	double length_large, width_large;
@@ -2215,8 +2291,8 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 	MSLaneFreeVehicle* lfv1;
 	MSLaneFreeVehicle* lfv2;
 	double xv1, yv1, lv1, wv1, lv2, wv2, half_vwidth, dx, dy,roadwidth;
-	double phi_angle;
-	double lv1_large, lv2_large, wv1_large, wv2_large;
+	
+	
 	for (MSEdge* edge : edges_v) {
 		edge_id = edge->getNumericalID();
 
@@ -2243,11 +2319,12 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 			lfv1 = find_vehicle_in_edge(veh1->getNumericalID(), edge_id); //we could somehow remove the need for this, maybe have the get_position_x, get_position_y as a function that gets the veh object as attribute
 			xv1 = lfv1->get_position_x();
 			yv1 = lfv1->get_position_y();
-			
+			std::cout << "veh:" << veh1->getID() << " with length:" << lv1 << " and width:" << wv1 <<"\n";
 			if (veh1->getVehicleType().getParameter().cmdModel == SUMO_TAG_LF_CMD_BICYCLE) {
 				// this vehicle uses the bicycle model, meaning that we should consider the fact that it may have a non-zero orientation
-				update_vehicle_dimensions(&lv1, &wv1, veh1->getAngleRelative());				
+				update_vehicle_dimensions(&lv1, &wv1, abs(veh1->getAngleRelative()));				
 			}
+			std::cout<< "veh:" << veh1->getID() << " updated length:" << lv1<<" and width:" << wv1<< " at angle:"<< veh1->getAngleRelative() << "\n";
 			//std::cout << "veh:" << veh1->getID() << " at posx:" << xv1;
 			//std::cout << "veh:" << veh1->getID() << " angle:" << veh1->computeAngle() * (180.0 / 3.141592653589793238463)<<"\n";
 			
@@ -2265,7 +2342,7 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 
 				if (veh2->getVehicleType().getParameter().cmdModel == SUMO_TAG_LF_CMD_BICYCLE) {
 					// this vehicle also uses the bicycle model, meaning that we should consider the fact that it may have a non-zero orientation
-					update_vehicle_dimensions(&lv2, &wv2, veh2->getAngleRelative());
+					update_vehicle_dimensions(&lv2, &wv2, abs(veh2->getAngleRelative())); // we could maybe save updated length and width, since for most vehicles we will do this computation more than once
 				}
 
 
@@ -2344,13 +2421,23 @@ LaneFreeSimulationPlugin::insert_vehicle(MSVehicle* veh){
 		max_vehicle_length = lv;
 	}
 
-	InsertedLateralInitStatus::iterator it_l = insertedLatInitStatus.find(veh_nid);
-	if(it_l!=insertedLatInitStatus.end()){
+	InsertedAdditionalInitStatus::iterator it_l = insertedAdditionalInitStatus.find(veh_nid);
+	if(it_l!=insertedAdditionalInitStatus.end()){
 		double pos_y = (it_l->second)[0];
 		double speed_y = (it_l->second)[1];
+		double theta = (it_l->second)[2];
+		std::cout << "theta:" << theta << "\n";
 		new_veh->set_position_y(pos_y);
 		new_veh->set_speed_y(speed_y);
-		insertedLatInitStatus.erase(veh_nid);
+
+		// only vehicles adhering to the bicycle model can have an initial non-zero orientation
+		if (new_veh->get_vehicle()->getVehicleType().getParameter().cmdModel == SUMO_TAG_LF_CMD_BICYCLE) {
+			new_veh->set_angle_relative(theta);
+		}
+		else {
+			std::cout << "Warning! Non-zero initial orientation selected for vehicle:" << new_veh->get_vehicle()->getID() << " will be omitted, since it does not adhere to the bicycle model!\n";
+		}
+		insertedAdditionalInitStatus.erase(veh_nid);
 	}
 	// double init_pos_x=new_veh->get_position_x(), init_pos_y=new_veh->get_position_y(), init_speed_x=new_veh->get_speed_x();
 	
