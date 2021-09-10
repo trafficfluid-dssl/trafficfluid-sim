@@ -2319,12 +2319,12 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 			lfv1 = find_vehicle_in_edge(veh1->getNumericalID(), edge_id); //we could somehow remove the need for this, maybe have the get_position_x, get_position_y as a function that gets the veh object as attribute
 			xv1 = lfv1->get_position_x();
 			yv1 = lfv1->get_position_y();
-			std::cout << "veh:" << veh1->getID() << " with length:" << lv1 << " and width:" << wv1 <<"\n";
+			// std::cout << "veh:" << veh1->getID() << " with length:" << lv1 << " and width:" << wv1 <<"\n";
 			if (veh1->getVehicleType().getParameter().cmdModel == SUMO_TAG_LF_CMD_BICYCLE) {
 				// this vehicle uses the bicycle model, meaning that we should consider the fact that it may have a non-zero orientation
 				update_vehicle_dimensions(&lv1, &wv1, abs(veh1->getAngleRelative()));				
 			}
-			std::cout<< "veh:" << veh1->getID() << " updated length:" << lv1<<" and width:" << wv1<< " at angle:"<< veh1->getAngleRelative() << "\n";
+			// std::cout<< "veh:" << veh1->getID() << " updated length:" << lv1<<" and width:" << wv1<< " at angle:"<< veh1->getAngleRelative() << "\n";
 			//std::cout << "veh:" << veh1->getID() << " at posx:" << xv1;
 			//std::cout << "veh:" << veh1->getID() << " angle:" << veh1->computeAngle() * (180.0 / 3.141592653589793238463)<<"\n";
 			
@@ -2352,7 +2352,7 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 					MSNet::getInstance()->getVehicleControl().registerCollision();
 				}
 				
-				if(dx>(lv1+max_vehicle_length)/2){
+				if(dx>(lv1+max_vehicle_length)/2){ // since vehicles are sorted based on x pos, we stop searching downstream vehicles for collisions when the dx distance exceeds the one corresponding to a vehicle with the maximum length within the network
 					break;
 				}
 			}
@@ -2426,7 +2426,7 @@ LaneFreeSimulationPlugin::insert_vehicle(MSVehicle* veh){
 		double pos_y = (it_l->second)[0];
 		double speed_y = (it_l->second)[1];
 		double theta = (it_l->second)[2];
-		std::cout << "theta:" << theta << "\n";
+		// std::cout << "theta:" << theta << "\n";
 		new_veh->set_position_y(pos_y);
 		new_veh->set_speed_y(speed_y);
 
@@ -2434,7 +2434,7 @@ LaneFreeSimulationPlugin::insert_vehicle(MSVehicle* veh){
 		if (new_veh->get_vehicle()->getVehicleType().getParameter().cmdModel == SUMO_TAG_LF_CMD_BICYCLE) {
 			new_veh->set_angle_relative(theta);
 		}
-		else {
+		else if (theta != 0) {
 			std::cout << "Warning! Non-zero initial orientation selected for vehicle:" << new_veh->get_vehicle()->getID() << " will be omitted, since it does not adhere to the bicycle model!\n";
 		}
 		insertedAdditionalInitStatus.erase(veh_nid);
