@@ -149,7 +149,7 @@ public:
     }
 
     void set_angle_relative(double new_angle_theta) {
-        std::cout << "initial angle:" << new_angle_theta << "\n";
+        // std::cout << "initial angle:" << new_angle_theta << "\n";
         myveh->setAngleRelative(new_angle_theta);
     }
     void set_speed_x(double new_speed_x){
