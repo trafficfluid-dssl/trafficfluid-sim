@@ -338,21 +338,26 @@ protected:
     }
 
     void update_x(double longitudinal_acceleration){
-        if(!ring_road){
-            return;
-        }
+        
 
         //we use myveh->getSpeed() instead of the class variable speed_x, since speed_x already contains the updated value
         double new_pos_x = myveh->getPositionOnLane() + myveh->getSpeed() * TS + 0.5 * longitudinal_acceleration * TS * TS;
         
         double edge_length = myveh->getEdge()->getLength();
         double threshold = myveh->getLength() / 2;
+
+        speed_x = myveh->getSpeed() + longitudinal_acceleration * TS;
+
+        if (!ring_road) {
+            return;
+        }
+
         if(new_pos_x>=edge_length-threshold){
             new_pos_x = myveh->getPositionOnLane()-edge_length;
             myveh->setPositionOnLane(new_pos_x);
         }
 
-        speed_x = myveh->getSpeed() + longitudinal_acceleration * TS;
+        
     }
 
 
