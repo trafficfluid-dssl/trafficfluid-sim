@@ -86,49 +86,7 @@ public:
         // veh->setSpeed(28);
         speed_x = veh->getSpeed();
         speed_x_desired = veh->getDesiredSpeed();
-        /*
-        if(is_lanefree()){//put new vehicle in an appropriate lateral position (random position, but it does not collide with other vehicles)            
-            double road_width = veh->getEdge()->getWidth();
-            NumericalID vedgeid = veh->getEdge()->getNumericalID();
-            double v_width = veh->getWidth();
-            double random_init_y_pos = 0;
-            double last_v_width = 0, last_init_pos_y = 0;
-            int max_it = 0;
-            LastVehicleStatus::iterator it_f = last_veh_status.find(vedgeid);
-            if (it_f != last_veh_status.end()) {
-                
-                last_v_width = it_f->second[0];
-                last_init_pos_y = it_f->second[1];
-                if ((v_width + last_v_width) < road_width) { //this can be changed, it should be better if we found the best "opening" for the new vehicle to enter, and put it randomly within that lateral "region"
-                    do {
-                        random_init_y_pos = fRand(v_width / 2, road_width - v_width / 2);
-                        max_it++;
-                    } while (abs(random_init_y_pos - last_init_pos_y) < (v_width / 2 + last_v_width / 2) && max_it < MAX_ITERS);
-                }
-                else {
-                    random_init_y_pos = fRand(v_width / 2, road_width - v_width / 2);
-                }
-                last_init_pos_y = random_init_y_pos;
-                last_v_width = v_width;
-                it_f->second[0] = last_v_width;
-                it_f->second[1] = last_init_pos_y;
-            }
-            else {
-                random_init_y_pos = fRand(v_width / 2, road_width - v_width / 2);
-                std::array<double, 2> last_stat_array { v_width, random_init_y_pos };
-                last_veh_status.insert(std::make_pair(vedgeid, last_stat_array));
-            }
-            
-            
-            
-            double pos_y = get_position_y();
-            double dist_from_lane = veh->getLateralPositionOnLane();
-            double transformation = pos_y - dist_from_lane;
-            double new_dist_from_lane = random_init_y_pos - transformation;
-            //std::cout << "new veh " << veh->getID() << " on lat pos " << new_dist_from_lane << "\n";
-            veh->setLateralPositionOnLane(new_dist_from_lane);    
-        }
-        */
+        
         ring_road = false;
         accel_y = 0;
         accel_x = 0;
@@ -282,20 +240,7 @@ protected:
             }
 
             if (new_lane != nullptr && !(new_lane->isAccelLane())) {
-                //myveh->leaveLane(MSMoveReminder::NOTIFICATION_LANE_CHANGE, new_lane);
-                //myveh->enterLaneAtLaneChange(new_lane);
-                //veh_lane->removeVehicle(myveh, MSMoveReminder::NOTIFICATION_LANE_CHANGE);
-                //new_lane->enteredByLaneChange(myveh);
-                //myveh->setLane(new_lane);
-                //
-
-
-
-                //myveh->getLaneChangeModel().primaryLaneChanged(veh_lane, new_lane, 1);
-
-                //myveh->getLaneChangeModel().endLaneChangeManeuver();
-
-                //myveh->getLaneChangeModel().updateShadowLane();
+                
                 std::vector<std::pair<SUMOTime, int> > laneTimeLine;
                 int laneIndex = myveh->getLaneIndex() + direction;
                 laneTimeLine.push_back(std::make_pair(MSNet::getInstance()->getCurrentTimeStep(), laneIndex));
@@ -304,7 +249,6 @@ protected:
 
 
                 new_pos_y = new_pos_y - direction * (veh_lane->getWidth() + new_lane->getWidth()) / 2;
-                //myveh->setLateralPositionOnLane(new_pos_y);
                 //std::cout<<"change lane for "<< myveh->getID()<<"\n";
             }
 
@@ -315,19 +259,7 @@ protected:
 
     void update_y(double lateral_acceleration){
         double pos_on_lane = myveh->getLateralPositionOnLane();
-        double new_pos_y = pos_on_lane + speed_y*TS + 0.5*lateral_acceleration*TS*TS;   
-        /*
-        if (!in_accel_lane && myveh->getLane()->isAccelLane()) {
-            in_accel_lane = true;
-            accel_lane_width = myveh->getLane()->getWidth();
-        }
-
-        if (in_accel_lane && !(myveh->getLane()->isAccelLane())) {
-            in_accel_lane = false;
-            new_pos_y = pos_on_lane - accel_lane_width;
-            std::cout << myveh->getID() << " goes from accel to highway!\n";
-        }*/
-
+        double new_pos_y = pos_on_lane + speed_y * TS + 0.5 * lateral_acceleration * TS * TS;
         
         
         //check whether we need to update the current lane
@@ -360,6 +292,29 @@ protected:
         
     }
 
+    // simply obtain the global coordinates for the back of the vehicle (as needed for the bicycle model)
+    void get_global_coordinates_bicycle_model(double* x_pos, double* y_pos, double sigma, double theta_cur) {
+        *x_pos = myveh->getPosition().x() - sigma * cos(theta_cur);
+        *y_pos = myveh->getPosition().y() - sigma * sin(theta_cur);
+    }
+
+    // properly adapt existing codebase here, in order to convert global coordinates to local
+    void convert_to_local_coordinates_bicycle_model(double* x_pos_local, double* y_pos_local, double x_pos_global, double y_pos_global) {
+        Position pos(x_pos_global, y_pos_global);
+        pos.setz(myveh->getPosition().z());
+        const MSLane* mylane = myveh->getLane();
+        *x_pos_local = std::max(0., std::min(double(mylane->getLength() - POSITION_EPS),
+            mylane->interpolateGeometryPosToLanePos(
+                mylane->getShape().nearest_offset_to_point25D(pos, false))));
+
+        const double perpDist = mylane->getShape().distance2D(pos, false);
+        *y_pos_local = std::min(perpDist, 0.5 * (mylane->getWidth() + myveh->getVehicleType().getWidth() - MSGlobals::gLateralResolution));
+        PositionVector tmp = mylane->getShape();
+        tmp.move2side(-*y_pos_local); // moved to left
+        if (tmp.distance2D(pos) > perpDist) {
+            *y_pos_local = -*y_pos_local;
+        }
+    }
 
     void apply_acceleration_internal_bicycle() {
         // do all the updates here!, convert to positions on the back, update these first, and then convert them to the ones on the front
@@ -385,10 +340,46 @@ protected:
 
         //std::cout << "F:" << F << ",delta:" << delta << "\n";
         //std::cout << "speed:" << v_cur << ", theta:"<< theta_cur << ",timestep:"<< TS <<"\n";
-        x_cur_back = get_position_x() - (sigma / 2) * cos(theta_cur); // convert to the positions on the back
-        y_cur_back = get_position_y() - (sigma / 2) * sin(theta_cur); // convert to the positions on the back
-        //std::cout << "x:" << x_cur_back << ",y:" << y_cur_back << "\n";
+        //x_cur_back = get_position_x() - (sigma / 2) * cos(theta_cur); // convert to the positions on the back
+        //y_cur_back = get_position_y() - (sigma / 2) * sin(theta_cur); // convert to the positions on the back
+        bool global_coordinates=false;
+        if (global_coordinates) {
+            get_global_coordinates_bicycle_model(&x_cur_back, &y_cur_back, sigma, theta_cur);
+        }
+        else {
+            x_cur_back = get_position_x() - (sigma / 2) * cos(theta_cur); // convert to the positions on the back
+            y_cur_back = get_position_y() - (sigma / 2) * sin(theta_cur); // convert to the positions on the back
+
+        }
         
+
+        /*
+         
+        std::cout << "local coordinates: x:" << x_cur_back << ",y:" << y_cur_back << ",angle:"<< theta_cur <<"\n";
+        double angle_global = myveh->getAngle();
+        double x_global = myveh->getPosition().x() - myveh->getLength() * cos(angle_global);
+        double y_global = myveh->getPosition().y() - myveh->getLength() * sin(angle_global);
+        std::cout << "global coordinates (converted): x:" << x_global << ",y:" << y_global << ",angle:" << angle_global << "\n";
+
+        double angle_delta = -1;
+        double x_local = -1;
+        double y_local = -1;
+        Position pos(x_global, y_global);
+        pos.setz(myveh->getPosition().z());
+        const MSLane* mylane = myveh->getLane();
+        x_local = std::max(0., std::min(double(mylane->getLength() - POSITION_EPS),
+            mylane->interpolateGeometryPosToLanePos(
+            mylane->getShape().nearest_offset_to_point25D(pos, false))));
+
+        const double perpDist = mylane->getShape().distance2D(pos, false);
+        y_local = std::min(perpDist, 0.5 * (mylane->getWidth() + myveh->getVehicleType().getWidth() - MSGlobals::gLateralResolution));
+        PositionVector tmp = mylane->getShape();
+        tmp.move2side(-y_local); // moved to left
+        if (tmp.distance2D(pos) > perpDist) {
+            y_local = -y_local;
+        }
+        std::cout << "local coordinates (converted from global): x:" << x_local << ",y:" << y_local << ",angle:" << theta_cur + angle_delta << "\n";
+        */
         if (delta == 0) {
             deltaPos_x_back = v_cur * cos(theta_cur) * TS + F * cos(theta_cur) * pow(TS, 2);
 
@@ -407,10 +398,14 @@ protected:
         deltaPos_x_back = (deltaPos_x_back < 0 ) ? 0 : deltaPos_x_back;
         x_next_back = x_cur_back + deltaPos_x_back;
         y_next_back = y_cur_back + deltaPos_y_back;
-       // std::cout << "x_next:" << x_next_back << ",y_next:" << y_next_back << "\n";
+        // std::cout << "x_next:" << x_next_back << ",y_next:" << y_next_back << "\n";
         //std::cout << "theta_next:" << theta_next << "speed_next:" << v_next << "\n";
         x_next_front = x_next_back + (sigma)*cos(theta_next); // convert to the front bumper positions again to comply with sumo
         y_next_front = y_next_back + (sigma)*sin(theta_next); // convert to the front bumper positions again to comply with sumo
+
+        if (global_coordinates) {
+            convert_to_local_coordinates_bicycle_model(&x_next_front, &y_next_front, x_next_front, y_next_front);
+        }
 
         // need to update speed_x parameter! It is more convenient to use the v speed value instead of the actual longitudinal speed of the vehicle
         speed_x = (v_next < 0) ? 0 : v_next;
