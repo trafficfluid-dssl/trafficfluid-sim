@@ -98,9 +98,18 @@ GeomHelper::nearest_offset_on_line_to_point2D(const Position& lineStart,
                           ((p.y() - lineStart.y()) * (lineEnd.y() - lineStart.y()))
                          ) / (lineLength2D * lineLength2D);
         if (u < 0.0f || u > 1.0f) {  // closest point does not fall within the line segment
+            //std::cout << "outside:" << u << "," << u * lineLength2D << "\n";
             if (perpendicular) {
-                return INVALID_OFFSET;
-            }
+                // LFPlugin Begin
+                // original code here (just the line below)
+                // return INVALID_OFFSET;
+                // This is replaced, we would like vehicles relative position to be outside the lane boundaries (when vehicle is about to proceed to the next road segment)
+                //std::cout << "got here ("<<lineStart.x()<<","<<lineStart.y()<<")->("<<lineEnd.x()<<", "<< lineEnd.y()<<"), returns:"<< u*lineLength2D<<"\n";
+                if (u > 1.0f) {
+                    return u * lineLength2D;// INVALID_OFFSET;
+                }
+                return 0.0f;
+            }   // LFPlugin End
             if (u < 0.0f) {
                 return 0.0f;
             }

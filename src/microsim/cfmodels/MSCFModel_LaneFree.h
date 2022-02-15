@@ -28,6 +28,7 @@
 #include <microsim/lcmodels/MSAbstractLaneChangeModel.h>
 #include <utils/xml/SUMOXMLDefinitions.h>
 #include <random>
+#include <chrono>
 //#include <tgmath.h> 
 #define MAX_ITERS 5
 //#define UPDATE_PRINT_MS 5
@@ -67,6 +68,7 @@ typedef std::unordered_map<NumericalID, std::array<double, 2>> LastVehicleStatus
 
 double fRand(double fMin, double fMax);
 
+
 //declare here the api functions ("C compatible", in terms if arguments, and return value) (maybe implement them directly, or inside the cpp file alternatively)
 
 // NumericalID* lf_sim_get_all_ids();
@@ -90,6 +92,7 @@ public:
         ring_road = false;
         accel_y = 0;
         accel_x = 0;
+        myveh->initializeCachedGlobalPos();        
     }
 
     
@@ -104,6 +107,14 @@ public:
         double transformation = pos_y - dist_from_lane;
         double new_dist_from_lane = new_pos_y - transformation;
         myveh->setLateralPositionOnLane(new_dist_from_lane);   
+    }
+
+    void set_position_x_front(double new_pos_x) {
+        myveh->setPositionOnLane(new_pos_x);
+    }
+
+    void set_position_y_front(double new_pos_y) {
+        update_lane(new_pos_y);
     }
 
     void set_angle_relative(double new_angle_theta) {
@@ -194,13 +205,14 @@ public:
     double apply_acceleration_internal(){
         if (myveh->getVehicleType().getParameter().cmdModel == SUMO_TAG_LF_CMD_BICYCLE) {
             apply_acceleration_internal_bicycle();
-            accel_y = 0;
-            accel_x = 0;
-            return speed_x;
+            
+        }
+        else {
+            update_y(accel_y);
+            update_x(accel_x);
+
         }
         
-        update_y(accel_y);
-        update_x(accel_x);
         
         accel_y = 0;
         accel_x = 0;
@@ -223,6 +235,7 @@ protected:
 
     void update_lane(double new_pos_y) {
         //check whether we need to update the current lane
+        //std::cout<<"veh "<< myveh->getID() << " in lane:"<<myveh->getLane()->getID()<<"\n";
         if ((abs(new_pos_y) > ((myveh->getLane()->getWidth()) / 2))) {
             MSLane* veh_lane = myveh->getLane();
             const MSEdge* veh_edge = myveh->getEdge();
@@ -249,7 +262,7 @@ protected:
 
 
                 new_pos_y = new_pos_y - direction * (veh_lane->getWidth() + new_lane->getWidth()) / 2;
-                //std::cout<<"change lane for "<< myveh->getID()<<"\n";
+                //std::cout<<"change lane for "<< myveh->getID()<<" from "<< myveh->getLaneIndex()<<" to "<<laneIndex <<"\n";
             }
 
         }
@@ -298,23 +311,30 @@ protected:
         *y_pos = myveh->getPosition().y() - sigma * sin(theta_cur);
     }
 
-    // properly adapt existing codebase here, in order to convert global coordinates to local
-    void convert_to_local_coordinates_bicycle_model(double* x_pos_local, double* y_pos_local, double x_pos_global, double y_pos_global) {
-        Position pos(x_pos_global, y_pos_global);
-        pos.setz(myveh->getPosition().z());
-        const MSLane* mylane = myveh->getLane();
-        *x_pos_local = std::max(0., std::min(double(mylane->getLength() - POSITION_EPS),
-            mylane->interpolateGeometryPosToLanePos(
-                mylane->getShape().nearest_offset_to_point25D(pos, false))));
+    
+    void convert_to_local_coordinates(double* x_pos_local, double* y_pos_local, Position& pos, const MSLane* mylane) {
 
+
+        //*x_pos_local = std::max(0., std::min(double(mylane->getLength() - POSITION_EPS),
+        //    mylane->interpolateGeometryPosToLanePos(
+        //        mylane->getShape().nearest_offset_to_point25D(pos, false))));
+        *x_pos_local = mylane->interpolateGeometryPosToLanePos(mylane->getShape().nearest_offset_to_point25D(pos, false));
+
+        double angle_lane = mylane->getShape().beginEndAngle();
+        //std::cout << *x_pos_local << " and angle:" << angle_lane << "\n";
+        //std::cout << *x_pos_local << ", length:" << mylane->getLength() << "\n";
+        //if (*x_pos_local - myveh->getPositionOnLane() < 3) {
+        //    *x_pos_local = myveh->getPositionOnLane() + 3;
+        //}
         const double perpDist = mylane->getShape().distance2D(pos, false);
-        *y_pos_local = std::min(perpDist, 0.5 * (mylane->getWidth() + myveh->getVehicleType().getWidth() - MSGlobals::gLateralResolution));
+        *y_pos_local = perpDist;// std::min(perpDist, 0.5 * (mylane->getWidth() + myveh->getVehicleType().getWidth() - MSGlobals::gLateralResolution));
         PositionVector tmp = mylane->getShape();
         tmp.move2side(-*y_pos_local); // moved to left
         if (tmp.distance2D(pos) > perpDist) {
             *y_pos_local = -*y_pos_local;
         }
     }
+
 
     void apply_acceleration_internal_bicycle() {
         // do all the updates here!, convert to positions on the back, update these first, and then convert them to the ones on the front
@@ -323,7 +343,8 @@ protected:
         F = accel_x;
         delta = accel_y;
         v_cur = myveh->getSpeed();
-        theta_cur = myveh->getAngleRelative();
+        
+        theta_cur = myveh->getAngleRelative(); // is automatically local or global
 
         sigma = myveh->getLength();
 
@@ -332,54 +353,25 @@ protected:
         double theta_next_elem_2 = v_cur * (tan_delta / sigma) * TS;
         double theta_next_elem_3 = F * (tan_delta / (2 * sigma)) * pow(TS, 2);
 
-        theta_next = theta_cur + theta_next_elem_2 + theta_next_elem_3;
-
-
 
         v_next = v_cur + F * TS;
 
-        //std::cout << "F:" << F << ",delta:" << delta << "\n";
-        //std::cout << "speed:" << v_cur << ", theta:"<< theta_cur << ",timestep:"<< TS <<"\n";
-        //x_cur_back = get_position_x() - (sigma / 2) * cos(theta_cur); // convert to the positions on the back
-        //y_cur_back = get_position_y() - (sigma / 2) * sin(theta_cur); // convert to the positions on the back
-        bool global_coordinates=false;
+        bool global_coordinates=myveh->getGlobalCoordinatesControl();
         if (global_coordinates) {
             get_global_coordinates_bicycle_model(&x_cur_back, &y_cur_back, sigma, theta_cur);
+            
         }
         else {
+            
             x_cur_back = get_position_x() - (sigma / 2) * cos(theta_cur); // convert to the positions on the back
             y_cur_back = get_position_y() - (sigma / 2) * sin(theta_cur); // convert to the positions on the back
-
         }
+        //printf("within simulator for veh:%s\nx:%f,y:%f,v:%f,theta:%f\n", myveh->getID().c_str(), x_cur_back, y_cur_back, v_cur, theta_cur);
+        // calculate delta of the angle, and then add it with respect to either global or local angle
+        double delta_theta = theta_next_elem_2 + theta_next_elem_3;
+        theta_next = theta_cur + delta_theta;
+
         
-
-        /*
-         
-        std::cout << "local coordinates: x:" << x_cur_back << ",y:" << y_cur_back << ",angle:"<< theta_cur <<"\n";
-        double angle_global = myveh->getAngle();
-        double x_global = myveh->getPosition().x() - myveh->getLength() * cos(angle_global);
-        double y_global = myveh->getPosition().y() - myveh->getLength() * sin(angle_global);
-        std::cout << "global coordinates (converted): x:" << x_global << ",y:" << y_global << ",angle:" << angle_global << "\n";
-
-        double angle_delta = -1;
-        double x_local = -1;
-        double y_local = -1;
-        Position pos(x_global, y_global);
-        pos.setz(myveh->getPosition().z());
-        const MSLane* mylane = myveh->getLane();
-        x_local = std::max(0., std::min(double(mylane->getLength() - POSITION_EPS),
-            mylane->interpolateGeometryPosToLanePos(
-            mylane->getShape().nearest_offset_to_point25D(pos, false))));
-
-        const double perpDist = mylane->getShape().distance2D(pos, false);
-        y_local = std::min(perpDist, 0.5 * (mylane->getWidth() + myveh->getVehicleType().getWidth() - MSGlobals::gLateralResolution));
-        PositionVector tmp = mylane->getShape();
-        tmp.move2side(-y_local); // moved to left
-        if (tmp.distance2D(pos) > perpDist) {
-            y_local = -y_local;
-        }
-        std::cout << "local coordinates (converted from global): x:" << x_local << ",y:" << y_local << ",angle:" << theta_cur + angle_delta << "\n";
-        */
         if (delta == 0) {
             deltaPos_x_back = v_cur * cos(theta_cur) * TS + F * cos(theta_cur) * pow(TS, 2);
 
@@ -394,38 +386,54 @@ protected:
             
         }
 
-        // vehicles are now allowed to move backwards
+        // vehicles are not allowed to move backwards        
         deltaPos_x_back = (deltaPos_x_back < 0 ) ? 0 : deltaPos_x_back;
+
         x_next_back = x_cur_back + deltaPos_x_back;
         y_next_back = y_cur_back + deltaPos_y_back;
-        // std::cout << "x_next:" << x_next_back << ",y_next:" << y_next_back << "\n";
-        //std::cout << "theta_next:" << theta_next << "speed_next:" << v_next << "\n";
+
         x_next_front = x_next_back + (sigma)*cos(theta_next); // convert to the front bumper positions again to comply with sumo
         y_next_front = y_next_back + (sigma)*sin(theta_next); // convert to the front bumper positions again to comply with sumo
-
+        //printf("next step:\n x:%f,y:%f,v:%f,theta:%f\n", x_next_back, y_next_back, v_next, theta_next);
         if (global_coordinates) {
-            convert_to_local_coordinates_bicycle_model(&x_next_front, &y_next_front, x_next_front, y_next_front);
-        }
+            myveh->setCachedGlobalPos(x_next_front, y_next_front);
+            Position cachedGlobalPos = myveh->getCachedGlobalPos();
+            const MSLane* mylane = myveh->getLane();
 
+            convert_to_local_coordinates(&x_next_front, &y_next_front, cachedGlobalPos, mylane);
+        }
+        //printf("next step local:\n x:%f,y:%f\n", x_next_front, y_next_front);
+        
         // need to update speed_x parameter! It is more convenient to use the v speed value instead of the actual longitudinal speed of the vehicle
         speed_x = (v_next < 0) ? 0 : v_next;
 
         // used to update properly the new position of the vehicle (corresponds to the front bumper)
         deltaPos_x_front = x_next_front - myveh->getPositionOnLane();
-        //std::cout << "delta x:" << deltaPos_x_front<<"\n";
+        //std::cout << "delta x: (local)" << deltaPos_x_front << "\n";
+        
+        // std::cout << "delta x:" << deltaPos_x_front<<"\n";
         // useful for compliance with existing structure, will update properly the longitudinal position
         myveh->setDeltaPosLF(deltaPos_x_front);
-
-        //update lane properly, and set new latpos on lane etc
-        double y_lane_cur_back = myveh->getLateralPositionOnLane() - (sigma) * sin(theta_cur);
         
-        double y_lane_next_back = y_lane_cur_back + deltaPos_y_back;
+        //update lane properly, and set new latpos on lane etc
+        double y_lane_next_front;
+        if (global_coordinates) {
+            y_lane_next_front = y_next_front;
+        }
+        else {
+            double y_lane_cur_back = myveh->getLateralPositionOnLane() - (sigma)*sin(theta_cur);
 
-        double y_lane_next_front = y_lane_next_back + (sigma)*sin(theta_next);
+            double y_lane_next_back = y_lane_cur_back + deltaPos_y_back;
 
+            y_lane_next_front = y_lane_next_back + (sigma)*sin(theta_next);
+
+            
+        }
+        
         update_lane(y_lane_next_front);
+        
 
-        myveh->setLateralPositionOnLane(y_lane_next_front);
+        //myveh->setLateralPositionOnLane(y_lane_next_front);
 
         
         // update theta angle
@@ -453,19 +461,22 @@ protected:
     double accel_x;
     double accel_y;
     bool ring_road;
+
 };
 
 
 
-typedef std::unordered_map<NumericalID,MSLaneFreeVehicle*> VehicleMap;
-typedef std::unordered_map<NumericalID,VehicleMap*> VehicleMapEdges;
+typedef std::unordered_map<NumericalID, MSLaneFreeVehicle*> VehicleMap;
+typedef std::unordered_map<NumericalID, VehicleMap*> VehicleMapEdges;
 
 typedef std::vector<const SUMOVehicle*> SortedVehiclesVector;
 typedef std::unordered_map<NumericalID, SortedVehiclesVector*> SortedVehiclesVectorEdges;
 
-typedef std::unordered_map<NumericalID,std::vector<double>> InsertedAdditionalInitStatus;
+typedef std::unordered_map<NumericalID, std::vector<double>> InsertedAdditionalInitStatus;
 
-class LaneFreeSimulationPlugin{
+class MSLaneFreeVehicle;
+
+class LaneFreeSimulationPlugin {
 
 
     //pointer to all vehicles' vector
@@ -478,10 +489,10 @@ public:
     LaneFreeSimulationPlugin();
     //destructor
     ~LaneFreeSimulationPlugin();
-    
+
     void initialize_lib();
     void lf_simulation_step();
-    
+
     // void sim_event_1(arguments);
     // void sim_event_2(arguments);
     // // etc
@@ -496,20 +507,20 @@ public:
         return myInstance != nullptr;
     }
 
-    
-    
+
+
 
     void insert_vehicle(MSVehicle* veh);
     void remove_vehicle(MSVehicle* veh);
     void change_edge(MSVehicle* veh);
-    
-    
+
+
 
     MSLaneFreeVehicle* find_vehicle(NumericalID veh_id);
     MSLaneFreeVehicle* find_vehicle_in_edge(NumericalID veh_id, NumericalID edge_id);
     NumericalID find_edge(NumericalID veh_id);
 
-    void add_new_veh_additional_stats(NumericalID veh_id, double pos_y, double speed_y, double theta);
+    void add_new_veh_additional_stats(NumericalID veh_id, double pos_x, double pos_y, double speed_y, double theta, bool use_global_coordinates);
 
 
     arrayMemStruct* get_all_ids_mem() {
@@ -532,24 +543,24 @@ public:
         return &edge_name;
     }
 
-    arrayMemStruct* get_all_ids_in_edge_mem(){
+    arrayMemStruct* get_all_ids_in_edge_mem() {
         return &all_ids_in_edge;
     }
-    arrayMemStruct* get_veh_type_name_mem(){
+    arrayMemStruct* get_veh_type_name_mem() {
         return &veh_type_name;
     }
-    arrayMemStruct* get_detector_ids_mem(){
+    arrayMemStruct* get_detector_ids_mem() {
         return &detector_ids;
     }
-    arrayMemStruct* get_detector_name_mem(){
+    arrayMemStruct* get_detector_name_mem() {
         return &detector_name;
     }
-    arrayMemStruct* get_detector_values_mem(){
+    arrayMemStruct* get_detector_values_mem() {
         return &detector_values;
     }
-    arrayMemStruct* get_density_per_segment_per_edge_mem(){
+    arrayMemStruct* get_density_per_segment_per_edge_mem() {
         return &density_per_segment_per_edge;
-    } 
+    }
 
     arrayMemStruct* get_all_neighbor_ids_front_mem() {
         return &all_neighbor_ids_front;
@@ -571,18 +582,33 @@ public:
 
     SortedVehiclesVector* get_sorted_vehicles_in_edge(NumericalID edge_id);
 
-    double get_max_vehicle_length(){
+    double get_max_vehicle_length() {
         return max_vehicle_length;
     }
-    
+
     double get_uniform_distribution_sample(double from, double to);
-        
+
+
+
+    // properly adapt existing codebase here, in order to convert global coordinates to local
+    void convert_to_local_coordinates(double* x_pos_local, double* y_pos_local, Position& pos, const MSLane* mylane);
+
+    // returns the execution time (in seconds) of the previous call for the simulation_step function 
+    double get_last_step_exec_time() {
+        return step_timer_seconds;
+    }
+
+    // returns the execution time (in seconds) of the previous step (disregarding the execution time for the simulation_step function, i.e., execution time for the SUMO application)
+    double get_last_step_app_exec_time() {
+        return rest_app_timer_seconds;
+    }
+
 protected:
     NumericalID find_stored_edge(MSVehicle* veh);
     void free_hashmap();
     /// @brief Unique instance of LaneFreeSimulationPlugin
     static LaneFreeSimulationPlugin* myInstance;
-    
+
     VehicleMapEdges allVehiclesMapEdges;
 
     InsertedAdditionalInitStatus insertedAdditionalInitStatus;
@@ -602,7 +628,7 @@ protected:
     arrayMemStruct detector_name;
     arrayMemStruct detector_values;
     arrayMemStruct density_per_segment_per_edge;
-    
+
     arrayMemStruct all_neighbor_ids_front;
     arrayMemStruct all_neighbor_ids_back;
 
@@ -610,12 +636,15 @@ protected:
     std::uniform_real_distribution<double> uniform_real_dis;
     //Deprecated print
     //std::vector<std::string> msgBufferVector;
-    
+
     //long printMessageTimer;
+
+    double step_timer_seconds;
+    double rest_app_timer_seconds;
+
+    std::chrono::steady_clock::time_point before_step_time;
+    std::chrono::steady_clock::time_point after_step_time;
 };
-
-
-
 
 
 

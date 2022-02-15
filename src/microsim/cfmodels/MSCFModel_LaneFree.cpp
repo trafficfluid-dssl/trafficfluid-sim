@@ -1420,7 +1420,9 @@ int lf_plugin_get_seed(){
 	return oc.getInt("seed");
 }
 
-NumericalID lf_plugin_insert_new_vehicle(char* veh_name, char* route_id, char* type_id, double pos_x, double pos_y, double speed_x, double speed_y, double theta){
+
+// use_global_coordinates is only relevant to the bicycle model, and will be disregarded otherwise
+NumericalID lf_plugin_insert_new_vehicle(char* veh_name, char* route_id, char* type_id, double pos_x, double pos_y, double speed_x, double speed_y, double theta, int use_global_coordinates){
 	
 	// 
 	std::string id(veh_name);
@@ -1429,13 +1431,22 @@ NumericalID lf_plugin_insert_new_vehicle(char* veh_name, char* route_id, char* t
 	std::string depart("now");
 	std::string departLane("best");
 	MSVehicleType* vehicleType = MSNet::getInstance()->getVehicleControl().getVType(vTypeID);
-	double depart_pos_front = pos_x + vehicleType->getLength()/2;
+	double depart_pos_front=0;
+	bool use_bicycle = vehicleType->getParameter().cmdModel == SUMO_TAG_LF_CMD_BICYCLE;
+	bool use_local_coordinates = !((bool)(use_global_coordinates) && use_bicycle);
+	if (use_local_coordinates) {
+		depart_pos_front = pos_x + vehicleType->getLength() / 2;
+		if (!use_bicycle && (bool)use_global_coordinates) {
+			std::cout << "Error: Control with global coordinates is only supported for vehicles that employ the bicycle model!\n Vehicle " << veh_name << " will use local coordinates.\n";
+		}
+	}
+	
 	std::string departPos = std::to_string(depart_pos_front);
 	std::string departSpeed = std::to_string(speed_x);	
 	
 	NumericalID new_vid = libsumo::Vehicle::addR(id, routeID, vTypeID, depart, departLane, departPos, departSpeed);
 	
-	LaneFreeSimulationPlugin::getInstance()->add_new_veh_additional_stats(new_vid, pos_y, speed_y, theta);
+	LaneFreeSimulationPlugin::getInstance()->add_new_veh_additional_stats(new_vid, pos_x, pos_y, speed_y, theta, !use_local_coordinates);
 
 	
 	// MSLaneFreeVehicle* lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(new_vid);
@@ -1959,7 +1970,7 @@ double lf_plugin_get_global_position_x(NumericalID veh_id) {
 		return -1;
 	}
 
-	double global_pos_x = lfveh->get_vehicle()->getPosition().x()-lfveh->get_vehicle()->getLength()/2;
+	double global_pos_x = lfveh->get_vehicle()->getPosition().x()- (lfveh->get_vehicle()->getLength()/2) * cos(lfveh->get_vehicle()->getAngleRelative());
 	return global_pos_x;
 }
 
@@ -1971,7 +1982,7 @@ double lf_plugin_get_global_position_y(NumericalID veh_id) {
 		return -1;
 	}
 
-	double global_pos_y = lfveh->get_vehicle()->getPosition().y();
+	double global_pos_y = lfveh->get_vehicle()->getPosition().y() - (lfveh->get_vehicle()->getLength() / 2) * sin(lfveh->get_vehicle()->getAngleRelative());
 	return global_pos_y;
 }
 
@@ -2009,6 +2020,7 @@ double lf_plugin_get_veh_orientation(NumericalID veh_id) {
 }
 
 
+
 void lf_plugin_apply_control_bicycle_model(NumericalID veh_id, double F, double delta) {
 	MSLaneFreeVehicle* lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(veh_id);
 	if (lfveh == nullptr) {
@@ -2041,6 +2053,32 @@ double lf_plugin_get_speed_bicycle_model(NumericalID veh_id) {
 
 	return lfveh->get_speed_x();
 
+}
+
+
+void lf_plugin_set_global_coordinate_control(NumericalID veh_id, int use_global_coordinates) {
+	MSLaneFreeVehicle* lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(veh_id);
+	if (lfveh == nullptr) {
+		std::cout << "Vehicle with veh id:" << veh_id << " not found!\n";
+		return ;
+	}
+	
+	MSVehicle* myveh = lfveh->get_vehicle();
+	if (myveh->getVehicleType().getParameter().cmdModel != SUMO_TAG_LF_CMD_BICYCLE)
+	{	
+		std::cout << "Vehicle with veh id:" << veh_id << " does not move according to the bicycle model!\n";
+	}
+
+	myveh->setGlobalCoordinatesControl((bool)use_global_coordinates);
+}
+// returns the execution time (in seconds) of the previous call for the simulation_step function 
+double lf_plugin_get_last_step_time() {
+	return  LaneFreeSimulationPlugin::getInstance()->get_last_step_exec_time();
+}
+
+// returns the execution time (in seconds) of the previous step (disregarding the execution time for the simulation_step function, i.e., execution time for the SUMO application)
+double lf_plugin_get_last_step_app_time() {
+	return LaneFreeSimulationPlugin::getInstance()->get_last_step_app_exec_time();
 }
 
 double
@@ -2110,9 +2148,13 @@ LaneFreeSimulationPlugin::LaneFreeSimulationPlugin(){
 	get_destination_edge_id = &lf_plugin_get_destination_edge_id;
 
 	get_veh_orientation = &lf_plugin_get_veh_orientation;
+	
 	apply_control_bicycle_model = &lf_plugin_apply_control_bicycle_model;
 	get_speed_bicycle_model = &lf_plugin_get_speed_bicycle_model;
+	set_global_coordinate_control  = &lf_plugin_set_global_coordinate_control;
 
+	get_last_step_time = &lf_plugin_get_last_step_time;
+	get_last_step_app_time = &lf_plugin_get_last_step_app_time;
 
 	srand(lf_plugin_get_seed());
 	max_vehicle_length = 0;
@@ -2137,6 +2179,8 @@ LaneFreeSimulationPlugin::LaneFreeSimulationPlugin(){
 	random_engine.seed(lf_plugin_get_seed());
 	uniform_real_dis = std::uniform_real_distribution<double>(0, 1);
 
+	step_timer_seconds = -1;
+	rest_app_timer_seconds = -1;;
 
 	myInstance = this;
 }
@@ -2209,47 +2253,29 @@ LaneFreeSimulationPlugin::lf_simulation_step(){
 	detector_values.updated = false;
 
 	density_per_segment_per_edge.updated = false;
-	
-	
 	lf_simulation_checkCollisions();
-	simulation_step();
-	
-	
-	/*
-	Deprecated print
-	bool is_empty = is_message_empty();
-	long timer = SysUtils::getCurrentMillis() - printMessageTimer;
-	bool update_time;
-	
-	update_time = true ? timer > UPDATE_PRINT_MS : false;
-	
-	if ((!is_empty) && update_time) {
-		std::string msg = get_message_step();
-		
-		
-		
-		if (MSNet::getInstance()->isGUINet()) {
-			
-			WRITE_MESSAGE(msg);
-		}
-		else{
-			std::cout << msg << "\n";
-		}
 
-
-		if (update_time) {
-			printMessageTimer = SysUtils::getCurrentMillis();
-		}
+	before_step_time = std::chrono::steady_clock::now();
+	
+	if (step_timer_seconds > 0) {
+		std::chrono::duration<double> dur_step(before_step_time - after_step_time);
+		rest_app_timer_seconds = dur_step.count();
 	}
-	*/
-	
 
+	before_step_time = std::chrono::steady_clock::now();
+	simulation_step();
+	after_step_time = std::chrono::steady_clock::now();
+
+	std::chrono::duration<double> dur_step(after_step_time - before_step_time);
+	step_timer_seconds = dur_step.count();
+	//printf("step time: %f s\n", step_timer_seconds);
+	//printf("rest time: %f s\n", rest_app_timer_seconds);
 }
 
 
 void
-LaneFreeSimulationPlugin::add_new_veh_additional_stats(NumericalID veh_id, double pos_y, double speed_y, double theta){
-	std::vector<double> additionals_array = {pos_y,speed_y,theta};
+LaneFreeSimulationPlugin::add_new_veh_additional_stats(NumericalID veh_id, double pos_x, double pos_y, double speed_y, double theta, bool use_global_coordinates){
+	std::vector<double> additionals_array = {pos_y,speed_y,theta, pos_x, (double) use_global_coordinates};
 	//additionals_array.push_back(pos_y);
 	//additionals_array.push_back(speed_y);
 	//additionals_array.push_back(theta);
@@ -2322,7 +2348,7 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 			// std::cout << "veh:" << veh1->getID() << " with length:" << lv1 << " and width:" << wv1 <<"\n";
 			if (veh1->getVehicleType().getParameter().cmdModel == SUMO_TAG_LF_CMD_BICYCLE) {
 				// this vehicle uses the bicycle model, meaning that we should consider the fact that it may have a non-zero orientation
-				update_vehicle_dimensions(&lv1, &wv1, abs(veh1->getAngleRelative()));				
+				update_vehicle_dimensions(&lv1, &wv1, abs(veh1->getAngleRelativeAlways()));				
 			}
 			// std::cout<< "veh:" << veh1->getID() << " updated length:" << lv1<<" and width:" << wv1<< " at angle:"<< veh1->getAngleRelative() << "\n";
 			//std::cout << "veh:" << veh1->getID() << " at posx:" << xv1;
@@ -2342,7 +2368,7 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 
 				if (veh2->getVehicleType().getParameter().cmdModel == SUMO_TAG_LF_CMD_BICYCLE) {
 					// this vehicle also uses the bicycle model, meaning that we should consider the fact that it may have a non-zero orientation
-					update_vehicle_dimensions(&lv2, &wv2, abs(veh2->getAngleRelative())); // we could maybe save updated length and width, since for most vehicles we will do this computation more than once
+					update_vehicle_dimensions(&lv2, &wv2, abs(veh2->getAngleRelativeAlways())); // we could maybe save updated length and width, since for most vehicles we will do this computation more than once
 				}
 
 
@@ -2426,22 +2452,47 @@ LaneFreeSimulationPlugin::insert_vehicle(MSVehicle* veh){
 		double pos_y = (it_l->second)[0];
 		double speed_y = (it_l->second)[1];
 		double theta = (it_l->second)[2];
+
+		bool use_global_coordinates = (it_l->second)[4];
+		if (!use_global_coordinates) {
+			new_veh->set_position_y(pos_y);
+		}
+		else {
+			double pos_x = (it_l->second)[3];
+			Position pos_global_init(pos_x + (lv / 2) * cos(theta), pos_y + (lv / 2) * sin(theta));
+			double x_local=0, y_local=0;
+			const MSLane* init_lane = veh->getLane();
+			convert_to_local_coordinates(&x_local, &y_local, pos_global_init, init_lane);
+			new_veh->set_position_x_front(x_local);
+			new_veh->set_position_y_front(y_local);
+			veh->setGlobalCoordinatesControl(true);			
+		}
 		// std::cout << "theta:" << theta << "\n";
-		new_veh->set_position_y(pos_y);
+		
 		new_veh->set_speed_y(speed_y);
 
 		// only vehicles adhering to the bicycle model can have an initial non-zero orientation
-		if (new_veh->get_vehicle()->getVehicleType().getParameter().cmdModel == SUMO_TAG_LF_CMD_BICYCLE) {
+		if (veh->getVehicleType().getParameter().cmdModel == SUMO_TAG_LF_CMD_BICYCLE) {
+			//std::cout << "Angle for veh " << veh->getID() << " " << theta << "\n";
 			new_veh->set_angle_relative(theta);
 		}
 		else if (theta != 0) {
 			std::cout << "Warning! Non-zero initial orientation selected for vehicle:" << new_veh->get_vehicle()->getID() << " will be omitted, since it does not adhere to the bicycle model!\n";
 		}
 		insertedAdditionalInitStatus.erase(veh_nid);
-	}
+	}	
 	// double init_pos_x=new_veh->get_position_x(), init_pos_y=new_veh->get_position_y(), init_speed_x=new_veh->get_speed_x();
 	
 	event_vehicle_enter(veh_nid);
+
+	// first condition means that vehicle is not inserted through the API
+	if (it_l == insertedAdditionalInitStatus.end() && veh->getVehicleType().getParameter().cmdModel == SUMO_TAG_LF_CMD_BICYCLE && veh->getGlobalCoordinatesControl()) {
+		// in case a new vehicle from any demand adopts the bicycle model, and used global coordinates, initial angle should not be zero, but rather the one parallel to the residing road, so 
+		const MSLane* init_lane = veh->getLane();
+		double init_theta = init_lane->getShape().rotationAtOffset(init_lane->interpolateLanePosToGeometryPos(veh->getPositionOnLane()));
+		new_veh->set_angle_relative(init_theta);
+	}
+
 	// new_veh->set_position_x(init_pos_x);
 	// new_veh->set_position_y(init_pos_y);
 	// new_veh->set_speed_x(init_speed_x);
@@ -2655,6 +2706,24 @@ LaneFreeSimulationPlugin::get_sorted_vehicles_in_edge(NumericalID edge_id) {
 	}
 	//std::cout << "Sorted edge " << edge_id << " not found!\n";
 	return nullptr;
+}
+
+
+// properly adapt existing codebase here, in order to convert global coordinates to local
+void 
+LaneFreeSimulationPlugin::convert_to_local_coordinates(double* x_pos_local, double* y_pos_local, Position& pos, const MSLane* mylane) {
+
+
+	*x_pos_local = mylane->interpolateGeometryPosToLanePos(mylane->getShape().nearest_offset_to_point25D(pos, false));
+
+	double angle_lane = mylane->getShape().beginEndAngle();
+	const double perpDist = mylane->getShape().distance2D(pos, false);
+	*y_pos_local = perpDist;// std::min(perpDist, 0.5 * (mylane->getWidth() + myveh->getVehicleType().getWidth() - MSGlobals::gLateralResolution));
+	PositionVector tmp = mylane->getShape();
+	tmp.move2side(-*y_pos_local); // moved to left
+	if (tmp.distance2D(pos) > perpDist) {
+		*y_pos_local = -*y_pos_local;
+	}
 }
 
 //to be removed

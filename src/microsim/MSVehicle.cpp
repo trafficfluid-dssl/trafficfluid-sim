@@ -659,7 +659,6 @@ MSVehicle::Influencer::influenceChangeDecision(const SUMOTime currentTime, const
     while (myLaneTimeLine.size() == 1 || (myLaneTimeLine.size() > 1 && currentTime > myLaneTimeLine[1].first)) {    
         myLaneTimeLine.erase(myLaneTimeLine.begin());
     }
-
     ChangeRequest changeRequest = REQUEST_NONE;
     // do nothing if the time line does not apply for the current time
     if (myLaneTimeLine.size() >= 2 && currentTime >= myLaneTimeLine[0].first) {
@@ -678,7 +677,7 @@ MSVehicle::Influencer::influenceChangeDecision(const SUMOTime currentTime, const
             state = state | LCA_TRACI;
         }
     }
-    
+
     // check whether the current reason shall be canceled / overridden
     if ((state & LCA_WANTS_LANECHANGE_OR_STAY) != 0) {
         // flags for the current reason
@@ -942,6 +941,7 @@ MSVehicle::MSVehicle(SUMOVehicleParameter* pars, const MSRoute* route,
     myDesiredSpeed = 0;
     myAngleRelative = 0;
     deltaPos_LF = 0;
+    global_coordinates = false;
     //LFPlugin End
 }
 
@@ -1339,9 +1339,14 @@ MSVehicle::computeAngle() const {
     //HERE we need another variable, that is the angle wrt the road edge
     // myAngleRelative changes values according to the bicycle model, relative to the residing road segment
     //std::cout << "myanglerelative:" << myAngleRelative << "\n";
-    double result = (p1 != p2 ? myAngleRelative + p2.angleTo2D(p1) :
-        myAngleRelative + myLane->getShape().rotationAtOffset(myLane->interpolateLanePosToGeometryPos(getPositionOnLane())));
-    
+    double result;
+    if (global_coordinates) {
+        result = myAngleRelative;
+    }
+    else {
+        result = (p1 != p2 ? myAngleRelative + p2.angleTo2D(p1) :
+        myAngleRelative + myLane->getShape().rotationAtOffset(myLane->interpolateLanePosToGeometryPos(getPositionOnLane())));    
+    }
     // LFPlugin End
     if (myLaneChangeModel->isChangingLanes()) {
         result += lefthandSign * DEG2RAD(myLaneChangeModel->getAngleOffset());
@@ -4549,8 +4554,20 @@ MSVehicle::enterLaneAtMove(MSLane* enteredLane, bool onTeleporting) {
             if (link != nullptr) {
                 myFurtherLanesPosLat.push_back(myState.myPosLat);
                 myState.myPosLat += link->getLateralShift();
+                
             }
+
         }
+        // LFPlugin Begin        
+        if (getVehicleType().getParameter().cmdModel == SUMO_TAG_LF_CMD_BICYCLE && global_coordinates) {
+            double new_x, new_y;
+            LaneFreeSimulationPlugin::getInstance()->convert_to_local_coordinates(&new_x, &new_y, cachedGlobalPos, myLane);
+            myState.myPos = new_x;
+            myState.myPosLat = new_y;
+            //std::cout << "veh:" << getID() << " proceeds to lane:" << myLane->getID() << " with new pos:" << cachedGlobalPos.x() << "," << cachedGlobalPos.y() << "\n";
+        }
+        // LFPlugin End
+        
 
     } else {
         // normal move() isn't called so reset position here. must be done
@@ -4621,6 +4638,7 @@ MSVehicle::enterLaneAtLaneChange(MSLane* enteredLane) {
 void
 MSVehicle::enterLaneAtInsertion(MSLane* enteredLane, double pos, double speed, double posLat, MSMoveReminder::Notification notification) {
     myState = State(pos, speed, posLat, pos - getVehicleType().getLength());
+    
     if (myDeparture == NOT_YET_DEPARTED) {
         // LFPlugin Begin
         LaneFreeSimulationPlugin::getInstance()->insert_vehicle(this);
@@ -4631,6 +4649,7 @@ MSVehicle::enterLaneAtInsertion(MSLane* enteredLane, double pos, double speed, d
     assert(myState.myPos >= 0);
     assert(myState.mySpeed >= 0);
     myLane = enteredLane;
+    
     myAmOnNet = true;
     // schedule action for the next timestep
     myLastActionTime = MSNet::getInstance()->getCurrentTimeStep() + DELTA_T;

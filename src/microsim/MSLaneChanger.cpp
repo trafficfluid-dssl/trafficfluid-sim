@@ -982,6 +982,13 @@ MSLaneChanger::checkChange(
     }
     const int oldstate = state;
     // let TraCI influence the wish to change lanes and the security to take
+    
+    // LFPlugin Begin
+    if (vehicle->getCarFollowModel().getModelID() == SUMO_TAG_CF_LANEFREE) {// state value may block vehicles from updating residing lane appropriately
+        state = 0;
+    }
+    // LFPlugin End 
+
     state = vehicle->influenceChangeDecision(state);
 #ifdef DEBUG_CHECK_CHANGE
     if (DEBUG_COND) {

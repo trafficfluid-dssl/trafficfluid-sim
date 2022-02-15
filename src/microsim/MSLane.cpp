@@ -820,12 +820,18 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
         double avg_speed_front, sum_speed_front=0;
         //how many front vehicles to check
         int num_front_check = 5, veh_counter = 0;
+        double desired_space_gap = desired_tau * speed;
+        double s;
+        double distance_to_zero=speed*speed/2*2;
+        double myfrontpos = aVehicle->getPositionOnLane();
+        sort(myVehicles.begin(), myVehicles.end(), vehicle_natural_position_sorter(this));
         for (VehCont::iterator veh = myVehicles.begin(); veh != myVehicles.end(); ++veh) {
             sum_speed_front += (*veh)->getSpeed();
             veh_counter++;
             if (veh_counter == num_front_check) {
                 break;
             }
+            
         }
 
         if (veh_counter > 0) {
@@ -837,10 +843,9 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
 
 
         
-        double s, v = std::min(speed, avg_speed_front);
-        double myfrontpos = aVehicle->getPositionOnLane();
+        double v = std::min(speed, avg_speed_front);
         double y, other_vwidth;
-        double desired_space_gap = desired_tau * speed;
+       
         if (insertion_policy == "center") {
             //limit initial speed only based on the one vehicle downstream
             if (veh_counter > 0) {
@@ -877,25 +882,28 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
         double front_veh_pos = 0, front_veh_length, dx;
         double sum_speed = 0;
         double num_vehs = 0;
-        for (VehCont::iterator veh = myVehicles.begin(); veh != myVehicles.end(); ++veh) {
+        bool debug_veh = false;
+                
+        for (VehCont::iterator veh = myVehicles.begin(); veh != myVehicles.end(); ++veh) {        
             //getPositionOnLane returns the position of the front point
+            
             s = (*veh)->getPositionOnLane() - (*veh)->getLength() - myfrontpos;
             if (s <= 0 || speed == 0) {
                 check_tau = false;
             }
             else {
-                check_tau = true;                
-                
-                
+                check_tau = true;
+
+
             }
-            
+
             //printf("%s to %s s:%f, v:%f\n",aVehicle->getID(),(*veh)->getID(), s, v);
             //comment: actually, we should add another contition when to break! check how collision detection works!
             if (check_max_length) {
                 dx = (*veh)->getPositionOnLane() - front_veh_pos;
-                if (dx > (max_veh_length-front_veh_length)) {
+                if (dx > (max_veh_length - front_veh_length)) {                    
                     break;
-                }                       
+                }
             }
             sum_speed += (*veh)->getSpeed();
             num_vehs++;
@@ -912,13 +920,13 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
                     front_veh_speed = (*veh)->getSpeed();
                     //std::cout << "Spawn veh:" << aVehicle->getID() << " back from veh:" << (*veh)->getID() << " with dist s:" << s << " and dep. speed:" << v << "\n";
                 }
-                
-                
+
+
                 //break;
 
             }
             else {
-                other_vwidth = (*veh)->getWidth();
+                other_vwidth = (*veh)->getVehicleType().getWidth();
                 y = getWidth() / 2 + (*veh)->getLateralPositionOnLane();
                 space_restriction.first = std::max(y - other_vwidth / 2 - vwidth / 2 - lat_distance, road_low);
                 space_restriction.second = std::min(y + other_vwidth / 2 + vwidth / 2 + lat_distance, road_high);
@@ -926,20 +934,22 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
                     printf("this will be excluded!\n");
                 }
                 else {
-                    
+
                     update_available_space(&available_lat_space, space_restriction);
                 }
 
                 if (available_lat_space.empty()) {
-                    
+
                     //this means that there is no available space to enter
+                    //std::cout << "Not avail space for veh " << aVehicle->getID() << "\n";
                     return false;
-                    
-                    
+
+
                 }
 
             }
         }
+        
 
         //if we have not yet spawned, but have available space
         //spawn randomly within the available space
@@ -957,7 +967,7 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
         */
         
         incorporateVehicle(aVehicle, pos, speed, posLat, find_if(myVehicles.begin(), myVehicles.end(), [&](MSVehicle* const v) {return v->getPositionOnLane() >= pos;}), notification);
-        
+        //std::cout << "Found avail space for veh " << aVehicle->getID() << "\n";
         return true;
     }
     else if(aVehicle->getCarFollowModel().getModelID() == SUMO_TAG_CF_LANEFREE && desired_speed_alignment) {
@@ -2370,7 +2380,6 @@ MSLane::integrateNewVehicles() {
     myNeedsCollisionCheck = true;
 
     std::vector<MSVehicle*>& buffered = myVehBuffer.getContainer();
-    
     sort(buffered.begin(), buffered.end(), vehicle_position_sorter(this));
     for (MSVehicle* const veh : buffered) {
         assert(veh->getLane() == this);
@@ -2383,6 +2392,8 @@ MSLane::integrateNewVehicles() {
     buffered.clear();
     myVehBuffer.unlock();
     //std::cout << SIMTIME << " integrateNewVehicle lane=" << getID() << " myVehicles1=" << toString(myVehicles);
+      
+    
     if (MSGlobals::gLateralResolution > 0 || myNeighs.size() > 0) {
         sort(myVehicles.begin(), myVehicles.end(), vehicle_natural_position_sorter(this));
     }

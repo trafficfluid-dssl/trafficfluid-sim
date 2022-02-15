@@ -407,6 +407,28 @@ public:
     void setPositionOnLane(double newPos){
         myState.myPos = newPos;
     }
+
+    void initializeCachedGlobalPos() {
+        cachedGlobalPos = getPosition();
+    }
+
+    void setCachedGlobalPos(double x, double y) {
+        cachedGlobalPos.setx(x);
+        cachedGlobalPos.sety(y);
+        cachedGlobalPos.setz(getPosition().z());
+    }
+
+    Position& getCachedGlobalPos() {
+        return cachedGlobalPos;
+    }
+
+    bool getGlobalCoordinatesControl() {
+        return global_coordinates;
+    }
+
+    void setGlobalCoordinatesControl(bool global_coordinates) {
+        this->global_coordinates = global_coordinates;
+    }
     // LFPlugin End
 
     /** @brief Get the distance the vehicle covered in the previous timestep
@@ -508,13 +530,24 @@ public:
         return myAngleRelative;
     }
 
+    double getAngleRelativeAlways() const {
+        if (global_coordinates) {
+            double tmp_angle = myAngleRelative - myLane->getShape().rotationAtOffset(myLane->interpolateLanePosToGeometryPos(getPositionOnLane()));
+            //std::cout << "rel angle for veh " << getID() << " is " << tmp_angle << "\n";
+            return tmp_angle;
+        }
+        return myAngleRelative;
+    }
+
     void setAngleRelative(double newangle) {
         // angle should always be within the range of [-pi/2,pi/2], since we only allow vehicles to move according to the road's direction
         double pi_2 = acos(0);
 
-        //bound the angle within the desired range
-        newangle = std::max(newangle, -pi_2);
-        newangle = std::min(newangle, pi_2);
+        //bound the angle within the desired range for local coordinates
+        if (!global_coordinates) {
+            newangle = std::max(newangle, -pi_2);
+            newangle = std::min(newangle, pi_2);
+        }
 
         myAngleRelative = newangle;
     }
@@ -1976,6 +2009,8 @@ protected:
     double myDesiredSpeed;
     double myAngleRelative;
     double deltaPos_LF;
+    Position cachedGlobalPos;
+    bool global_coordinates;
     // LFPlugin End
 
 protected:
