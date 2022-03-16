@@ -1987,6 +1987,7 @@ double lf_plugin_get_global_position_y(NumericalID veh_id) {
 }
 
 
+// returns the destination edge of the specific vehicle id
 NumericalID lf_plugin_get_destination_edge_id(NumericalID veh_id) {
 	MSLaneFreeVehicle* lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(veh_id);
 	if (lfveh == nullptr) {
@@ -2005,6 +2006,64 @@ NumericalID lf_plugin_get_destination_edge_id(NumericalID veh_id) {
 	}
 	
 	return veh_edges.back()->getNumericalID();
+}
+
+
+// returns the subsequent edge id of the vehicle
+NumericalID lf_plugin_get_next_edge_id(NumericalID veh_id) {
+	MSLaneFreeVehicle* lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(veh_id);
+	if (lfveh == nullptr) {
+		std::cout << "Vehicle not found!\n";
+		return -1;
+	}
+
+
+	const MSRoute veh_route = lfveh->get_vehicle()->getRoute();
+	const ConstMSEdgeVector veh_edges = veh_route.getEdges();
+
+	size_t size_edges = veh_route.size();
+
+	int my_edge_index = veh_route.edge_index_normal(lfveh->get_vehicle()->getEdge());// veh_route.edge_index(&(lfveh->get_vehicle()->getLane()->getEdge()));//
+	if (my_edge_index == -1) {
+		
+		std::cout << "Edge " << lfveh->get_vehicle()->getLane()->getEdge().getID() << " not found in route for vehicle " << lfveh->get_vehicle()->getID() << "!\n";
+		return -1;
+	}
+
+	if (my_edge_index == size_edges - 1) {		
+		return -1;
+	}
+
+	return veh_edges.at(my_edge_index+1)->getNumericalID();
+}
+
+
+// returns the previous edge id of the vehicle
+NumericalID lf_plugin_get_previous_edge_id(NumericalID veh_id) {
+	MSLaneFreeVehicle* lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(veh_id);
+	if (lfveh == nullptr) {
+		std::cout << "Vehicle not found!\n";
+		return -1;
+	}
+
+
+	const MSRoute veh_route = lfveh->get_vehicle()->getRoute();
+	const ConstMSEdgeVector veh_edges = veh_route.getEdges();
+
+	size_t size_edges = veh_edges.size();
+
+	int my_edge_index = veh_route.edge_index_normal(lfveh->get_vehicle()->getEdge()); //veh_route.edge_index(&(lfveh->get_vehicle()->getLane()->getEdge()));//
+	if (my_edge_index == -1) {
+
+		std::cout << "Edge " << lfveh->get_vehicle()->getLane()->getEdge().getID() << " not found in route for vehicle " << lfveh->get_vehicle()->getID() << "!\n";
+		return -1;
+	}
+
+	if (my_edge_index == 0) {
+		return -1;
+	}
+
+	return veh_edges.at(my_edge_index-1)->getNumericalID();
 }
 
 
@@ -2146,6 +2205,8 @@ LaneFreeSimulationPlugin::LaneFreeSimulationPlugin(){
 	get_edge_of_vehicle = &lf_plugin_get_edge_of_vehicle;
 	get_edge_name = &lf_plugin_get_edge_name;
 	get_destination_edge_id = &lf_plugin_get_destination_edge_id;
+	get_previous_edge_id = &lf_plugin_get_previous_edge_id;
+	get_next_edge_id = &lf_plugin_get_next_edge_id;
 
 	get_veh_orientation = &lf_plugin_get_veh_orientation;
 	

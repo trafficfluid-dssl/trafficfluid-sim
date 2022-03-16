@@ -168,8 +168,8 @@ libLaneFreePlugin_EXPORT NumericalID* (*get_all_neighbor_ids_front)(NumericalID 
 libLaneFreePlugin_EXPORT NumericalID* (*get_all_neighbor_ids_back)(NumericalID veh_id, double back_distance, int cross_edge, size_t* neighbors_size);
 
 
-//insert a new vehicle (route_id and type_id need to be defined in the scenario tested)
-libLaneFreePlugin_EXPORT NumericalID (*insert_new_vehicle)(char* veh_name, char* route_id, char* type_id, double pos_x, double pos_y, double speed_x, double speed_y, double theta);
+//insert a new vehicle (route_id and type_id need to be defined in the scenario tested), use_global_coordinates is only relevant to the bicycle model, and will be disregarded otherwise
+libLaneFreePlugin_EXPORT NumericalID (*insert_new_vehicle)(char* veh_name, char* route_id, char* type_id, double pos_x, double pos_y, double speed_x, double speed_y, double theta, int use_global_coordinates);
 
 //returns 1 if the vehicle is currently on an acceleration lane and needs to merge
 libLaneFreePlugin_EXPORT int (*am_i_on_acceleration_lane)(NumericalID veh_id);
@@ -183,7 +183,13 @@ libLaneFreePlugin_EXPORT double (*get_global_position_y)(NumericalID veh_id);
 //returns the destination edge id of the vehicle
 libLaneFreePlugin_EXPORT NumericalID (*get_destination_edge_id)(NumericalID veh_id);
 
-//returns the current orientation of the vehicle, in radians, with respect to the residing road
+//returns the subsequent edge id of the vehicle. In case of error (also displays error message), or if the vehicle is already at the destination edge, it returns -1.
+libLaneFreePlugin_EXPORT NumericalID(*get_next_edge_id)(NumericalID veh_id);
+
+//returns the previous edge id of the vehicle.  In case of error (also displays error message), or if the vehicle is at the origin edge, it returns -1.
+libLaneFreePlugin_EXPORT NumericalID(*get_previous_edge_id)(NumericalID veh_id);
+
+//returns the current orientation of the vehicle, in radians, with respect to the residing road (or global if controller is on global coordinates)
 libLaneFreePlugin_EXPORT double (*get_veh_orientation)(NumericalID veh_id);
 
 //apply control for vehicles adhering to the bicycle model by providing the F, and delta values for vehicle with numerical id veh_id
@@ -192,8 +198,14 @@ libLaneFreePlugin_EXPORT void (*apply_control_bicycle_model)(NumericalID veh_id,
 //return the speed of vehicle with numerical id veh_id which adheres to the bicycle model
 libLaneFreePlugin_EXPORT double (*get_speed_bicycle_model)(NumericalID veh_id);
 
+//set global control on or off based on the value of use_global_coordinates (1 or 0 respectively) (only for the bicycle model vehicles)
+libLaneFreePlugin_EXPORT void (*set_global_coordinate_control)(NumericalID veh_id, int use_global_coordinates);
 
+// returns the execution time (in seconds) of the previous call for the simulation_step function
+libLaneFreePlugin_EXPORT double (*get_last_step_time)();
 
+// returns the execution time (in seconds) of the previous step (disregarding the execution time for the simulation_step function, i.e., execution time for the SUMO application)
+libLaneFreePlugin_EXPORT double (*get_last_step_app_time)();
 
 //is called once before the first time-step
 libLaneFreePlugin_EXPORT void simulation_initialize();

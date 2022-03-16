@@ -176,7 +176,13 @@ double (*get_global_position_y)(NumericalID veh_id);
 //returns the destination edge id of the vehicle
 NumericalID(*get_destination_edge_id)(NumericalID veh_id);
 
-//returns the current orientation of the vehicle, in radians, with respect to the residing road
+//returns the subsequent edge id of the vehicle. In case of error (also displays error message), or if the vehicle is already at the destination edge, it returns -1.
+NumericalID(*get_next_edge_id)(NumericalID veh_id);
+
+//returns the previous edge id of the vehicle.  In case of error (also displays error message), or if the vehicle is at the origin edge, it returns -1.
+NumericalID(*get_previous_edge_id)(NumericalID veh_id);
+
+//returns the current orientation of the vehicle, in radians, with respect to the residing road (or global if controller is on global coordinates)
 double (*get_veh_orientation)(NumericalID veh_id);
 
 //apply control for vehicles adhering to the bicycle model by providing the F, and delta values for vehicle with numerical id veh_id
@@ -185,8 +191,14 @@ void (*apply_control_bicycle_model)(NumericalID veh_id, double F, double delta);
 //return the speed of vehicle with numerical id veh_id which adheres to the bicycle model
 double (*get_speed_bicycle_model)(NumericalID veh_id);
 
+//set global control on or off based on the value of use_global_coordinates (1 or 0 respectively) (only for the bicycle model vehicles)
+void (*set_global_coordinate_control)(NumericalID veh_id, int use_global_coordinates);
 
+// returns the execution time (in seconds) of the previous call for the simulation_step function
+double (*get_last_step_time)();
 
+// returns the execution time (in seconds) of the previous step (disregarding the execution time for the simulation_step function, i.e., execution time for the SUMO application)
+double (*get_last_step_app_time)();
 
 //is called once before the first time-step
 void simulation_initialize();
