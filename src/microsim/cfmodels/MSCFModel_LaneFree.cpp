@@ -1270,6 +1270,18 @@ double lf_plugin_get_relative_distance_y(NumericalID ego_id, NumericalID other_i
 	return dy;
 }
 
+// calculates left road boundary for veh_id, at longitudinal_distance_x (vehicle can also observe upstream with negative values)
+// regarding the boundary, it calculates the boundary's position (with boundary_position variable), speed (with boundary_speed variable), and acceleration (with boundary_acceleration variable)
+void lf_plugin_get_left_road_boundary(NumericalID veh_id, double longitudinal_distance_x, double* boundary_position, double* boundary_speed, double* boundary_acceleration) {
+
+}
+
+
+// calculates right road boundary for veh_id, at longitudinal_distance_x (vehicle can also observe upstream with negative values)
+// regarding the boundary, it calculates the boundary's position (with boundary_position variable), speed (with boundary_speed variable), and acceleration (with boundary_acceleration variable)
+void lf_plugin_get_right_road_boundary(NumericalID veh_id, double longitudinal_distance_x, double* boundary_position, double* boundary_speed, double* boundary_acceleration) {
+
+}
 
 
 void lf_plugin_set_circular_movement(NumericalID veh_id, bool circular) {
@@ -1331,7 +1343,6 @@ void lf_plugin_set_desired_speed(NumericalID veh_id, double new_d_speed){
 
 	lfveh->set_desired_speed(new_d_speed);
 
-	
 }
 // get the desired speed of a given vehicle
 double lf_plugin_get_desired_speed(NumericalID veh_id){
@@ -2030,7 +2041,7 @@ NumericalID lf_plugin_get_next_edge_id(NumericalID veh_id) {
 		return -1;
 	}
 
-	if (my_edge_index == size_edges - 1) {		
+	if (my_edge_index == size_edges - 1) {
 		return -1;
 	}
 
