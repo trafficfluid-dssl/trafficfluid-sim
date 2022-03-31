@@ -2358,7 +2358,7 @@ LaneFreeSimulationPlugin::add_new_veh_additional_stats(NumericalID veh_id, doubl
 // that contains inside it the oriented rectangle that is our vehicle, veh1 
 // see: https://math.stackexchange.com/questions/2179500/calculating-the-dimensions-of-a-rectangle-inside-another-rectangle 
 void update_vehicle_dimensions(double* length, double* width, double phi_angle) {
-	
+	// THIS FUNCTION IS NOT USED ANYMORE.
 	double length_large, width_large;
 
 	double length_tmp, width_tmp;
@@ -2372,6 +2372,74 @@ void update_vehicle_dimensions(double* length, double* width, double phi_angle) 
 	*length = length_large;
 	*width = width_large;
 }
+
+
+// given a vehicle in location (x,y) with orientation theta, and dimensions (length,width)
+// it returns the 4 vertices of the rectangular through xv, yv.
+// xy and yv should be already be initialized as an array of doubles with 4 elements.
+void vertices(double x, double y, double theta, double length, double width, double* xv, double* yv) {
+	*xv = x + (width / 2) * sin(theta);
+	*(xv + 1) = x - (width / 2) * sin(theta);
+	*(xv + 2) = x + length * cos(theta) - (width / 2) * sin(theta);
+	*(xv + 3) = x + length * cos(theta) + (width / 2) * sin(theta);
+
+	*yv = y - (width / 2) * cos(theta);
+	*(yv + 1) = y + (width / 2) * cos(theta);
+	*(yv + 2) = y + length * sin(theta) - (width / 2) * cos(theta);
+	*(yv + 3) = y + length * sin(theta) + (width / 2) * cos(theta);
+
+}
+
+
+// returns 1 if point (xj,yj) lies within the rectangular formed by vehicle in location (x,y) with orientation theta, and dimensions (length,width)
+int if_inside(double x, double y, double theta, double xj, double yj, double length, double width) {
+
+
+	double x_t = xj - x;
+	double y_t = yj - y;
+
+	double xj_transformed = x_t * cos(theta) + y_t * sin(theta);
+	double yj_transformed = y_t * cos(theta) - x_t * sin(theta);
+
+	if (xj_transformed >= 0 && xj_transformed <= length && yj_transformed >= -width / 2 && yj_transformed <= width / 2) {
+		// the point (xj,yj) lies within the rectangular area
+		return 1;
+	}
+
+	return 0;
+}
+
+
+// returns 1 if two vehicles collide, 0 otherwise.
+int collision_check_with_orientation(double x1, double y1, double theta1, double length1, double width1, double x2, double y2, double theta2, double length2, double width2) {
+
+	// array for vertices
+	double xv[4], yv[4];
+
+	// calcualte the vertices of vehicle 2
+	vertices(x2, y2, theta2, length2, width2, xv, yv);
+
+
+	int i;
+
+	// examine whether a vertex of vehicle 2 lies within the rectangular of vehicle 1
+	for (i = 0; i < 4; i++) {
+		if (if_inside(x1, y1, theta1, xv[i], yv[i], length1, width1)) {
+			return 1;
+		}
+	}
+
+	vertices(x1, y1, theta1, length1, width1, xv, yv);
+	// examine whether a vertex of vehicle 1 lies within the rectangular of vehicle 2
+	for (i = 0; i < 4; i++) {
+		if (if_inside(x2, y2, theta2, xv[i], yv[i], length2, width2)) {
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
 
 void
 LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
@@ -2388,7 +2456,7 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 	MSVehicle* veh2;
 	MSLaneFreeVehicle* lfv1;
 	MSLaneFreeVehicle* lfv2;
-	double xv1, yv1, lv1, wv1, lv2, wv2, half_vwidth, dx, dy,roadwidth;
+	double xv1, yv1, lv1, wv1, theta1=0, xv2, yv2, lv2, wv2, theta2=0, half_vwidth, dx, dy,roadwidth;
 	
 	
 	for (MSEdge* edge : edges_v) {
@@ -2418,10 +2486,17 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 			xv1 = lfv1->get_position_x();
 			yv1 = lfv1->get_position_y();
 			// std::cout << "veh:" << veh1->getID() << " with length:" << lv1 << " and width:" << wv1 <<"\n";
+
+			
 			if (veh1->getVehicleType().getParameter().cmdModel == SUMO_TAG_LF_CMD_BICYCLE) {
 				// this vehicle uses the bicycle model, meaning that we should consider the fact that it may have a non-zero orientation
-				update_vehicle_dimensions(&lv1, &wv1, abs(veh1->getAngleRelativeAlways()));				
+				theta1 = veh1->getAngleRelativeAlways();
+				// Code below is now deprecated, will be removed completely in future versions
+				//update_vehicle_dimensions(&lv1, &wv1, abs(veh1->getAngleRelativeAlways()));		
+				
 			}
+			// 
+			// 
 			// std::cout<< "veh:" << veh1->getID() << " updated length:" << lv1<<" and width:" << wv1<< " at angle:"<< veh1->getAngleRelative() << "\n";
 			//std::cout << "veh:" << veh1->getID() << " at posx:" << xv1;
 			//std::cout << "veh:" << veh1->getID() << " angle:" << veh1->computeAngle() * (180.0 / 3.141592653589793238463)<<"\n";
@@ -2432,28 +2507,49 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 			}
 			for(j=i+1;j<n_v;j++){
 				veh2 = (MSVehicle*)(*vehs_in_edge)[j];
-				lfv2 = find_vehicle_in_edge(veh2->getNumericalID(), edge_id);
-				dx = abs(xv1-lfv2->get_position_x());
-				dy = abs(yv1-lfv2->get_position_y());
 				lv2 = veh2->getVehicleType().getLength();
 				wv2 = veh2->getVehicleType().getWidth();
 
+				// Code below is now deprecated, will be removed completely in future versions
 				if (veh2->getVehicleType().getParameter().cmdModel == SUMO_TAG_LF_CMD_BICYCLE) {
 					// this vehicle also uses the bicycle model, meaning that we should consider the fact that it may have a non-zero orientation
-					update_vehicle_dimensions(&lv2, &wv2, abs(veh2->getAngleRelativeAlways())); // we could maybe save updated length and width, since for most vehicles we will do this computation more than once
+					theta2 = veh2->getAngleRelativeAlways();
+					//update_vehicle_dimensions(&lv2, &wv2, abs(veh2->getAngleRelativeAlways())); // we could maybe save updated length and width, since for most vehicles we will do this computation more than once
 				}
+				lfv2 = find_vehicle_in_edge(veh2->getNumericalID(), edge_id);
+				xv2 = lfv2->get_position_x();
+				yv2 = lfv2->get_position_y();
+				///*
+				if (veh1->getVehicleType().getParameter().cmdModel == SUMO_TAG_LF_CMD_BICYCLE || veh2->getVehicleType().getParameter().cmdModel == SUMO_TAG_LF_CMD_BICYCLE) {
+					
 
+					int collision_true = collision_check_with_orientation(xv1, yv1, theta1, lv1, wv1, xv2, yv2, theta2, lv2, wv2);
+					if (collision_true) {
+						event_vehicles_collide(veh1->getNumericalID(), veh2->getNumericalID());
+						MSNet::getInstance()->getVehicleControl().registerCollision();
+					}
+					// since vehicles are sorted based on x pos, we stop searching downstream vehicles for collisions when the dx distance exceeds the one corresponding to a vehicle with the maximum length within the network, accounting for the orientation as well
+					
+
+					//skip the standard condition for collision check
+					continue;
+				}
+				//*/
+				dx = abs(xv2 - xv1);
+				dy = abs(yv2 - yv1);
+				
 
 				if((dx<((lv1 + lv2)/2)) && (dy<((wv1 + wv2)/2))){
 					//std::cout << "\n";
 					event_vehicles_collide(veh1->getNumericalID(), veh2->getNumericalID());
 					MSNet::getInstance()->getVehicleControl().registerCollision();
 				}
-				
+				theta2 = 0;
 				if(dx>(lv1+max_vehicle_length)/2){ // since vehicles are sorted based on x pos, we stop searching downstream vehicles for collisions when the dx distance exceeds the one corresponding to a vehicle with the maximum length within the network
 					break;
 				}
 			}
+			theta1 = 0;
 			
 		}		
 		
