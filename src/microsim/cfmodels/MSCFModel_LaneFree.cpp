@@ -1287,9 +1287,9 @@ double boundary_value(double mid_height, std::vector<double>& lim, std::vector<d
 }
 
 
-// calculates the lateral distance from left road boundary for veh_id, at longitudinal_distance_x (vehicle can also observe upstream with negative values)
-// regarding the boundary, it calculates the boundary's distance (with boundary_distance variable) and speed (with boundary_speed variable)
-void lf_plugin_get_distance_to_left_road_boundary_at(NumericalID veh_id, double longitudinal_distance_x, double* boundary_distance, double* boundary_speed) {
+// calculates the lateral distance from left and right road boundaries for veh_id, at longitudinal_distance_x (vehicle can also observe upstream with negative values)
+// regarding the boundaries, it calculates the boundaries's distances (with left_boundary_distance, right_boundary_distance variables) and first derivative (with left_boundary_speed, right_boundary_speed variables)
+void lf_plugin_get_distance_to_road_boundaries_at(NumericalID veh_id, double longitudinal_distance_x, double* left_boundary_distance, double* right_boundary_distance, double* left_boundary_speed, double* right_boundary_speed) {
 	MSLaneFreeVehicle* lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(veh_id);
 	if (lfveh == nullptr) {
 		std::cout << "Vehicle not found!\n";
@@ -1317,16 +1317,27 @@ void lf_plugin_get_distance_to_left_road_boundary_at(NumericalID veh_id, double 
 
 	//std::cout << "Current veh "<<myveh->getID()<<" at pos:(" << global_pos_x << "," << global_pos_y << ") with boundary at long pos " << global_pos_x + longitudinal_distance_x << " is :" << left_boundary << ". Result on lateral distance is :"<< left_boundary - global_pos_y<<"\n";
 
-	*boundary_distance = left_boundary - global_pos_y;
+	*left_boundary_distance = left_boundary - global_pos_y;
 
+	std::vector<double> rightBoundaryLevelPoints = veh_route.getRightBoundaryLevelPoints();
+	if (rightBoundaryLevelPoints.size() == 0) {
+		std::cout << "ERROR: right boundary parameters not provided!\n";
+		return;
+	}
+
+	std::vector<double> rightBoundarySlopes = veh_route.getRightBoundarySlopes();
+
+	std::vector<double> rightBoundaryOffsets = veh_route.getRightBoundaryOffsets();
+
+	
+	double right_boundary = boundary_value(mid_height, rightBoundaryLevelPoints, rightBoundarySlopes, rightBoundaryOffsets, global_pos_x + longitudinal_distance_x);
+
+
+	//std::cout << "Current veh "<<myveh->getID()<<" at pos:(" << global_pos_x << "," << global_pos_y << ") with boundary at long pos " << global_pos_x + longitudinal_distance_x << " is :" << left_boundary << ". Result on lateral distance is :"<< left_boundary - global_pos_y<<"\n";
+
+	*right_boundary_distance = global_pos_y - right_boundary;
 }
 
-
-// calculates the lateral distance from left road boundary for veh_id, at longitudinal_distance_x (vehicle can also observe upstream with negative values)
-// regarding the boundary, it calculates the boundary's position (with boundary_position variable) and speed (with boundary_speed variable)
-void lf_plugin_get_distance_to_right_road_boundary_at(NumericalID veh_id, double longitudinal_distance_x, double* boundary_position, double* boundary_speed) {
-
-}
 
 
 void lf_plugin_set_circular_movement(NumericalID veh_id, bool circular) {
