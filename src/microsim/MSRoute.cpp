@@ -57,7 +57,13 @@ MSRoute::MSRoute(const std::string& id,
     myCosts(-1),
     mySavings(0),
     myReroute(false),
-    myStops(stops) {
+    myStops(stops)
+    // LFPlugin Begin
+    ,
+    hasLeftBoundary(false),
+    hasRightBoundary(false)    
+    // LFPlugin End
+    {
     // LFPlugin Begin
     // initialize myEdgeswInternal
     const MSEdge* tmp_edge_prev = nullptr;
@@ -78,6 +84,126 @@ MSRoute::MSRoute(const std::string& id,
     }
     // LFPlugin End
     }
+
+// LFPlugin Begin
+
+void 
+MSRoute::setLeftBoundary(std::string& leftBoundaryLevelPointsString, std::string& leftBoundarySlopesString, std::string& leftBoundaryOffsetsString) {
+    hasLeftBoundary = true;
+
+    // use StringTokenizer to get the string xml value as a vector of string values
+    StringTokenizer lbpoints(leftBoundaryLevelPointsString);
+    std::vector<std::string> lbpointsStringVector = lbpoints.getVector();
+
+    StringTokenizer lbslopes(leftBoundarySlopesString);
+    std::vector<std::string> lbslopesStringVector = lbslopes.getVector();
+
+    StringTokenizer lboffsets(leftBoundaryOffsetsString);
+    std::vector<std::string> lboffsetsStringVector = lboffsets.getVector();
+
+    if (lbslopesStringVector.size() != lboffsetsStringVector.size()) {// || (lbpointsStringVector.size() - 1) != lbslopesStringVector.size()) {
+        std::cout << "Error when parsing Left Boundary for Route:" << getID() << ".";
+        std::cout << "Size of leftBoundarySlopes does not match leftBoundaryOffsets.\n";
+        hasLeftBoundary = false;
+        return;
+    }
+
+    if ((lbpointsStringVector.size() - 1) != lbslopesStringVector.size()) {
+        std::cout << "Error when parsing Left Boundary for Route:" << getID() << ".";
+        std::cout << "Size of leftBoundaryLevelPoints does not match leftBoundaryOffsets.\n";
+        hasLeftBoundary = false;
+        return;
+    }
+
+    if (lbpointsStringVector.size() == 0 || lbslopesStringVector.size() == 0 || lboffsetsStringVector.size() == 0) {
+        std::cout << "Error when parsing Left Boundary for Route:" << getID() << ".";
+        std::cout << "At least one of the associated elements is empty.\n";
+        hasLeftBoundary = false;
+        return;
+    }
+
+    // convert the string elements to double
+    double element_value;
+
+    int points_size = lbpointsStringVector.size();
+    for (int i = 0; i < points_size; i++) {
+
+        element_value = StringUtils::toDouble(lbpointsStringVector.at(i));
+        leftBoundaryLevelPoints.push_back(element_value);
+        //std::cout << "left boundary point:" << leftBoundaryLevelPoints.at(i)<<"\n";
+        if (i == points_size - 1) {
+            continue; // or break; It is the last iteration so they are equivalent
+        }
+
+        element_value = StringUtils::toDouble(lbslopesStringVector.at(i));
+        leftBoundarySlopes.push_back(element_value);
+
+        element_value = StringUtils::toDouble(lboffsetsStringVector.at(i));
+        leftBoundaryOffsets.push_back(element_value);
+
+        
+    }
+    
+}
+
+
+void 
+MSRoute::setRightBoundary(std::string& rightBoundaryLevelPointsString, std::string& rightBoundarySlopesString, std::string& rightBoundaryOffsetsString) {
+    hasRightBoundary = true;
+
+    // use StringTokenizer to get the string xml value as a vector of string values
+    StringTokenizer rbpoints(rightBoundaryLevelPointsString);
+    std::vector<std::string> rbpointsStringVector = rbpoints.getVector();
+
+    StringTokenizer rbslopes(rightBoundarySlopesString);
+    std::vector<std::string> rbslopesStringVector = rbslopes.getVector();
+
+    StringTokenizer rboffsets(rightBoundaryOffsetsString);
+    std::vector<std::string> rboffsetsStringVector = rboffsets.getVector();
+
+    if (rbslopesStringVector.size() != rboffsetsStringVector.size()) {// || (rbpointsStringVector.size() - 1) != rbslopesStringVector.size()) {
+        std::cout << "Error when parsing Right Boundary for Route:" << getID() << ".";
+        std::cout << "Size of rightBoundarySlopes does not match rightBoundaryOffsets.\n";
+        hasRightBoundary = false;
+        return;
+    }
+
+    if ((rbpointsStringVector.size() - 1) != rbslopesStringVector.size()) {
+        std::cout << "Error when parsing Right Boundary for Route:" << getID() << ".";
+        std::cout << "Size of rightBoundaryLevelPoints does not match rightBoundaryOffsets.\n";
+        hasRightBoundary = false;
+        return;
+    }
+
+    if (rbpointsStringVector.size() == 0 || rbslopesStringVector.size() == 0 || rboffsetsStringVector.size() == 0) {
+        std::cout << "Error when parsing Right Boundary for Route:" << getID() << ".";
+        std::cout << "At least one of the associated elements is empty.\n";
+        hasRightBoundary = false;
+        return;
+    }
+
+    // convert the string elements to double
+    double element_value;
+
+    int points_size = rbpointsStringVector.size();
+    for (int i = 0; i < points_size; i++) {
+
+        element_value = StringUtils::toDouble(rbpointsStringVector.at(i));
+        rightBoundaryLevelPoints.push_back(element_value);
+
+        if (i == points_size - 1) {
+            continue; // or break; It is the last iteration so they are equivalent
+        }
+
+        element_value = StringUtils::toDouble(rbslopesStringVector.at(i));
+        rightBoundarySlopes.push_back(element_value);
+
+        element_value = StringUtils::toDouble(rboffsetsStringVector.at(i));
+        rightBoundaryOffsets.push_back(element_value);
+
+    }
+}
+// LFPlugin End
 
 
 MSRoute::~MSRoute() {

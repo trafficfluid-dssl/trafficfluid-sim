@@ -1338,17 +1338,23 @@ MSVehicle::computeAngle() const {
     //std::cout << getID() << "angleee:"<<p2.angleTo2D(p1)<<"\n";
     //HERE we need another variable, that is the angle wrt the road edge
     // myAngleRelative changes values according to the bicycle model, relative to the residing road segment
-    //std::cout << "myanglerelative:" << myAngleRelative << "\n";
+    
     double result;
     if (global_coordinates) {
+        //std::cout << "myangler for veh " << getID() << ":" << myAngleRelative << "\n";
         result = myAngleRelative;
     }
     else {
+        //std::cout << "myangle relative for veh " << getID() << ":" << myAngleRelative << "\n";
         result = (p1 != p2 ? myAngleRelative + p2.angleTo2D(p1) :
         myAngleRelative + myLane->getShape().rotationAtOffset(myLane->interpolateLanePosToGeometryPos(getPositionOnLane())));    
     }
     // LFPlugin End
-    if (myLaneChangeModel->isChangingLanes()) {
+    if (myLaneChangeModel->isChangingLanes()
+    // LFPlugin Begin
+        && !global_coordinates
+    // LFPlugin End
+        ) {
         result += lefthandSign * DEG2RAD(myLaneChangeModel->getAngleOffset());
     }
 #ifdef DEBUG_FURTHER

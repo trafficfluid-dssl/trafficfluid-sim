@@ -41,6 +41,7 @@
 #include <microsim/MSRoute.h>
 #include <libsumo/Vehicle.h>
 
+
 LaneFreeSimulationPlugin* LaneFreeSimulationPlugin::myInstance = nullptr;
 
 double fRand(double fMin, double fMax)
@@ -989,7 +990,7 @@ double lf_plugin_get_position_x(NumericalID veh_id){
 		std::cout << "Vehicle not found!\n";
 		return -1;
 	}
-
+	
 	return lfveh->get_position_x();
 }
 
@@ -1270,16 +1271,60 @@ double lf_plugin_get_relative_distance_y(NumericalID ego_id, NumericalID other_i
 	return dy;
 }
 
-// calculates left road boundary for veh_id, at longitudinal_distance_x (vehicle can also observe upstream with negative values)
-// regarding the boundary, it calculates the boundary's position (with boundary_position variable), speed (with boundary_speed variable), and acceleration (with boundary_acceleration variable)
-void lf_plugin_get_left_road_boundary(NumericalID veh_id, double longitudinal_distance_x, double* boundary_position, double* boundary_speed, double* boundary_acceleration) {
+// This code calculates the boundary's values and is based from Karteek's implementation
+double boundary_value(double mid_height, std::vector<double>& lim, std::vector<double>& slope, std::vector<double>& offset, double long_pos) {
+	double ret_val = 0;
+	int size_points = lim.size();
+	for (size_t i = 0; i < size_points - 1; i++) {
+		if (long_pos < offset[i]) {
+			ret_val += mid_height * (lim[i + 1] - lim[i]) * tanh(slope[i] * (long_pos - offset[i]));
+		}
+		else {
+			ret_val += (1 - mid_height) * (lim[i + 1] - lim[i]) * tanh((mid_height / (1 - mid_height)) * slope[i] * (long_pos - offset[i]));
+		}
+	}
+	return ret_val + lim[0] + mid_height * (lim[size_points - 1] - lim[0]);
+}
+
+
+// calculates the lateral distance from left road boundary for veh_id, at longitudinal_distance_x (vehicle can also observe upstream with negative values)
+// regarding the boundary, it calculates the boundary's distance (with boundary_distance variable) and speed (with boundary_speed variable)
+void lf_plugin_get_distance_to_left_road_boundary_at(NumericalID veh_id, double longitudinal_distance_x, double* boundary_distance, double* boundary_speed) {
+	MSLaneFreeVehicle* lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(veh_id);
+	if (lfveh == nullptr) {
+		std::cout << "Vehicle not found!\n";
+		return;
+	}
+	const MSVehicle* myveh = lfveh->get_vehicle();
+	const MSRoute veh_route = myveh->getRoute();
+	
+	std::vector<double> leftBoundaryLevelPoints = veh_route.getLeftBoundaryLevelPoints();
+	if (leftBoundaryLevelPoints.size() == 0) {
+		std::cout << "ERROR: left boundary parameters not provided!\n";
+		return;
+	}
+
+	std::vector<double> leftBoundarySlopes = veh_route.getLeftBoundarySlopes();
+
+	std::vector<double> leftBoundaryOffsets = veh_route.getLeftBoundaryOffsets();
+
+	double global_pos_x = myveh->getPosition().x() - (myveh->getLength() / 2) * cos(myveh->getAngleRelative());
+	double global_pos_y = myveh->getPosition().y() - (myveh->getLength() / 2) * sin(myveh->getAngleRelative());
+
+	double mid_height = 0.55;
+	double left_boundary = boundary_value(mid_height, leftBoundaryLevelPoints, leftBoundarySlopes, leftBoundaryOffsets, global_pos_x+longitudinal_distance_x);
+
+
+	//std::cout << "Current veh "<<myveh->getID()<<" at pos:(" << global_pos_x << "," << global_pos_y << ") with boundary at long pos " << global_pos_x + longitudinal_distance_x << " is :" << left_boundary << ". Result on lateral distance is :"<< left_boundary - global_pos_y<<"\n";
+
+	*boundary_distance = left_boundary - global_pos_y;
 
 }
 
 
-// calculates right road boundary for veh_id, at longitudinal_distance_x (vehicle can also observe upstream with negative values)
-// regarding the boundary, it calculates the boundary's position (with boundary_position variable), speed (with boundary_speed variable), and acceleration (with boundary_acceleration variable)
-void lf_plugin_get_right_road_boundary(NumericalID veh_id, double longitudinal_distance_x, double* boundary_position, double* boundary_speed, double* boundary_acceleration) {
+// calculates the lateral distance from left road boundary for veh_id, at longitudinal_distance_x (vehicle can also observe upstream with negative values)
+// regarding the boundary, it calculates the boundary's position (with boundary_position variable) and speed (with boundary_speed variable)
+void lf_plugin_get_distance_to_right_road_boundary_at(NumericalID veh_id, double longitudinal_distance_x, double* boundary_position, double* boundary_speed) {
 
 }
 
@@ -2486,7 +2531,10 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 			xv1 = lfv1->get_position_x();
 			yv1 = lfv1->get_position_y();
 			// std::cout << "veh:" << veh1->getID() << " with length:" << lv1 << " and width:" << wv1 <<"\n";
-
+			//if (i == n_v-1) {
+			//	double res_dy, res_vy;
+			//	lf_plugin_get_distance_to_left_road_boundary_at(veh1->getNumericalID(), 1050, &res_dy, &res_vy);
+			//}
 			
 			if (veh1->getVehicleType().getParameter().cmdModel == SUMO_TAG_LF_CMD_BICYCLE) {
 				// this vehicle uses the bicycle model, meaning that we should consider the fact that it may have a non-zero orientation
@@ -2628,12 +2676,14 @@ LaneFreeSimulationPlugin::insert_vehicle(MSVehicle* veh){
 		else {
 			double pos_x = (it_l->second)[3];
 			Position pos_global_init(pos_x + (lv / 2) * cos(theta), pos_y + (lv / 2) * sin(theta));
+			std::cout << "Initial global position for veh ("<< veh->getID() <<"):" << pos_x + (lv / 2) * cos(theta) << "," << pos_y + (lv / 2) * sin(theta)<< "\n";
 			double x_local=0, y_local=0;
 			const MSLane* init_lane = veh->getLane();
 			convert_to_local_coordinates(&x_local, &y_local, pos_global_init, init_lane);
 			new_veh->set_position_x_front(x_local);
 			new_veh->set_position_y_front(y_local);
-			veh->setGlobalCoordinatesControl(true);			
+			std::cout << "Initial local position for veh (" << veh->getID() << "):" << x_local << "," << y_local << "\n";
+			veh->setGlobalCoordinatesControl(true);		
 		}
 		// std::cout << "theta:" << theta << "\n";
 		
@@ -2892,6 +2942,7 @@ LaneFreeSimulationPlugin::convert_to_local_coordinates(double* x_pos_local, doub
 	if (tmp.distance2D(pos) > perpDist) {
 		*y_pos_local = -*y_pos_local;
 	}
+
 }
 
 //to be removed

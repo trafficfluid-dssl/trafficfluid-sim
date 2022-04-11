@@ -38,6 +38,10 @@
 #include <FXThread.h>
 #endif
 
+// LFPlugin Begin
+#include <utils/common/StringTokenizer.h>
+#include <utils/common/StringUtils.h>
+// LFPlugin End
 
 // ===========================================================================
 // class declarations
@@ -121,6 +125,38 @@ public:
     const ConstMSEdgeVector& getEdgeswInternal() const {
         return myEdgeswInternal;
     }
+
+
+    void setLeftBoundary(std::string& leftBoundaryLevelPointsString, std::string& leftBoundarySlopesString, std::string& leftBoundaryOffsetsString);
+
+    void setRightBoundary(std::string& rightBoundaryLevelPointsString, std::string& rightBoundarySlopesString, std::string& rightBoundaryOffsetsString);
+
+
+    const std::vector<double>& getLeftBoundaryLevelPoints() const {
+        
+        return leftBoundaryLevelPoints;
+    }
+
+    const std::vector<double>& getLeftBoundarySlopes() const {
+        return leftBoundarySlopes;
+    }
+
+    const std::vector<double>& getLeftBoundaryOffsets() const {
+        return leftBoundaryOffsets;
+    }
+
+    const std::vector<double>& getRightBoundaryLevelPoints() const {
+        return rightBoundaryLevelPoints;
+    }
+
+    const std::vector<double>& getRightBoundarySlopes() const {
+        return rightBoundarySlopes;
+    }
+
+    const std::vector<double>& getRightBoundaryOffsets() const {
+        return rightBoundaryOffsets;
+    }
+
     // LFPlugin End
 
     bool containsAnyOf(const MSEdgeVector& edgelist) const;
@@ -288,6 +324,16 @@ private:
     // LFPlugin Begin
     // additional vector that contains all edges along with the internal ones
     ConstMSEdgeVector myEdgeswInternal;
+    bool hasLeftBoundary;
+    std::vector<double> leftBoundaryLevelPoints;
+    std::vector<double> leftBoundarySlopes;
+    std::vector<double> leftBoundaryOffsets;
+
+    bool hasRightBoundary;
+    std::vector<double> rightBoundaryLevelPoints;
+    std::vector<double> rightBoundarySlopes;
+    std::vector<double> rightBoundaryOffsets;
+
     // LFPlugin End
 
     /// whether the route may be deleted after the last vehicle abandoned it

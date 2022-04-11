@@ -56,7 +56,13 @@ MSRouteHandler::MSRouteHandler(const std::string& file, bool addVehiclesDirectly
     myAddVehiclesDirectly(addVehiclesDirectly),
     myCurrentVTypeDistribution(nullptr),
     myCurrentRouteDistribution(nullptr),
-    myAmLoadingState(false) {
+    myAmLoadingState(false) 
+    // LFPlugin Begin
+    ,
+    hasLeftBoundary(false),
+    hasRightBoundary(false)
+    // LFPlugin End
+    {
     myActiveRoute.reserve(100);
 }
 
@@ -492,6 +498,42 @@ MSRouteHandler::openRoute(const SUMOSAXAttributes& attrs) {
     if (ok && myCurrentCosts != -1 && myCurrentCosts < 0) {
         WRITE_ERROR("Invalid cost for route '" + myActiveRouteID + "'.");
     }
+
+    // LFPlugin Begin
+    // parse parameters related to the boundaries for the associated route
+    
+    bool at_least_one = attrs.hasAttribute(SUMO_ATTR_LF_LEFT_BOUNDARY_LVL_POINTS) || attrs.hasAttribute(SUMO_ATTR_LF_LEFT_BOUNDARY_SLOPES) || attrs.hasAttribute(SUMO_ATTR_LF_LEFT_BOUNDARY_OFFSETS);
+    bool all_of_them = attrs.hasAttribute(SUMO_ATTR_LF_LEFT_BOUNDARY_LVL_POINTS) && attrs.hasAttribute(SUMO_ATTR_LF_LEFT_BOUNDARY_SLOPES) && attrs.hasAttribute(SUMO_ATTR_LF_LEFT_BOUNDARY_OFFSETS);
+    if(at_least_one && !all_of_them) {
+        // only a subset of the attributes needed is defined
+        std::cout << "ERROR: not all atributes for the left boundary are defined!\n";
+        
+    }
+
+    if (all_of_them) {
+        hasLeftBoundary = true;
+        leftBoundaryLevelPoints = attrs.get<std::string>(SUMO_ATTR_LF_LEFT_BOUNDARY_LVL_POINTS, myActiveRouteID.c_str(), ok);
+        leftBoundarySlopes = attrs.get<std::string>(SUMO_ATTR_LF_LEFT_BOUNDARY_SLOPES, myActiveRouteID.c_str(), ok);
+        leftBoundaryOffsets = attrs.get<std::string>(SUMO_ATTR_LF_LEFT_BOUNDARY_OFFSETS, myActiveRouteID.c_str(), ok);
+    }
+
+    // same thing for the right boundary
+
+    at_least_one = attrs.hasAttribute(SUMO_ATTR_LF_RIGHT_BOUNDARY_LVL_POINTS) || attrs.hasAttribute(SUMO_ATTR_LF_RIGHT_BOUNDARY_SLOPES) || attrs.hasAttribute(SUMO_ATTR_LF_RIGHT_BOUNDARY_OFFSETS);
+    all_of_them = attrs.hasAttribute(SUMO_ATTR_LF_RIGHT_BOUNDARY_LVL_POINTS) && attrs.hasAttribute(SUMO_ATTR_LF_RIGHT_BOUNDARY_SLOPES) && attrs.hasAttribute(SUMO_ATTR_LF_RIGHT_BOUNDARY_OFFSETS);
+    if (at_least_one && !all_of_them) {
+        // only a subset of the attributes needed is defined
+        std::cout << "ERROR: not all atributes for the right boundary are defined!\n";
+
+    }
+
+    if (all_of_them) {
+        hasRightBoundary = true;
+        rightBoundaryLevelPoints = attrs.get<std::string>(SUMO_ATTR_LF_RIGHT_BOUNDARY_LVL_POINTS, myActiveRouteID.c_str(), ok);
+        rightBoundarySlopes = attrs.get<std::string>(SUMO_ATTR_LF_RIGHT_BOUNDARY_SLOPES, myActiveRouteID.c_str(), ok);
+        rightBoundaryOffsets = attrs.get<std::string>(SUMO_ATTR_LF_RIGHT_BOUNDARY_OFFSETS, myActiveRouteID.c_str(), ok);
+    }
+    // LFPlugin End
 }
 
 
@@ -590,7 +632,19 @@ MSRouteHandler::closeRoute(const bool mayBeDisconnected) {
         route->setPeriod(myActiveRoutePeriod);
         route->setCosts(myCurrentCosts);
         route->setReroute(mustReroute);
-        myActiveRoute.clear();
+        // LFPlugin Begin
+        if(hasLeftBoundary) {
+            route->setLeftBoundary(leftBoundaryLevelPoints, leftBoundarySlopes, leftBoundaryOffsets);
+        }
+
+        if (hasRightBoundary) {
+            route->setRightBoundary(rightBoundaryLevelPoints, rightBoundarySlopes, rightBoundaryOffsets);
+        }
+        hasLeftBoundary = false;
+        hasRightBoundary = false;
+        //std::cout << "Route:" << myActiveRouteID << " created\n";
+        // LFPlugin End
+        myActiveRoute.clear();        
         if (!MSRoute::dictionary(myActiveRouteID, route)) {
             delete route;
             if (!MSGlobals::gStateLoaded) {

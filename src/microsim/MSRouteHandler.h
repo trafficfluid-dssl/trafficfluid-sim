@@ -202,6 +202,18 @@ protected:
     /// @brief A random number generator used to choose from vtype/route distributions and computing the speed factors
     static std::mt19937 myParsingRNG;
 
+    // LFPlugin Begin
+    bool hasLeftBoundary;
+    std::string leftBoundaryLevelPoints;
+    std::string leftBoundarySlopes;
+    std::string leftBoundaryOffsets;
+
+    bool hasRightBoundary;
+    std::string rightBoundaryLevelPoints;
+    std::string rightBoundarySlopes;
+    std::string rightBoundaryOffsets;
+    // LFPlugin End
+
 private:
     /// @brief delete already created MSTransportablePlans if error occurs before handing over responsibility to a MSTransportable.
     void deleteActivePlans();
