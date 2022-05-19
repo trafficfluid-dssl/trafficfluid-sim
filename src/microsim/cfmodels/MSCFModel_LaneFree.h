@@ -318,9 +318,9 @@ protected:
         //*x_pos_local = std::max(0., std::min(double(mylane->getLength() - POSITION_EPS),
         //    mylane->interpolateGeometryPosToLanePos(
         //        mylane->getShape().nearest_offset_to_point25D(pos, false))));
-        *x_pos_local = mylane->interpolateGeometryPosToLanePos(mylane->getShape().nearest_offset_to_point25D(pos, false));
+        *x_pos_local = mylane->interpolateGeometryPosToLanePos(mylane->getShape().nearest_offset_to_point25D(pos, false)); //mylane->interpolateGeometryPosToLanePos(mylane->getShape().nearest_offset_to_point25D(pos, false));
 
-        double angle_lane = mylane->getShape().beginEndAngle();
+        //double angle_lane = mylane->getShape().beginEndAngle();
         //std::cout << *x_pos_local << " and angle:" << angle_lane << "\n";
         //std::cout << *x_pos_local << ", length:" << mylane->getLength() << "\n";
         //if (*x_pos_local - myveh->getPositionOnLane() < 3) {
@@ -357,6 +357,7 @@ protected:
         v_next = v_cur + F * TS;
 
         bool global_coordinates=myveh->getGlobalCoordinatesControl();
+        //printf("curr step local:\n x:%f,y:%f\n", get_position_x()+ (sigma / 2) * cos(theta_cur), get_position_y() + (sigma / 2) * sin(theta_cur));
         if (global_coordinates) {
             get_global_coordinates_bicycle_model(&x_cur_back, &y_cur_back, sigma, theta_cur);
             
@@ -387,7 +388,7 @@ protected:
         }
 
         // vehicles are not allowed to move backwards        
-        deltaPos_x_back = (deltaPos_x_back < 0 ) ? 0 : deltaPos_x_back;
+        //deltaPos_x_back = (deltaPos_x_back < 0 ) ? 0 : deltaPos_x_back;
 
         x_next_back = x_cur_back + deltaPos_x_back;
         y_next_back = y_cur_back + deltaPos_y_back;
@@ -399,7 +400,7 @@ protected:
             myveh->setCachedGlobalPos(x_next_front, y_next_front);
             Position cachedGlobalPos = myveh->getCachedGlobalPos();
             const MSLane* mylane = myveh->getLane();
-
+            //std::cout << "mylane:" << mylane->getID() << "\n";
             convert_to_local_coordinates(&x_next_front, &y_next_front, cachedGlobalPos, mylane);
         }
         //printf("next step local:\n x:%f,y:%f\n", x_next_front, y_next_front);
@@ -409,6 +410,8 @@ protected:
 
         // used to update properly the new position of the vehicle (corresponds to the front bumper)
         deltaPos_x_front = x_next_front - myveh->getPositionOnLane();
+        // vehicles are not allowed to move backwards        
+        deltaPos_x_front = (deltaPos_x_front < 0 ) ? 0 : deltaPos_x_front;
         //std::cout << "delta x: (local)" << deltaPos_x_front << "\n";
         
         // std::cout << "delta x:" << deltaPos_x_front<<"\n";

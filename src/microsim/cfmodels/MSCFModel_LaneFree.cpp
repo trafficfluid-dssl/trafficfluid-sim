@@ -2702,13 +2702,13 @@ LaneFreeSimulationPlugin::insert_vehicle(MSVehicle* veh){
 		else {
 			double pos_x = (it_l->second)[3];
 			Position pos_global_init(pos_x + (lv / 2) * cos(theta), pos_y + (lv / 2) * sin(theta));
-			std::cout << "Initial global position for veh ("<< veh->getID() <<"):" << pos_x + (lv / 2) * cos(theta) << "," << pos_y + (lv / 2) * sin(theta)<< "\n";
+			//std::cout << "Initial global position for veh ("<< veh->getID() <<"):" << pos_x + (lv / 2) * cos(theta) << "," << pos_y + (lv / 2) * sin(theta)<< "\n";
 			double x_local=0, y_local=0;
 			const MSLane* init_lane = veh->getLane();
 			convert_to_local_coordinates(&x_local, &y_local, pos_global_init, init_lane);
 			new_veh->set_position_x_front(x_local);
 			new_veh->set_position_y_front(y_local);
-			std::cout << "Initial local position for veh (" << veh->getID() << "):" << x_local << "," << y_local << "\n";
+			//std::cout << "Initial local position for veh (" << veh->getID() << "):" << x_local << "," << y_local << "\n";
 			veh->setGlobalCoordinatesControl(true);		
 		}
 		// std::cout << "theta:" << theta << "\n";
@@ -2835,7 +2835,7 @@ LaneFreeSimulationPlugin::change_edge(MSVehicle* veh){
 	//std::cout << "Start with change "<< veh->getID()<<" !\n";
 	NumericalID new_edge_id = veh->getLane()->getEdge().getNumericalID();
 	NumericalID old_edge_id = find_stored_edge(veh);
-	//std::cout << "old edge " << old_edge_id << " new edge " << new_edge_id << "\n";
+	//std::cout << "old edge " << old_edge_id << " new edge " << new_edge_id << " with name:"<< veh->getLane()->getEdge().getID() <<"\n";
 	if(old_edge_id==new_edge_id){
 		return;
 	}
