@@ -2302,6 +2302,8 @@ LaneFreeSimulationPlugin::LaneFreeSimulationPlugin(){
 	get_last_step_time = &lf_plugin_get_last_step_time;
 	get_last_step_app_time = &lf_plugin_get_last_step_app_time;
 
+	get_distance_to_road_boundaries_at = &lf_plugin_get_distance_to_road_boundaries_at;
+
 	srand(lf_plugin_get_seed());
 	max_vehicle_length = 0;
 	

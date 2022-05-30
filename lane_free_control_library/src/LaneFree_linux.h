@@ -71,8 +71,10 @@ double (*get_position_y)(NumericalID veh_id);
 //returns the relative longitudinal distance of a vehicle with respect to an ego vehicle
 double (*get_relative_distance_x)(NumericalID ego_id, NumericalID other_id);
 
+
 //returns the relative longitudinal position of a vehicle with respect to an ego vehicle
 double (*get_relative_position_x)(NumericalID ego_id, NumericalID other_id);
+
 
 //returns the relative lateral distance of a vehicle with respect to an ego vehicle
 double (*get_relative_distance_y)(NumericalID ego_id, NumericalID other_id);
@@ -91,7 +93,7 @@ int (*get_current_time_step)();
 
 
 //returns the type of a given vehicle id
-NumericalID(*get_veh_type_id)(NumericalID veh_id);
+NumericalID (*get_veh_type_id)(NumericalID veh_id);
 
 
 //returns the name of a given type id
@@ -119,7 +121,7 @@ NumericalID* (*get_detectors_ids)();
 
 
 //returns the size of the ids of the detectors
-NumericalID(*get_detectors_size)();
+NumericalID (*get_detectors_size)();
 
 
 //returns the detector's name, based on the detector id
@@ -161,8 +163,8 @@ NumericalID* (*get_all_neighbor_ids_front)(NumericalID veh_id, double front_dist
 //you need "cross_edge=1" to look for vehicles beyond the current edge, and pass the address of a variable to "neighbors_size" in order to acquire the size of the resulting array.
 NumericalID* (*get_all_neighbor_ids_back)(NumericalID veh_id, double back_distance, int cross_edge, size_t* neighbors_size);
 
-//insert a new vehicle (route_id and type_id need to be defined in the scenario tested)
-NumericalID(*insert_new_vehicle)(char* veh_name, char* route_id, char* type_id, double pos_x, double pos_y, double speed_x, double speed_y, double theta, int use_global_coordinates);
+//insert a new vehicle (route_id and type_id need to be defined in the scenario tested), use_global_coordinates is only relevant to the bicycle model, and will be disregarded otherwise
+NumericalID (*insert_new_vehicle)(char* veh_name, char* route_id, char* type_id, double pos_x, double pos_y, double speed_x, double speed_y, double theta, int use_global_coordinates);
 
 //returns 1 if the vehicle is currently on an acceleration lane and needs to merge
 int (*am_i_on_acceleration_lane)(NumericalID veh_id);
@@ -199,6 +201,11 @@ double (*get_last_step_time)();
 
 // returns the execution time (in seconds) of the previous step (disregarding the execution time for the simulation_step function, i.e., execution time for the SUMO application)
 double (*get_last_step_app_time)();
+
+// calculates the lateral distance from left and right road boundaries for veh_id, at longitudinal_distance_x (vehicle can also observe upstream with negative values)
+// regarding the boundaries, it calculates the boundaries's distances (with left_boundary_distance, right_boundary_distance variables) and first derivative (with left_boundary_speed, right_boundary_speed variables)
+// if speed information is not useful, one can simply place NULL pointers to the respective arguments (left_boundary_speed, right_boundary_speed)
+void (*get_distance_to_road_boundaries_at)(NumericalID veh_id, double longitudinal_distance_x, double* left_boundary_distance, double* right_boundary_distance, double* left_boundary_speed, double* right_boundary_speed);
 
 //is called once before the first time-step
 void simulation_initialize();

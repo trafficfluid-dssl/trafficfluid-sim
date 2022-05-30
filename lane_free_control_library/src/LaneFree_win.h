@@ -1,12 +1,15 @@
-#include "libLaneFreePlugin_Export.h"
 
-//NumericalID is used as a data type for ids.
+#include "libLaneFreePlugin_EXPORT.h"
+
+
+
 typedef long long int NumericalID;
+
 
 //Note: memory management is performed automatically. You do not free the pointers you receive through this API (See LaneFree.cpp for usage)
 
 //returns all ids in the network
-libLaneFreePlugin_EXPORT NumericalID* (* get_all_ids)();
+libLaneFreePlugin_EXPORT NumericalID* (*get_all_ids)();
 //returns the size of all ids in the network
 libLaneFreePlugin_EXPORT NumericalID (* get_all_ids_size)();
 
@@ -56,7 +59,6 @@ libLaneFreePlugin_EXPORT double (* get_speed_y)(NumericalID veh_id);
 //returns the desired speed in m/s of vehicle with id veh_id
 libLaneFreePlugin_EXPORT double (* get_desired_speed)(NumericalID veh_id);
 
-
 //sets the desired speed in m/s of vehicle with id veh_id
 libLaneFreePlugin_EXPORT void (* set_desired_speed)(NumericalID veh_id, double new_des_speed);
 
@@ -72,10 +74,8 @@ libLaneFreePlugin_EXPORT double (* get_position_y)(NumericalID veh_id);
 //returns the relative longitudinal distance of a vehicle with respect to an ego vehicle
 libLaneFreePlugin_EXPORT double (*get_relative_distance_x)(NumericalID ego_id, NumericalID other_id);
 
-
 //returns the relative longitudinal position of a vehicle with respect to an ego vehicle
 libLaneFreePlugin_EXPORT double (*get_relative_position_x)(NumericalID ego_id, NumericalID other_id);
-
 
 
 //returns the relative lateral distance of a vehicle with respect to an ego vehicle
@@ -127,12 +127,11 @@ libLaneFreePlugin_EXPORT NumericalID (* get_detectors_size)();
 
 
 //returns the detector's name, based on the detector id
-libLaneFreePlugin_EXPORT char* (* get_detector_name)(NumericalID detector_id);
+libLaneFreePlugin_EXPORT char* (*get_detector_name)(NumericalID detector_id);
 
 
 //returns the values of all detectors (number of vehicles for each detector)
-libLaneFreePlugin_EXPORT int* (* get_detectors_values)();
-
+libLaneFreePlugin_EXPORT int* (*get_detectors_values)();
 
 //returns the value of a single detector, based on the detector's id
 libLaneFreePlugin_EXPORT int (*get_detector_value)(NumericalID detector_id);
@@ -153,15 +152,14 @@ libLaneFreePlugin_EXPORT double (*get_average_speed_on_segment_region_on_edge)(N
 libLaneFreePlugin_EXPORT double (*get_average_speed_on_segment_region_on_edge_for_type)(NumericalID edge_id, double segment_start, double segment_end, char* veh_type);
 
 //returns the density of vehicles per segment for a given edge id, and a segment length
-libLaneFreePlugin_EXPORT int* (* get_density_per_segment_per_edge)(NumericalID edge_id, double segment_length);
+libLaneFreePlugin_EXPORT int* (*get_density_per_segment_per_edge)(NumericalID edge_id, double segment_length);
 
 //returns the size of the array provided above
-libLaneFreePlugin_EXPORT int (* get_density_per_segment_per_edge_size)(NumericalID edge_id, double segment_length);
+libLaneFreePlugin_EXPORT int (*get_density_per_segment_per_edge_size)(NumericalID edge_id, double segment_length);
 
 //returns the ids of front vehicles that may be located beyond the veh_id's road edge, according to the front distance provided, and based on its routing. 
 //you need "cross_edge=1" to look for vehicles beyond the current edge, and pass the address of a variable to "neighbors_size" in order to acquire the size of the resulting array.
 libLaneFreePlugin_EXPORT NumericalID* (*get_all_neighbor_ids_front)(NumericalID veh_id, double front_distance, int cross_edge, size_t* neighbors_size);
-
 
 //returns the ids of vehicles one the back that may be located before the veh_id's road edge, according to the back distance provided, and based on its routing. 
 //you need "cross_edge=1" to look for vehicles beyond the current edge, and pass the address of a variable to "neighbors_size" in order to acquire the size of the resulting array.
@@ -207,6 +205,12 @@ libLaneFreePlugin_EXPORT double (*get_last_step_time)();
 // returns the execution time (in seconds) of the previous step (disregarding the execution time for the simulation_step function, i.e., execution time for the SUMO application)
 libLaneFreePlugin_EXPORT double (*get_last_step_app_time)();
 
+// calculates the lateral distance from left and right road boundaries for veh_id, at longitudinal_distance_x (vehicle can also observe upstream with negative values)
+// regarding the boundaries, it calculates the boundaries's distances (with left_boundary_distance, right_boundary_distance variables) and first derivative (with left_boundary_speed, right_boundary_speed variables)
+// if speed information is not useful, one can simply place NULL pointers to the respective arguments (left_boundary_speed, right_boundary_speed)
+libLaneFreePlugin_EXPORT void (*get_distance_to_road_boundaries_at)(NumericalID veh_id, double longitudinal_distance_x, double* left_boundary_distance, double* right_boundary_distance, double* left_boundary_speed, double* right_boundary_speed);
+
+
 //is called once before the first time-step
 libLaneFreePlugin_EXPORT void simulation_initialize();
 
@@ -226,6 +230,7 @@ libLaneFreePlugin_EXPORT void event_vehicle_exit(NumericalID veh_id);
 
 //is called when two vehicles collide
 libLaneFreePlugin_EXPORT void event_vehicles_collide(NumericalID veh_id1, NumericalID veh_id2);
+
 
 //is called when a vehicle exceeds the road boundaries
 libLaneFreePlugin_EXPORT void event_vehicle_out_of_bounds(NumericalID veh_id);
