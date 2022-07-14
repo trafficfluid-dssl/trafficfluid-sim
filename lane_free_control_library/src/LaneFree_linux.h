@@ -205,10 +205,13 @@ double (*get_last_step_time)();
 // returns the execution time (in seconds) of the previous step (disregarding the execution time for the simulation_step function, i.e., execution time for the SUMO application)
 double (*get_last_step_app_time)();
 
-// calculates the lateral distance from left and right road boundaries for veh_id, at longitudinal_distance_x (vehicle can also observe upstream with negative values)
+// calculates the lateral distance from left and right road boundaries for veh_id, at longitudinal_distance_x (vehicle can also observe upstream with negative values) and lateral_distance_y
 // regarding the boundaries, it calculates the boundaries's distances (with left_boundary_distance, right_boundary_distance variables) and first derivative (with left_boundary_speed, right_boundary_speed variables)
 // if speed information is not useful, one can simply place NULL pointers to the respective arguments (left_boundary_speed, right_boundary_speed)
-void (*get_distance_to_road_boundaries_at)(NumericalID veh_id, double longitudinal_distance_x, double* left_boundary_distance, double* right_boundary_distance, double* left_boundary_speed, double* right_boundary_speed);
+// for speed information the argument veh_longitudinal_speed provides the longitudinal speed of the vehicle for the calculation of left_boundary_speed, right_boundary_speed. 
+// if veh_longitudinal_speed is a NULL pointer, then the current speed of the vehicle will be choosed for these calculations
+void (*get_distance_to_road_boundaries_at)(NumericalID veh_id, double longitudinal_distance_x, double lateral_distance_y, double* left_boundary_distance, double* right_boundary_distance, double* left_boundary_speed, double* right_boundary_speed, double* veh_longitudinal_speed);
+
 
 //is called once before the first time-step
 void simulation_initialize();
