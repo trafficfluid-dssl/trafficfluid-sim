@@ -307,8 +307,9 @@ protected:
 
     // simply obtain the global coordinates for the back of the vehicle (as needed for the bicycle model)
     void get_global_coordinates_bicycle_model(double* x_pos, double* y_pos, double sigma, double theta_cur) {
-        *x_pos = myveh->getPosition().x() - sigma * cos(theta_cur);
-        *y_pos = myveh->getPosition().y() - sigma * sin(theta_cur);
+        Position cachedGlobalPos = myveh->getCachedGlobalPos();
+        *x_pos = cachedGlobalPos.x() - sigma * cos(theta_cur);
+        *y_pos = cachedGlobalPos.y() - sigma * sin(theta_cur);
     }
 
     
@@ -360,7 +361,11 @@ protected:
         //printf("curr step local:\n x:%f,y:%f\n", get_position_x()+ (sigma / 2) * cos(theta_cur), get_position_y() + (sigma / 2) * sin(theta_cur));
         if (global_coordinates) {
             get_global_coordinates_bicycle_model(&x_cur_back, &y_cur_back, sigma, theta_cur);
-            
+            //Position pos_cur = myveh->getCachedGlobalPos();
+            //printf("cached pos:(%f,%f) vs obtained pos:(%f,%f)", pos_cur.x() - (sigma)*cos(theta_cur), pos_cur.y() - (sigma)*sin(theta_cur), x_cur_back, y_cur_back);
+            //printf("local (front):(%f,%f)\n",myveh->getPositionOnLane() ,myveh->getLateralPositionOnLane());
+            //x_cur_back = pos_cur.x() - (sigma)*cos(theta_cur);
+            //y_cur_back = pos_cur.y() - (sigma)*sin(theta_cur);
         }
         else {
             
@@ -395,23 +400,25 @@ protected:
 
         x_next_front = x_next_back + (sigma)*cos(theta_next); // convert to the front bumper positions again to comply with sumo
         y_next_front = y_next_back + (sigma)*sin(theta_next); // convert to the front bumper positions again to comply with sumo
-        //printf("next step:\n x:%f,y:%f,v:%f,theta:%f\n", x_next_back, y_next_back, v_next, theta_next);
+        //printf("next step:\n\t   x = %f, y = %f,v:%f,theta:%f\n", x_next_back, y_next_back, v_next, theta_next);
         if (global_coordinates) {
             myveh->setCachedGlobalPos(x_next_front, y_next_front);
             Position cachedGlobalPos = myveh->getCachedGlobalPos();
             const MSLane* mylane = myveh->getLane();
             //std::cout << "mylane:" << mylane->getID() << "\n";
             convert_to_local_coordinates(&x_next_front, &y_next_front, cachedGlobalPos, mylane);
+            //std::cout << "next local:(" <<x_next_front<< "," << y_next_front<< ")\n";
         }
-        //printf("next step local:\n x:%f,y:%f\n", x_next_front, y_next_front);
+        //printf("next step local (front):\n x:%f,y:%f\n", x_next_front, y_next_front);
         
         // need to update speed_x parameter! It is more convenient to use the v speed value instead of the actual longitudinal speed of the vehicle
         speed_x = (v_next < 0) ? 0 : v_next;
-
+        
         // used to update properly the new position of the vehicle (corresponds to the front bumper)
         deltaPos_x_front = x_next_front - myveh->getPositionOnLane();
-        // vehicles are not allowed to move backwards        
-        deltaPos_x_front = (deltaPos_x_front < 0 ) ? 0 : deltaPos_x_front;
+        // vehicles are not allowed to move backwards     
+        // The following line creates issues for global coordinates control   
+        //deltaPos_x_front = (deltaPos_x_front < 0 ) ? 0 : deltaPos_x_front;
         //std::cout << "delta x: (local)" << deltaPos_x_front << "\n";
         
         // std::cout << "delta x:" << deltaPos_x_front<<"\n";

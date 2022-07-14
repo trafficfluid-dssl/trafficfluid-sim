@@ -181,6 +181,9 @@ libLaneFreePlugin_EXPORT double (*get_global_position_y)(NumericalID veh_id);
 //returns the destination edge id of the vehicle
 libLaneFreePlugin_EXPORT NumericalID (*get_destination_edge_id)(NumericalID veh_id);
 
+//returns the origin edge id of the vehicle
+libLaneFreePlugin_EXPORT NumericalID (*get_origin_edge_id)(NumericalID veh_id);
+
 //returns the subsequent edge id of the vehicle. In case of error (also displays error message), or if the vehicle is already at the destination edge, it returns -1.
 libLaneFreePlugin_EXPORT NumericalID(*get_next_edge_id)(NumericalID veh_id);
 

@@ -178,6 +178,9 @@ double (*get_global_position_y)(NumericalID veh_id);
 //returns the destination edge id of the vehicle
 NumericalID(*get_destination_edge_id)(NumericalID veh_id);
 
+//returns the origin edge id of the vehicle
+NumericalID (*get_origin_edge_id)(NumericalID veh_id);
+
 //returns the subsequent edge id of the vehicle. In case of error (also displays error message), or if the vehicle is already at the destination edge, it returns -1.
 NumericalID(*get_next_edge_id)(NumericalID veh_id);
 
