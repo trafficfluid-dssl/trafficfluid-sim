@@ -1350,7 +1350,13 @@ void lf_plugin_get_distance_to_road_boundaries_at(NumericalID veh_id, double lon
 
 	double right_boundary_y;
 	
-	double veh_speed = *veh_longitudinal_speed ? (veh_longitudinal_speed != NULL) : lfveh->get_speed_x();
+	double veh_speed;
+	if (veh_longitudinal_speed != NULL) {
+		veh_speed = *veh_longitudinal_speed;
+	}
+	else {
+		veh_speed = lfveh->get_speed_x();
+	}		
 	boundary_value(mid_height, rightBoundaryLevelPoints, rightBoundarySlopes, rightBoundaryOffsets, global_pos_x + longitudinal_distance_x, veh_speed, &right_boundary_y, right_boundary_speed);
 
 
