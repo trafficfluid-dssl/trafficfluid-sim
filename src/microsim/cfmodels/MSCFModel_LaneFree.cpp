@@ -2671,7 +2671,7 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 					MSNet::getInstance()->getVehicleControl().registerCollision();
 				}
 				theta2 = 0;
-				if(dx>(lv1+max_vehicle_length)/2){ // since vehicles are sorted based on x pos, we stop searching downstream vehicles for collisions when the dx distance exceeds the one corresponding to a vehicle with the maximum length within the network
+				if(dx>(lv1+max_vehicle_length)/2){ // since vehicles are sorted based on x pos, we stop searching downstream vehicles for collisions when the dx distance exceeds the one corresponding to a vehicle with the maximum length within the network TODO: orientiation should be taken into account for the bicycle model
 					break;
 				}
 			}
