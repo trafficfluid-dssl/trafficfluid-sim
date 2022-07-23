@@ -997,12 +997,12 @@ double lf_plugin_get_position_x(NumericalID veh_id){
 double lf_plugin_get_relative_distance_x(NumericalID ego_id, NumericalID other_id) {
 	MSLaneFreeVehicle* ego_lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(ego_id);
 	if (ego_lfveh == nullptr) {
-		std::cout << "Ego not found!\n";
+		std::cout << "Ego with Numerical ID:"<< ego_id <<" not found!\n";
 		return -1;
 	}
 	MSLaneFreeVehicle* other_lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(other_id);
 	if (other_lfveh== nullptr) {
-		std::cout << "Other not found!\n";
+		std::cout << "Other with Numerical ID:" << other_id << " not found!\n";
 		return -1;
 	}
 	NumericalID ego_edge_id = ego_lfveh->get_vehicle()->getLane()->getEdge().getNumericalID(), other_edge_id = other_lfveh->get_vehicle()->getLane()->getEdge().getNumericalID();
@@ -1022,7 +1022,7 @@ double lf_plugin_get_relative_distance_x(NumericalID ego_id, NumericalID other_i
 		}
 		int other_index = ego_route.edge_index(other_edge);
 		if (other_index == -1) {
-			std::cout << "Error! other vehicle not in the path of ego!\n";
+			std::cout << "Error! other vehicle ("<< other_lfveh->get_vehicle()->getID() <<") with route "<< other_lfveh->get_vehicle()->getRoute().getID()<<" not in the path of ego ("<< ego_lfveh->get_vehicle()->getID() <<") with route "<< ego_lfveh->get_vehicle()->getRoute().getID() <<"!\n";
 			return -1;
 		}
 		
@@ -1164,6 +1164,7 @@ double lf_plugin_get_relative_distance_x(NumericalID ego_id, NumericalID other_i
 }
 
 double lf_plugin_get_relative_position_x(NumericalID ego_id, NumericalID other_id) {
+	std::cout << "This function 'lf_plugin_get_relative_position_x' is deprecated and will be removed in later versions\n";
 	MSLaneFreeVehicle* ego_lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(ego_id);
 	if (ego_lfveh == nullptr) {
 		std::cout << "Ego not found!\n";
@@ -1197,12 +1198,12 @@ double lf_plugin_get_relative_position_x(NumericalID ego_id, NumericalID other_i
 double lf_plugin_get_relative_distance_y(NumericalID ego_id, NumericalID other_id) {
 	MSLaneFreeVehicle* ego_lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(ego_id);
 	if (ego_lfveh == nullptr) {
-		std::cout << "Ego not found!\n";
+		std::cout << "Ego with Numerical ID:" << ego_id << " not found!\n";
 		return -1;
 	}
 	MSLaneFreeVehicle* other_lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(other_id);
 	if (other_lfveh == nullptr) {
-		std::cout << "Other not found!\n";
+		std::cout << "Other with Numerical ID:" << other_id << " not found!\n";
 		return -1;
 	}
 	double latShift = 0, total_latShift=0;
@@ -1223,7 +1224,7 @@ double lf_plugin_get_relative_distance_y(NumericalID ego_id, NumericalID other_i
 		}
 		int other_index = ego_route.edge_index(other_edge);
 		if (other_index == -1) {
-			std::cout << "Error! other vehicle not in the path of ego!\n";
+			std::cout << "Error! other vehicle (" << other_lfveh->get_vehicle()->getID() << ") with route " << other_lfveh->get_vehicle()->getRoute().getID() << " not in the path of ego (" << ego_lfveh->get_vehicle()->getID() << ") with route " << ego_lfveh->get_vehicle()->getRoute().getID() << "!\n";
 			return -1;
 		}
 		
