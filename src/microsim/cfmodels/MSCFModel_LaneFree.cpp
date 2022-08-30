@@ -2630,7 +2630,7 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 			
 			half_vwidth = wv1 / 2;
 			if (yv1 > (roadwidth - half_vwidth) || yv1 < half_vwidth) {
-				//event_vehicle_out_of_bounds(veh1->getNumericalID());
+				event_vehicle_out_of_bounds(veh1->getNumericalID());
 			}
 			for(j=i+1;j<n_v;j++){
 				veh2 = (MSVehicle*)(*vehs_in_edge)[j];
