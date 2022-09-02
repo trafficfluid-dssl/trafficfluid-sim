@@ -2961,9 +2961,14 @@ LaneFreeSimulationPlugin::remove_vehicle(MSVehicle* veh){
 		std::cout << "Edge " << edge_id << " not found!\n";
 		return;
 	}
-	NumericalID veh_id = veh->getNumericalID();
-	event_vehicle_exit(veh_id);
+	NumericalID veh_id = veh->getNumericalID();	
 	VehicleMap* vm = it->second;
+
+	// if the following condition is met, then exit function is called for a vehicle that has never beed inserted (e.g., it stayed in the virtual queue)
+	if (vm->find(veh_id) == vm->end()) {
+		return;
+	}
+	event_vehicle_exit(veh_id);
 	MSLaneFreeVehicle* ch_veh = (*vm)[veh_id];
 	delete ch_veh;
 	vm->erase(veh_id);
