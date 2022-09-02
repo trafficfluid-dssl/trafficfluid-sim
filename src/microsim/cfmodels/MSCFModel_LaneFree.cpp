@@ -2954,7 +2954,12 @@ LaneFreeSimulationPlugin::change_edge(MSVehicle* veh){
 void 
 LaneFreeSimulationPlugin::remove_vehicle(MSVehicle* veh){
 
-	NumericalID edge_id = veh->getLane()->getEdge().getNumericalID();
+	const MSLane* vehlane = veh->getLane();
+	// if the following condition is met, then exit function is called for a vehicle that has never beed inserted (e.g., it stayed in the virtual queue)
+	if (vehlane == nullptr) {
+		return;
+	}
+	NumericalID edge_id = vehlane->getEdge().getNumericalID();
 	VehicleMapEdges::iterator it = allVehiclesMapEdges.find(edge_id);
 	
 	if(it==allVehiclesMapEdges.end()){		
