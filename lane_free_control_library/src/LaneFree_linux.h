@@ -1,4 +1,3 @@
-
 //NumericalID is used as a data type for ids.
 typedef long long int NumericalID;
 
@@ -137,10 +136,10 @@ int (*get_detector_value)(NumericalID detector_id);
 //returns the value that corresponds to the specified type of a single detector, based on the detector's id
 int (*get_detector_value_for_type)(NumericalID detector_id, char* veh_type);
 
-//returns the density of vehicles for a given segment region for a given edge id
+//returns the density of vehicles (veh/km) for a given segment region for a given edge id
 int (*get_density_on_segment_region_on_edge)(NumericalID edge_id, double segment_start, double segment_end);
 
-//returns the density of vehicles for a given segment region for a given edge id and for a given type of vehicles
+//returns the density of vehicles (veh/km) for a given segment region for a given edge id and for a given type of vehicles
 int (*get_density_on_segment_region_on_edge_for_type)(NumericalID edge_id, double segment_start, double segment_end, char* veh_type);
 
 //returns the average speed of vehicles for a given segment region for a given edge id
@@ -149,7 +148,7 @@ double (*get_average_speed_on_segment_region_on_edge)(NumericalID edge_id, doubl
 //returns the average speed of vehicles for a given segment region for a given edge id and for a given type of vehicles
 double (*get_average_speed_on_segment_region_on_edge_for_type)(NumericalID edge_id, double segment_start, double segment_end, char* veh_type);
 
-//returns the density of vehicles per segment for a given edge id, and a segment length
+//returns the density of vehicles (veh/km) per segment for a given edge id, and a segment length
 int* (*get_density_per_segment_per_edge)(NumericalID edge_id, double segment_length);
 
 //returns the size of the array provided above
@@ -227,7 +226,8 @@ void simulation_finalize();
 void event_vehicle_enter(NumericalID veh_id);
 
 //is called when a new vehicle exits
-void event_vehicle_exit(NumericalID veh_id);
+//if has_arrived==1, then vehicle is out of the network. Otherwise, vehicle is still in the network when simulation was terminated
+void event_vehicle_exit(NumericalID veh_id, int has_arrived);
 
 
 //is called when two vehicles collide

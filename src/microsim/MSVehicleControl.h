@@ -300,6 +300,12 @@ public:
         return myCollisions;
     }
 
+    // LFPlugin Begin
+    int getCollisionCountWithoutConsecutives() const {
+        return myCollisionsNoConsecutives;
+    }
+    // LFPlugin End
+
     /// @brief return the number of teleports due to jamming
     int getTeleportsJam() const {
         return myTeleportsJam;
@@ -454,6 +460,11 @@ public:
         myCollisions++;
     }
 
+    /// @brief registers one collision-related teleport
+    void registerCollisionNoConsecutives() {
+        myCollisionsNoConsecutives++;
+    }
+
     /// @brief register one non-collision-related teleport
     void registerTeleportJam() {
         myTeleportsJam++;
@@ -561,6 +572,10 @@ private:
 
     /// @brief The number of collisions
     int myCollisions;
+
+    // LFPlugin Begin
+    int myCollisionsNoConsecutives;
+    // LFPlugin End
 
     /// @brief The number of teleports due to jam
     int myTeleportsJam;

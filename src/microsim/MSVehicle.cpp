@@ -940,6 +940,9 @@ MSVehicle::MSVehicle(SUMOVehicleParameter* pars, const MSRoute* route,
     //LFPlugin Begin
     myDesiredSpeed = 0;
     myAngleRelative = 0;
+    myAccelerationLat = 0;
+    myAccelerationBC = 0;
+    myDeltaBC = 0;
     deltaPos_LF = 0;
     global_coordinates = false;
     //LFPlugin End
@@ -3839,7 +3842,7 @@ MSVehicle::executeMove() {
         myState.myPos += deltaPos_LF;
         myState.myLastCoveredDist = deltaPos_LF;
         myNextTurn.first -= deltaPos_LF;
-
+        //myAcceleration = SPEED2ACCEL(myState.mySpeed - myState.myPreviousSpeed);
         myCachedPosition = Position::INVALID;
     }
     // LFPlugin End

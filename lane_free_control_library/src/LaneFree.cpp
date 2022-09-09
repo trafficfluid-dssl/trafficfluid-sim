@@ -171,7 +171,8 @@ void event_vehicle_enter(NumericalID veh_id){
 	
 }
 
-void event_vehicle_exit(NumericalID veh_id){
+// If has_arrived==1, then vehicle is out of the network. Otherwise, vehicle is still in the network when simulation was terminated
+void event_vehicle_exit(NumericalID veh_id, int has_arrived){
 	char* vname1 = get_vehicle_name(veh_id);
 	printf("Vehicle %s exited at time %.2f, at pos:%f.\n",vname1, get_current_time_step()*get_time_step_length(), get_position_x(veh_id));
 	

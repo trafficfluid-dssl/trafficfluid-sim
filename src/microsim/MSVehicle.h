@@ -422,12 +422,37 @@ public:
         return cachedGlobalPos;
     }
 
+    
     bool getGlobalCoordinatesControl() {
         return global_coordinates;
     }
 
     void setGlobalCoordinatesControl(bool global_coordinates) {
         this->global_coordinates = global_coordinates;
+    }
+
+    double getMyAccelerationLat() const{
+        return myAccelerationLat;
+    }
+
+    void setMyAccelerationLat(double newVal) {
+        myAccelerationLat = newVal;
+    }
+
+    double getMyAccelerationBC() const {
+        return myAccelerationBC;
+    }
+
+    void setMyAccelerationBC(double newVal) {
+        myAccelerationBC = newVal;
+    }
+
+    double getMyDeltaBC() const {
+        return myDeltaBC;
+    }
+
+    void setMyDeltaBC(double newVal) {
+        myDeltaBC = newVal;
     }
     // LFPlugin End
 
@@ -2011,6 +2036,9 @@ protected:
     double deltaPos_LF;
     Position cachedGlobalPos;
     bool global_coordinates;
+    double myAccelerationLat;
+    double myAccelerationBC;
+    double myDeltaBC;
     // LFPlugin End
 
 protected:

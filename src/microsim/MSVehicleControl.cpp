@@ -50,6 +50,9 @@ MSVehicleControl::MSVehicleControl() :
     myEndedVehNo(0),
     myDiscarded(0),
     myCollisions(0),
+    // LFPlugin Begin
+    myCollisionsNoConsecutives(0),
+    // LFPlugin End
     myTeleportsJam(0),
     myTeleportsYield(0),
     myTeleportsWrongLane(0),

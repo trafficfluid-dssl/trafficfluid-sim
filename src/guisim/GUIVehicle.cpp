@@ -63,6 +63,10 @@
 #include "GUIEdge.h"
 #include "GUILane.h"
 
+// LFPlugin Begin
+#include <microsim/cfmodels/MSCFModel_LaneFree.h>
+// LFPlugin End
+
 #define SPEEDMODE_DEFAULT 31
 #define LANECHANGEMODE_DEFAULT 1621
 
@@ -112,6 +116,14 @@ GUIVehicle::getParameterWindow(GUIMainWindow& app,
     if (isSelected()) {
         ret->mkItem("back lane [id]", true, new FunctionBindingString<GUIVehicle>(this, &GUIVehicle::getBackLaneID));
     }
+    // LFPlugin Begin
+    // insert additional parameters here
+    
+    //getGlobalCoordinatesControl
+    //ret->mkItem("x position (global) [LaneFreePlugin] [m]", true, lf_plugin_get_global_position_x(MSVehicle::getNumericalID()));
+    // 
+    
+    // LFPlugin End
     ret->mkItem("position [m]", true,
                 new FunctionBinding<GUIVehicle, double>(this, &MSVehicle::getPositionOnLane));
     ret->mkItem("lateral offset [m]", true,
@@ -122,6 +134,14 @@ GUIVehicle::getParameterWindow(GUIMainWindow& app,
                 new FunctionBinding<MSAbstractLaneChangeModel, double>(&getLaneChangeModel(), &MSAbstractLaneChangeModel::getSpeedLat));
     ret->mkItem("acceleration [m/s^2]", true,
                 new FunctionBinding<GUIVehicle, double>(this, &MSVehicle::getAcceleration));
+    // LFPlugin Begin
+    ret->mkItem("acceleration lat (LF) [m/s^2]", true,
+        new FunctionBinding<GUIVehicle, double>(this, &MSVehicle::getMyAccelerationLat));
+    ret->mkItem("acceleration bc (LF) [m/s^2]", true,
+        new FunctionBinding<GUIVehicle, double>(this, &MSVehicle::getMyAccelerationBC));
+    ret->mkItem("delta orient. bc (LF) [rad]", true,
+        new FunctionBinding<GUIVehicle, double>(this, &MSVehicle::getMyDeltaBC));
+    // LFPlugin End
     ret->mkItem("angle [degree]", true,
                 new FunctionBinding<GUIVehicle, double>(this, &GUIBaseVehicle::getNaviDegree));
     ret->mkItem("slope [degree]", true,

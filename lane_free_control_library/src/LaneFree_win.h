@@ -229,7 +229,8 @@ libLaneFreePlugin_EXPORT void simulation_finalize();
 libLaneFreePlugin_EXPORT void event_vehicle_enter(NumericalID veh_id);
 
 //is called when a new vehicle exits
-libLaneFreePlugin_EXPORT void event_vehicle_exit(NumericalID veh_id);
+//if has_arrived==1, then vehicle is out of the network. Otherwise, vehicle is still in the network when simulation was terminated
+libLaneFreePlugin_EXPORT void event_vehicle_exit(NumericalID veh_id, int has_arrived);
 
 
 //is called when two vehicles collide

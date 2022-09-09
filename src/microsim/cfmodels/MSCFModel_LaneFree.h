@@ -29,6 +29,13 @@
 #include <utils/xml/SUMOXMLDefinitions.h>
 #include <random>
 #include <chrono>
+
+//#ifdef __unix__
+//#include "LaneFree_linux.h"
+//#elif defined(WIN32)
+//#include "LaneFree_win.h"
+//#endif
+
 //#include <tgmath.h> 
 #define MAX_ITERS 5
 //#define UPDATE_PRINT_MS 5
@@ -69,6 +76,8 @@ typedef std::unordered_map<NumericalID, std::array<double, 2>> LastVehicleStatus
 double fRand(double fMin, double fMax);
 
 
+double lf_plugin_get_global_position_x(NumericalID veh_id);
+
 //declare here the api functions ("C compatible", in terms if arguments, and return value) (maybe implement them directly, or inside the cpp file alternatively)
 
 // NumericalID* lf_sim_get_all_ids();
@@ -82,7 +91,7 @@ public:
     //static double last_v_width;
     static LastVehicleStatus last_veh_status;
 
-    MSLaneFreeVehicle(MSVehicle* veh){
+    MSLaneFreeVehicle(MSVehicle* veh) : collided_with_cur{}, collided_with_prev{}{
         myveh = veh;
         speed_y = 0;
         // veh->setSpeed(28);
@@ -96,6 +105,23 @@ public:
     }
 
     
+    void just_collided_with(NumericalID c_veh_id) {
+        collided_with_cur.insert(c_veh_id);
+    }
+
+    void empty_collided_set() {
+        //collided_with_prev.clear();
+        collided_with_prev = collided_with_cur;
+        collided_with_cur.clear();
+    }
+
+    bool has_collided_with(NumericalID c_veh_id) {
+        if (collided_with_prev.find(c_veh_id) != collided_with_prev.end()) {
+            return true;
+        }
+
+        return false;
+    }
 
     void set_position_x(double new_pos_x){
         myveh->setPositionOnLane(new_pos_x+myveh->getLength()/2);
@@ -191,6 +217,8 @@ public:
         
         accel_y = uy;
         accel_x = ux;
+
+        
         
     }
 
@@ -199,18 +227,21 @@ public:
         // no need to define more parameters
         accel_x = F;
         accel_y = delta;
+
+        
     }
 
     // Complies with the CF model, returns the next speed of the vehicle. Lateral position is updated internally here
     double apply_acceleration_internal(){
         if (myveh->getVehicleType().getParameter().cmdModel == SUMO_TAG_LF_CMD_BICYCLE) {
             apply_acceleration_internal_bicycle();
-            
+            myveh->setMyAccelerationBC(accel_x);
+            myveh->setMyDeltaBC(accel_y);
         }
         else {
             update_y(accel_y);
             update_x(accel_x);
-
+            myveh->setMyAccelerationLat(accel_y);
         }
         
         
@@ -230,7 +261,12 @@ public:
         return (myveh->getEdge()->getNumericalID());
     }
 
-
+    // simply obtain the global coordinates for the back of the vehicle (as needed for the bicycle model)
+    void get_global_coordinates_bicycle_model(double* x_pos, double* y_pos, double sigma, double theta_cur) {
+        Position cachedGlobalPos = myveh->getCachedGlobalPos();
+        *x_pos = cachedGlobalPos.x() - sigma * cos(theta_cur);
+        *y_pos = cachedGlobalPos.y() - sigma * sin(theta_cur);
+    }
 protected:
 
     void update_lane(double new_pos_y) {
@@ -305,12 +341,7 @@ protected:
         
     }
 
-    // simply obtain the global coordinates for the back of the vehicle (as needed for the bicycle model)
-    void get_global_coordinates_bicycle_model(double* x_pos, double* y_pos, double sigma, double theta_cur) {
-        Position cachedGlobalPos = myveh->getCachedGlobalPos();
-        *x_pos = cachedGlobalPos.x() - sigma * cos(theta_cur);
-        *y_pos = cachedGlobalPos.y() - sigma * sin(theta_cur);
-    }
+    
 
     
     void convert_to_local_coordinates(double* x_pos_local, double* y_pos_local, Position& pos, const MSLane* mylane) {
@@ -472,6 +503,9 @@ protected:
     double accel_y;
     bool ring_road;
 
+
+    std::set<NumericalID> collided_with_prev;
+    std::set<NumericalID> collided_with_cur;
 };
 
 
@@ -626,7 +660,8 @@ protected:
     SortedVehiclesVectorEdges sortedVehiclesVectorEdges;
 
     double max_vehicle_length;
-
+    double max_vehicle_width;
+    double max_vehicle_diag;
     arrayMemStruct all_ids;
     arrayMemStruct lane_free_ids;
     arrayMemStruct vehicle_name;

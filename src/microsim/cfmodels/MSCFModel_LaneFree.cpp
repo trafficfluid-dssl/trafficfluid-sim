@@ -1303,6 +1303,7 @@ void boundary_value(double mid_height, std::vector<double>& lim, std::vector<dou
 // for speed information the argument veh_longitudinal_speed provides the longitudinal speed of the vehicle for the calculation of left_boundary_speed, right_boundary_speed. 
 // if veh_longitudinal_speed is a NULL pointer, then the current speed of the vehicle will be choosed for these calculations
 void lf_plugin_get_distance_to_road_boundaries_at(NumericalID veh_id, double longitudinal_distance_x, double lateral_distance_y, double* left_boundary_distance, double* right_boundary_distance, double* left_boundary_speed, double* right_boundary_speed, double* veh_longitudinal_speed) {
+//void lf_plugin_get_distance_to_road_boundaries_at(NumericalID veh_id, double longitudinal_distance_x, double* left_boundary_distance, double* right_boundary_distance, double* left_boundary_speed, double* right_boundary_speed) {
 	MSLaneFreeVehicle* lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(veh_id);
 
 	if (left_boundary_distance == nullptr || right_boundary_distance == nullptr) {
@@ -1352,12 +1353,14 @@ void lf_plugin_get_distance_to_road_boundaries_at(NumericalID veh_id, double lon
 	double right_boundary_y;
 	
 	double veh_speed;
+	
 	if (veh_longitudinal_speed != NULL) {
 		veh_speed = *veh_longitudinal_speed;
 	}
 	else {
 		veh_speed = lfveh->get_speed_x();
-	}		
+	}
+
 	boundary_value(mid_height, rightBoundaryLevelPoints, rightBoundarySlopes, rightBoundaryOffsets, global_pos_x + longitudinal_distance_x, veh_speed, &right_boundary_y, right_boundary_speed);
 
 
@@ -1782,6 +1785,11 @@ int* lf_plugin_get_density_per_segment_per_edge(NumericalID edge_id, double segm
 
 		
 		}
+
+		for (i = 0; i < size_segments; i++) {
+			dens_per_segment[i] = (dens_per_segment[i] * 1000) / segment_length;
+		
+		}
 		
 		return dens_per_segment;
 	}
@@ -1821,7 +1829,7 @@ int lf_plugin_get_density_per_segment_per_edge_size(NumericalID edge_id, double 
 
 double lf_plugin_get_average_speed_on_segment_region_on_edge(NumericalID edge_id, double segment_start, double segment_end) {
 
-	if (segment_start > segment_end) {
+	if (segment_start >= segment_end) {
 		printf("Segment start point should always be before the segment end point!\n");
 		return -1;
 	}
@@ -1881,7 +1889,7 @@ double lf_plugin_get_average_speed_on_segment_region_on_edge(NumericalID edge_id
 
 int lf_plugin_get_density_on_segment_region_on_edge(NumericalID edge_id, double segment_start, double segment_end) {
 
-	if (segment_start > segment_end) {
+	if (segment_start >= segment_end) {
 		printf("Segment start point should always be before the segment end point!\n");
 		return -1;
 	}
@@ -1924,8 +1932,8 @@ int lf_plugin_get_density_on_segment_region_on_edge(NumericalID edge_id, double 
 				density++;
 			}
 		}
-		//std::cout << "Success!\n";
-		return density;
+		// std::cout << "Success!\n";
+		return (density *1000)/ (segment_end-segment_start);
 	}
 	std::cout << "Edge with id " << edge_id << " not found!\n";
 	return -1;
@@ -1944,7 +1952,7 @@ int lf_plugin_am_i_on_acceleration_lane(NumericalID veh_id) {
 
 double lf_plugin_get_average_speed_on_segment_region_on_edge_for_type(NumericalID edge_id, double segment_start, double segment_end, char* veh_type) {
 	std::string veh_type_str(veh_type);
-	if (segment_start > segment_end) {
+	if (segment_start >= segment_end) {
 		printf("Segment start point should always be before the segment end point!\n");
 		return -1;
 	}
@@ -2005,7 +2013,7 @@ double lf_plugin_get_average_speed_on_segment_region_on_edge_for_type(NumericalI
 
 int lf_plugin_get_density_on_segment_region_on_edge_for_type(NumericalID edge_id, double segment_start, double segment_end, char* veh_type) {
 	std::string veh_type_str(veh_type);
-	if (segment_start > segment_end) {
+	if (segment_start >= segment_end) {
 		printf("Segment start point should always be before the segment end point!\n");
 		return -1;
 	}
@@ -2049,7 +2057,7 @@ int lf_plugin_get_density_on_segment_region_on_edge_for_type(NumericalID edge_id
 			}
 		}
 		//std::cout << "Success!\n";
-		return density;
+		return (density * 1000) / (segment_end - segment_start);
 	}
 	std::cout << "Edge with id " << edge_id << " not found!\n";
 	return -1;
@@ -2226,6 +2234,8 @@ void lf_plugin_apply_control_bicycle_model(NumericalID veh_id, double F, double 
 		std::cout << "Vehicle with id:" << lfveh->get_vehicle()->getID() << " is nod defined to operate with the bicycle model!\n";
 		return;
 	}
+	
+	
 	//std::cout << "Applied (F,delta)=("<< F<< "," << delta<<") for veh " << lfveh->get_vehicle()->getID() << "\n";
 	lfveh->apply_acceleration(F, delta);
 
@@ -2357,6 +2367,8 @@ LaneFreeSimulationPlugin::LaneFreeSimulationPlugin(){
 
 	srand(lf_plugin_get_seed());
 	max_vehicle_length = 0;
+	max_vehicle_width = 0;
+	max_vehicle_diag = 0;
 	
 	// Initialize all pointers, and set corresponding counters to zero, counters reflect the allocated memory blocks
 	
@@ -2512,10 +2524,11 @@ void vertices(double x, double y, double theta, double length, double width, dou
 
 	*yv = y - (width / 2) * cos(theta);
 	*(yv + 1) = y + (width / 2) * cos(theta);
-	*(yv + 2) = y + length * sin(theta) - (width / 2) * cos(theta);
-	*(yv + 3) = y + length * sin(theta) + (width / 2) * cos(theta);
+	*(yv + 2) = y + length * sin(theta) + (width / 2) * cos(theta);
+	*(yv + 3) = y + length * sin(theta) - (width / 2) * cos(theta);
 
 }
+
 
 
 // returns 1 if point (xj,yj) lies within the rectangular formed by vehicle in location (x,y) with orientation theta, and dimensions (length,width)
@@ -2529,7 +2542,7 @@ int if_inside(double x, double y, double theta, double xj, double yj, double len
 	double yj_transformed = y_t * cos(theta) - x_t * sin(theta);
 
 	if (xj_transformed >= 0 && xj_transformed <= length && yj_transformed >= -width / 2 && yj_transformed <= width / 2) {
-		// the point (xj,yj) lies within the rectangular area
+		// the point (xj,yj) lies within the rectangular area		
 		return 1;
 	}
 
@@ -2552,6 +2565,10 @@ int collision_check_with_orientation(double x1, double y1, double theta1, double
 	// examine whether a vertex of vehicle 2 lies within the rectangular of vehicle 1
 	for (i = 0; i < 4; i++) {
 		if (if_inside(x1, y1, theta1, xv[i], yv[i], length1, width1)) {
+			/*std::cout << "For veh at pos: ("<<x2 << "," << y2 << ")\n";
+			std::cout << "Four x points:" << xv[0] << "," << xv[1] << "," << xv[2] << "," << xv[3] << "\n";
+			std::cout << "Four y points:" << yv[0] << "," << yv[1] << "," << yv[2] << "," << yv[3] << "\n";
+			*/
 			return 1;
 		}
 	}
@@ -2560,6 +2577,10 @@ int collision_check_with_orientation(double x1, double y1, double theta1, double
 	// examine whether a vertex of vehicle 1 lies within the rectangular of vehicle 2
 	for (i = 0; i < 4; i++) {
 		if (if_inside(x2, y2, theta2, xv[i], yv[i], length2, width2)) {
+			/*std::cout << "For veh at pos: (" << x1 << "," << y1 << ")\n";
+			std::cout << "Four x points:" << xv[0] << "," << xv[1] << "," << xv[2] << "," << xv[3] << "\n";
+			std::cout << "Four y points:" << yv[0] << "," << yv[1] << "," << yv[2] << "," << yv[3] << "\n";
+			*/
 			return 1;
 		}
 	}
@@ -2583,9 +2604,9 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 	MSVehicle* veh2;
 	MSLaneFreeVehicle* lfv1;
 	MSLaneFreeVehicle* lfv2;
-	double xv1, yv1, lv1, wv1, theta1=0, xv2, yv2, lv2, wv2, theta2=0, half_vwidth, dx, dy,roadwidth;
-	
-	
+	double xv1, yv1, lv1, wv1, theta1=0, xv2, yv2, lv2, wv2, theta2=0, half_vwidth, dx, dy,roadwidth, roadlength;
+	double xv1_gl, yv1_gl, theta1_gl;
+	double distance_no_collide;
 	for (MSEdge* edge : edges_v) {
 		edge_id = edge->getNumericalID();
 
@@ -2602,8 +2623,10 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 		}
 		//*vehs_in_edge = edge->getVehicles(); //This can now be removed
 		roadwidth = edge->getWidth();
+		roadlength = edge->getLength();
 		std::sort(vehs_in_edge->begin(), vehs_in_edge->end(), less_than_key()); //sorting is essentially performed here only
 		n_v = vehs_in_edge->size();
+		double veh_diag{ 0 };
 		for(i=0;i<n_v;i++){ //one potential improvement here is to have a memory for all the info requested, because for each vehicle, same info is requested multiple times
 			veh1 = (MSVehicle*)(*vehs_in_edge)[i];
 			
@@ -2615,12 +2638,20 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 			// std::cout << "veh:" << veh1->getID() << " with length:" << lv1 << " and width:" << wv1 <<"\n";
 			
 			
+
 			if (veh1->getVehicleType().getParameter().cmdModel == SUMO_TAG_LF_CMD_BICYCLE) {
 				// this vehicle uses the bicycle model, meaning that we should consider the fact that it may have a non-zero orientation
 				theta1 = veh1->getAngleRelativeAlways();
 				// Code below is now deprecated, will be removed completely in future versions
 				//update_vehicle_dimensions(&lv1, &wv1, abs(veh1->getAngleRelativeAlways()));		
-				
+				veh_diag = sqrt(pow(lv1, 2) + pow(lv2, 2));
+
+				if (veh1->getGlobalCoordinatesControl()) {
+					theta1_gl = veh1->getAngleRelative();
+					const Position veh1glpos = veh1->getCachedGlobalPos();
+					xv1_gl = veh1glpos.x() - (lv1)*cos(theta1_gl);
+					yv1_gl = veh1glpos.y() - (lv1)*sin(theta1_gl);
+				}
 			}
 			// 
 			// 
@@ -2646,18 +2677,43 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 				lfv2 = find_vehicle_in_edge(veh2->getNumericalID(), edge_id);
 				xv2 = lfv2->get_position_x();
 				yv2 = lfv2->get_position_y();
+
+				// calculate dx with local coordinates, in order to check
+				dx = (xv2 - xv1);
 				///*
 				if (veh1->getVehicleType().getParameter().cmdModel == SUMO_TAG_LF_CMD_BICYCLE || veh2->getVehicleType().getParameter().cmdModel == SUMO_TAG_LF_CMD_BICYCLE) {
-					
+					// if vehicles utilize the global coordinate control, we need to use the global coordinates
+					int collision_true{ false };
+					if (veh1->getGlobalCoordinatesControl() && veh2->getGlobalCoordinatesControl()) {
+						
+						
+						theta2 = veh2->getAngleRelative();
+						const Position veh2glpos = veh2->getCachedGlobalPos();
+						xv2 = veh2glpos.x() - (lv2) * cos(theta2);
+						yv2 = veh2glpos.y() - (lv2) * sin(theta2);
+						
+						collision_true = collision_check_with_orientation(xv1_gl, yv1_gl, theta1_gl, lv1, wv1, xv2, yv2, theta2, lv2, wv2);
+						
+					}
+					else {
+						collision_true = collision_check_with_orientation(xv1, yv1, theta1, lv1, wv1, xv2, yv2, theta2, lv2, wv2);
+					}
 
-					int collision_true = collision_check_with_orientation(xv1, yv1, theta1, lv1, wv1, xv2, yv2, theta2, lv2, wv2);
 					if (collision_true) {
 						event_vehicles_collide(veh1->getNumericalID(), veh2->getNumericalID());
+						//std::cout << veh1->getID() << " at pos (" << xv1 << "," << yv1 << ") with angle " << theta1 << "and dimensions ("<< lv1<<","<<wv1 << ") ;" << veh2->getID() << " at pos (" << xv2 << "," << yv2 << ") with angle " << theta2 << "and dimensions (" << lv2 << "," << wv2 << ") \n";
 						MSNet::getInstance()->getVehicleControl().registerCollision();
-					}
-					// since vehicles are sorted based on x pos, we stop searching downstream vehicles for collisions when the dx distance exceeds the one corresponding to a vehicle with the maximum length within the network, accounting for the orientation as well
-					
+						lfv1->just_collided_with(veh2->getNumericalID());
+						if (!(lfv1->has_collided_with(veh2->getNumericalID()) || lfv2->has_collided_with(veh1->getNumericalID()))) {
+							MSNet::getInstance()->getVehicleControl().registerCollisionNoConsecutives();
+						}
 
+					}
+					
+					// since vehicles are sorted based on x pos, we stop searching downstream vehicles for collisions when the dx distance exceeds the one corresponding to a vehicle with the maximum length within the network, accounting for the orientation as well					
+					if ( dx > (veh_diag + max_vehicle_diag) / 2) {
+						break;
+					}
 					//skip the standard condition for collision check
 					continue;
 				}
@@ -2670,13 +2726,28 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 					//std::cout << "\n";
 					event_vehicles_collide(veh1->getNumericalID(), veh2->getNumericalID());
 					MSNet::getInstance()->getVehicleControl().registerCollision();
+
+					lfv1->just_collided_with(veh2->getNumericalID());
+					if (!(lfv1->has_collided_with(veh2->getNumericalID()) || lfv2->has_collided_with(veh1->getNumericalID()))) {
+						MSNet::getInstance()->getVehicleControl().registerCollisionNoConsecutives();
+					}
 				}
 				theta2 = 0;
 				if(dx>(lv1+max_vehicle_length)/2){ // since vehicles are sorted based on x pos, we stop searching downstream vehicles for collisions when the dx distance exceeds the one corresponding to a vehicle with the maximum length within the network TODO: orientiation should be taken into account for the bicycle model
 					break;
 				}
 			}
+			lfv1->empty_collided_set();
+
 			theta1 = 0;
+
+			
+
+			/*if ((roadlength - xv1) < distance_no_collide) {
+				TODO add info from next segment,
+			
+			}*/
+
 			
 		}		
 		
@@ -2738,8 +2809,19 @@ LaneFreeSimulationPlugin::insert_vehicle(MSVehicle* veh){
 	NumericalID veh_nid = veh->getNumericalID();
 	vm->insert(std::make_pair(veh_nid,new_veh));
 	double lv = veh->getVehicleType().getLength();
-	if(lv>max_vehicle_length){
+	bool updated_max_dim{ false };
+	if(lv > max_vehicle_length){
 		max_vehicle_length = lv;
+		updated_max_dim = true;
+	}
+	double wv = veh->getVehicleType().getWidth();
+	if (wv > max_vehicle_width) {
+		max_vehicle_width = wv;
+		updated_max_dim = true;
+	}
+
+	if (updated_max_dim) {
+		max_vehicle_diag = sqrt(pow(max_vehicle_length, 2) + pow(max_vehicle_width, 2));
 	}
 
 	InsertedAdditionalInitStatus::iterator it_l = insertedAdditionalInitStatus.find(veh_nid);
@@ -2973,7 +3055,9 @@ LaneFreeSimulationPlugin::remove_vehicle(MSVehicle* veh){
 	if (vm->find(veh_id) == vm->end()) {
 		return;
 	}
-	event_vehicle_exit(veh_id);
+	//std::cout << "Veh " << veh->getID()<< " has arrived:" << veh->hasArrived() << "\n";
+	
+	event_vehicle_exit(veh_id, (int) veh->hasArrived());
 	MSLaneFreeVehicle* ch_veh = (*vm)[veh_id];
 	delete ch_veh;
 	vm->erase(veh_id);
