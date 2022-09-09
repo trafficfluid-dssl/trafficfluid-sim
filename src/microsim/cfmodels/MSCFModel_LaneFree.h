@@ -544,6 +544,7 @@ public:
     /** @brief Returns whether the network was already constructed
     * @return whether the network was already constructed
     */
+    void finalize_event();
 
     static LaneFreeSimulationPlugin* getInstance();
 

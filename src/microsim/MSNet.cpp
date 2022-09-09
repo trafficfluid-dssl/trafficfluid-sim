@@ -279,8 +279,9 @@ MSNet::closeBuilding(const OptionsCont& oc, MSEdgeControl* edges, MSJunctionCont
 
 
 MSNet::~MSNet() {
+
     // LFPlugin Begin
-    delete LaneFreeSimulationPlugin::getInstance();
+    LaneFreeSimulationPlugin::getInstance()->finalize_event();
     // LFPlugin End
 
     cleanupStatic();
@@ -330,6 +331,10 @@ MSNet::~MSNet() {
         delete MSGlobals::gMesoNet;
     }
     myInstance = nullptr;
+
+    // LFPlugin Begin
+    delete LaneFreeSimulationPlugin::getInstance();
+    // LFPlugin End
     
 }
 

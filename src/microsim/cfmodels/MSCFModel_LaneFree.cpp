@@ -2402,8 +2402,13 @@ void free_mem(void* ptr) {
 	}
 }
 
-LaneFreeSimulationPlugin::~LaneFreeSimulationPlugin() {
+void
+LaneFreeSimulationPlugin::finalize_event() {
 	simulation_finalize();
+}
+
+LaneFreeSimulationPlugin::~LaneFreeSimulationPlugin() {
+	
 	free_hashmap();
 	
 	free_mem(all_ids.ptr);
