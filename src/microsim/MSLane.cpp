@@ -723,7 +723,7 @@ void update_available_space(std::vector<std::pair<double, double>>* available_la
             i++;
         }
         else {
-            printf("error, we not handle this case, avail region:[%f,%f], restriction:[%f,%f]\n", a_low, a_high, b_low, b_high);
+            printf("error, we do not handle this case, avail region:[%f,%f], restriction:[%f,%f]\n", a_low, a_high, b_low, b_high);
         }
         
     }
