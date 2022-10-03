@@ -414,13 +414,14 @@ protected:
 
 
             deltaPos_y_back = v_cur * sin(theta_cur) * TS + F * sin(theta_cur) * pow(TS, 2);
+        
         }
         else {
-            deltaPos_x_back = (sigma / tan_delta) * (sin(theta_next) - sin(theta_cur));
+            deltaPos_x_back = (sigma) * (sin(theta_next)/tan_delta - sin(theta_cur)/tan_delta);
             
 
-            deltaPos_y_back = (sigma / tan_delta) * (cos(theta_cur) - cos(theta_next));
-            
+            deltaPos_y_back = (sigma) * (cos(theta_cur)/tan_delta - cos(theta_next)/tan_delta);
+        
         }
 
         // vehicles are not allowed to move backwards        
@@ -647,9 +648,12 @@ public:
     double get_last_step_app_exec_time() {
         return rest_app_timer_seconds;
     }
-
+    void get_all_neighbors_internal(MSLaneFreeVehicle* lfveh, const  MSEdge* current_edge, SortedVehiclesVector* current_edge_sorted_vehs, size_t veh_index, double distance, bool front, int cross_edge, std::vector<std::pair<double, MSVehicle*>>& neighbors_with_distance);
 protected:
     NumericalID find_stored_edge(MSVehicle* veh);
+    void get_vehicles_from_other_direction_edges(NumericalID veh_id, double global_pox_x, double global_pos_y, double global_theta, bool front, const std::vector<MSLane*>& internal_lanes, NumericalID current_edge_id, std::vector<std::pair<double, MSVehicle*>>& neighbors_with_distance);
+    
+    void transform_neighbor_vehicle_distance_and_add_to_neighbors(MSVehicle* veh_ptr, double global_pos_x, double global_pos_y, double cos_theta, double sin_theta, bool front, std::vector<std::pair<double, MSVehicle*>>& neighbors_with_distance);
     void free_hashmap();
     /// @brief Unique instance of LaneFreeSimulationPlugin
     static LaneFreeSimulationPlugin* myInstance;
