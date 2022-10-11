@@ -1195,7 +1195,7 @@ void lf_plugin_apply_acceleration(NumericalID veh_id, double accel_x, double acc
 		return;
 	}
 	//std::cout << "Acceleration:" << accel_x << "," << accel_y << " for veh:" << lfveh->get_vehicle()->getID() << "\n";
-	accel_x = 0;
+	//accel_x = 0;
 	lfveh->apply_acceleration(accel_x, accel_y);
 
 }
