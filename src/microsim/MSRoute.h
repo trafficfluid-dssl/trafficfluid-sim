@@ -130,12 +130,21 @@ public:
     void setLeftBoundary(std::string& leftBoundaryLevelPointsString, std::string& leftBoundarySlopesString, std::string& leftBoundaryOffsetsString);
 
     void setRightBoundary(std::string& rightBoundaryLevelPointsString, std::string& rightBoundarySlopesString, std::string& rightBoundaryOffsetsString);
-
+    
 
     const std::vector<double>& getLeftBoundaryLevelPoints() const {
         
         return leftBoundaryLevelPoints;
     }
+
+    const std::vector<double>& getLeftBoundaryLevelPointsWithEpsilon() const {
+
+        return leftBoundaryLevelPointsEpsilonCoefficients;
+    }
+
+
+    // returns the left boundary offsets, according to the epsilon values selected, results will be appended in the input argument
+    void updateLeftBoundaryLevelPointsEpsilonCoefficients(std::vector<double>& leftBoundaryEpsilons);
 
     const std::vector<double>& getLeftBoundarySlopes() const {
         return leftBoundarySlopes;
@@ -328,11 +337,15 @@ private:
     std::vector<double> leftBoundaryLevelPoints;
     std::vector<double> leftBoundarySlopes;
     std::vector<double> leftBoundaryOffsets;
+    
 
     bool hasRightBoundary;
     std::vector<double> rightBoundaryLevelPoints;
     std::vector<double> rightBoundarySlopes;
     std::vector<double> rightBoundaryOffsets;
+    
+    double rightBoundaryConstantLevelPoint; // this is useful for the use of epsilon
+    std::vector<double> leftBoundaryLevelPointsEpsilonCoefficients;
 
     // LFPlugin End
 

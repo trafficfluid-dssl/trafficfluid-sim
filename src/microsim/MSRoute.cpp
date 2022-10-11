@@ -130,7 +130,9 @@ MSRoute::setLeftBoundary(std::string& leftBoundaryLevelPointsString, std::string
 
         element_value = StringUtils::toDouble(lbpointsStringVector.at(i));
         leftBoundaryLevelPoints.push_back(element_value);
-        //std::cout << "left boundary point:" << leftBoundaryLevelPoints.at(i)<<"\n";
+        // initialize leftBoundaryLevelPointsEpsilonCoefficients with epsilon=1, i.e., the same values with leftBoundaryLevelPoints
+        leftBoundaryLevelPointsEpsilonCoefficients.push_back(element_value);
+        
         if (i == points_size - 1) {
             continue; // or break; It is the last iteration so they are equivalent
         }
@@ -144,8 +146,20 @@ MSRoute::setLeftBoundary(std::string& leftBoundaryLevelPointsString, std::string
         
     }
     
+    
 }
 
+void
+MSRoute::updateLeftBoundaryLevelPointsEpsilonCoefficients(std::vector<double>& leftBoundaryEpsilons){
+    
+    double boundaries_width;
+    
+    for (int i = 0; i < leftBoundaryLevelPoints.size(); i++) {
+        boundaries_width = leftBoundaryLevelPoints.at(i) - rightBoundaryConstantLevelPoint;
+        leftBoundaryLevelPointsEpsilonCoefficients.at(i) = rightBoundaryConstantLevelPoint + boundaries_width * leftBoundaryEpsilons.at(i);
+    }
+
+}
 
 void 
 MSRoute::setRightBoundary(std::string& rightBoundaryLevelPointsString, std::string& rightBoundarySlopesString, std::string& rightBoundaryOffsetsString) {
@@ -183,14 +197,19 @@ MSRoute::setRightBoundary(std::string& rightBoundaryLevelPointsString, std::stri
     }
 
     // convert the string elements to double
-    double element_value;
+    double element_value, min_element{ 0 }, max_element{ 0 };
 
     int points_size = rbpointsStringVector.size();
     for (int i = 0; i < points_size; i++) {
 
         element_value = StringUtils::toDouble(rbpointsStringVector.at(i));
         rightBoundaryLevelPoints.push_back(element_value);
-
+        if (element_value > max_element || i == 0) {
+            max_element = element_value;
+        }
+        if (element_value < min_element || i == 0) {
+            min_element = element_value;
+        }
         if (i == points_size - 1) {
             continue; // or break; It is the last iteration so they are equivalent
         }
@@ -202,6 +221,36 @@ MSRoute::setRightBoundary(std::string& rightBoundaryLevelPointsString, std::stri
         rightBoundaryOffsets.push_back(element_value);
 
     }
+
+
+    // initialize the right Boundary level that is taken for the internal boundary control through the epsilon values
+    // Considering it is used for scenarios with on-ramps and off-ramps. It makes sense to pick the level point associated with the main highway
+    // This will be either the max or min level point depending on the direction
+    // We can get direction through the first lane
+    if (myEdges.size() == 0) {
+        std::cout << "Error initializing the right boundary constant value for internal boundary control. Empty path!\n";
+        return;
+    }
+
+    // we choose the path direction according to the first lane on the path
+    const std::vector<MSLane*> myLanes = myEdges.at(0)->getLanes();
+    if (myLanes.size() == 0) {
+        std::cout << "Error initializing the right boundary constant value for internal boundary control. Empty lane set for first edge!\n";
+        return;
+    }
+    MSLane* myFirstLane{ myLanes.at(0) };
+    double pathAngle = myFirstLane->getShape().angleAt2D(0);
+
+    if (cos(pathAngle) > 0) {
+        rightBoundaryConstantLevelPoint = max_element;
+    }
+    else {
+        rightBoundaryConstantLevelPoint = min_element;
+    }
+    if (cos(pathAngle) != 1 && cos(pathAngle) != -1) {
+        std::cout << "Warning! Constant right boundary value for internal control was set for left or right direction, but the path's angle is: "<< pathAngle << " rad \n";
+    }
+
 }
 // LFPlugin End
 
