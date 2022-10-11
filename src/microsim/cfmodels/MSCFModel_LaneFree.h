@@ -192,9 +192,13 @@ public:
         double pos_x = myveh->getPositionOnLane() - (myveh->getLength() / 2)* cos_angle;
 
         //avoid negative positions when circular movement
-        if (pos_x < 0 && is_circular()) {
-            return myveh->getEdge()->getLength() + pos_x;
+        /*
+        if (is_circular() && pos_x < 0) { // This creates issues when checking the order of vehicles
+            return myveh->getLane()->getEdge().getLength() + pos_x;
         }
+
+        */
+
         return pos_x;
     }
 
@@ -274,7 +278,9 @@ protected:
         //std::cout<<"veh "<< myveh->getID() << " in lane:"<<myveh->getLane()->getID()<<"\n";
         if ((abs(new_pos_y) > ((myveh->getLane()->getWidth()) / 2))) {
             MSLane* veh_lane = myveh->getLane();
-            const MSEdge* veh_edge = myveh->getEdge();
+
+            // use myveh->getLane()->getEdge() instead of myveh->getEdge(), since the latter does not incorporate internal edges (when vehicle is on junctions)
+            const MSEdge* veh_edge = &myveh->getLane()->getEdge();
             MSLane* new_lane = nullptr;
             int direction = 0;
             if (new_pos_y > 0) {
@@ -297,8 +303,7 @@ protected:
                 myveh->getInfluencer().setLaneTimeLine(laneTimeLine);
 
 
-                new_pos_y = new_pos_y - direction * (veh_lane->getWidth() + new_lane->getWidth()) / 2;
-                //std::cout<<"change lane for "<< myveh->getID()<<" from "<< myveh->getLaneIndex()<<" to "<<laneIndex <<"\n";
+                new_pos_y = new_pos_y - direction * (veh_lane->getWidth() + new_lane->getWidth()) / 2;                
             }
 
         }
@@ -648,6 +653,7 @@ public:
     double get_last_step_app_exec_time() {
         return rest_app_timer_seconds;
     }
+    void get_all_neighbors_ring_road_internal(MSLaneFreeVehicle* lfveh, const MSEdge* current_edge, SortedVehiclesVector* current_edge_sorted_vehs, size_t veh_index, double distance, bool front, int cross_edge, std::vector<std::pair<double, MSVehicle*>>& neighbors_with_distance);
     void get_all_neighbors_internal(MSLaneFreeVehicle* lfveh, const  MSEdge* current_edge, SortedVehiclesVector* current_edge_sorted_vehs, size_t veh_index, double distance, bool front, int cross_edge, std::vector<std::pair<double, MSVehicle*>>& neighbors_with_distance);
 protected:
     NumericalID find_stored_edge(MSVehicle* veh);

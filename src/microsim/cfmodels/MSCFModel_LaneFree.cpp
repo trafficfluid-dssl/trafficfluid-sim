@@ -588,8 +588,9 @@ NumericalID* lf_plugin_get_all_neighbor_ids_front(NumericalID veh_id, double fro
 		*neighbors_size = 0;
 		return NULL;
 	}
-
-	size_t found = binary_search_find_index(sorted_vehs, 0, (int)(size_edge-1), veh_id, x_vid);
+	
+	
+	size_t found = binary_search_find_index(sorted_vehs, 0, (int)(size_edge-1), veh_id, x_vid); // TODO CHECK THIS FOR RING_ROAD SCENARIO
 	
 	if (found == -1) {
 		
@@ -598,7 +599,15 @@ NumericalID* lf_plugin_get_all_neighbor_ids_front(NumericalID veh_id, double fro
 		return NULL;
 	}
 	std::vector<std::pair<double, MSVehicle*>> neighbors_with_distance;
-	LaneFreeSimulationPlugin::getInstance()->get_all_neighbors_internal(lfveh, veh_edges.at(my_edge_index), sorted_vehs, found, front_distance, true, cross_edge, neighbors_with_distance);
+
+	// if vehicle is emulating ring road behavior on a single edge, we need to provide the neighbors in a different manner
+	if (lfveh->is_circular()) {
+		LaneFreeSimulationPlugin::getInstance()->get_all_neighbors_ring_road_internal(lfveh, veh_edges.at(my_edge_index), sorted_vehs, found, front_distance, true, cross_edge, neighbors_with_distance);
+	}
+	else {
+		LaneFreeSimulationPlugin::getInstance()->get_all_neighbors_internal(lfveh, veh_edges.at(my_edge_index), sorted_vehs, found, front_distance, true, cross_edge, neighbors_with_distance);
+	}
+	
 
 
 	
@@ -707,9 +716,14 @@ NumericalID* lf_plugin_get_all_neighbor_ids_back(NumericalID veh_id, double back
 		return NULL;
 	}
 	std::vector<std::pair<double, MSVehicle*>> neighbors_with_distance;
-	LaneFreeSimulationPlugin::getInstance()->get_all_neighbors_internal(lfveh, veh_edges.at(my_edge_index), sorted_vehs, found, back_distance, false, cross_edge, neighbors_with_distance);
 
-
+	if (lfveh->is_circular()) {
+		LaneFreeSimulationPlugin::getInstance()->get_all_neighbors_ring_road_internal(lfveh, veh_edges.at(my_edge_index), sorted_vehs, found, back_distance, false, cross_edge, neighbors_with_distance);
+	}
+	else {
+		LaneFreeSimulationPlugin::getInstance()->get_all_neighbors_internal(lfveh, veh_edges.at(my_edge_index), sorted_vehs, found, back_distance, false, cross_edge, neighbors_with_distance);
+	}
+	
 
 
 	// update the allocated memory if needed
@@ -832,112 +846,7 @@ double lf_plugin_get_relative_distance_x(NumericalID ego_id, NumericalID other_i
 			std::cout << "Error! edge indices should not be the same";
 			return -1;
 		}
-		/*
-		const ConstMSEdgeVector veh_edges = veh_route.getEdges();
-		double x_vid = ego_lfveh->get_position_x();
 		
-
-		ConstMSEdgeVector all_veh_edges; //contains also the internal edges
-		NumericalID edge_id = ego_edge_id;
-		
-		size_t route_edge_index = 0;//-1;
-		const MSEdge* tmp_edge = veh_edges.at(0);
-		const MSEdge* tmp_edge_next;
-		const MSEdge* tmp_internal_edge;
-
-		
-
-		
-		
-		//std::cout << "Route of " << lfveh->get_vehicle()->getID()<<", with current edge:"<< lfveh->get_vehicle()->getLane()->getEdge().getID() <<", reg:"<< lfveh->get_vehicle()->getEdge()->getID()<<", and position:"<< lfveh->get_position_x() <<" :";
-		for (size_t i = 0; i < veh_edges.size() - 1; i++) {//calculate the distance inside here, or maybe try the function provided, which may give directly the answer getDistanceBetween
-			tmp_edge_next = veh_edges.at(i + 1);
-			tmp_internal_edge = tmp_edge->getInternalFollowingEdge(tmp_edge_next);
-
-			if (found_edge) {
-				all_veh_edges.push_back(tmp_edge);
-				all_veh_edges.push_back(tmp_internal_edge);
-				//std::cout << " "<<tmp_edge->getID()<<" "<<tmp_internal_edge->getID();
-			}
-			else if (tmp_edge->getNumericalID() == edge_id) {
-				found_edge = true;
-				all_veh_edges.push_back(tmp_edge);
-				all_veh_edges.push_back(tmp_internal_edge);
-			}
-			else if (tmp_internal_edge->getNumericalID() == edge_id) {
-				found_edge = true;
-				all_veh_edges.push_back(tmp_internal_edge);
-			}
-
-			if (tmp_edge->getNumericalID() == other_edge_id || tmp_internal_edge->getNumericalID() == edge_id) {
-				found_other = true;
-			}
-			tmp_edge = tmp_edge_next;
-		}
-
-		if (tmp_edge->getNumericalID() == other_edge_id) {
-			found_other = true;
-		}
-
-		if (!found_other) {
-			std::cout << "Edge of other vehicle not found!\n";
-		}
-		all_veh_edges.push_back(tmp_edge);
-		//std::cout << " " << tmp_edge->getID() << " ";
-		//std::cout << "\n";
-		if (!found_edge) {
-			//this is an error only if the vehicle is not in the last edge already
-			if (tmp_edge->getNumericalID() != edge_id) {
-				std::cout << "Edge not found in route for vehicle " << ego_lfveh->get_vehicle()->getID() << "!\n";
-			}
-
-		}
-		
-		size_t route_ego_edge_index = -1, route_other_edge_index = -1;
-		double total_length = 0;
-		double edge_length = lf_plugin_get_edge_length(ego_edge_id);
-		NumericalID current_edge_id;
-		bool found_ego_edge = false;
-		for (size_t i = 0; i < veh_edges.size(); i++) {
-			current_edge_id = veh_edges[i]->getNumericalID();
-			if (current_edge_id == ego_edge_id) {
-				route_ego_edge_index = i;
-				found_ego_edge = true;
-			}
-
-			if (veh_edges[i]->getNumericalID() == route_other_edge_index) {
-				route_other_edge_index = i;
-				break;
-			}
-			
-			if (found_ego_edge) {
-				total_length = total_length + lf_plugin_get_edge_length(current_edge_id);
-			}
-			
-
-			
-		}
-
-		if (route_other_edge_index < route_ego_edge_index) {
-			std::cout<< "Vehicles are not on the same edge! Vehicles upstream of ego are not currently supported!\n";
-			return -1;
-		}
-		if (route_other_edge_index == -1) {
-			//std::cout << "Other vehicle not in the route of ego!\n";
-			return -1;
-		}
-
-		
-
-
-		double x_vid = ego_lfveh->get_position_x();
-
-		double other_x_vid = other_lfveh->get_position_x();
-		double x_relative = x_vid - total_length;
-
-
-		
-		return other_x_vid - x_relative;*/
 
 
 	}
@@ -1086,7 +995,22 @@ void boundary_value(double mid_height, std::vector<double>& lim, std::vector<dou
 	*boundary_speed = boundary_speed_tmp;
 }
 
+void lf_plugin_set_epsilon_left_boundary(char* route_name, double* epsilon_array, size_t epsilon_array_size) {
 
+	std::string route_str{ route_name };
+
+	// The dictionary function returns a const pointer to myRoute, but we cannot work with a const route object. We use casting to remove const, and consider finding a better alternative here in the future
+	MSRoute* myRoute = (MSRoute*)MSRoute::dictionary(route_str);
+
+	if (myRoute == nullptr) {
+		std::cout << "Error! Route with name:" << route_str << " not found!\n";
+		return;
+	}
+
+	std::vector<double> epsilons(epsilon_array, epsilon_array + epsilon_array_size);
+	myRoute->updateLeftBoundaryLevelPointsEpsilonCoefficients(epsilons);
+
+}
 
 
 // calculates the lateral distance from left and right road boundaries for veh_id, at longitudinal_distance_x (vehicle can also observe upstream with negative values) and lateral_distance_y
@@ -1108,16 +1032,34 @@ void lf_plugin_get_distance_to_road_boundaries_at(NumericalID veh_id, double lon
 	}
 	const MSVehicle* myveh = lfveh->get_vehicle();
 	const MSRoute veh_route = myveh->getRoute();
+	double sign_coeff{ cos(myveh->getAngle()) > 0 ? 1.0 : -1.0 }; // if vehicle is on the opposite side, distances should be multiplied by -1
+	std::vector<double> leftBoundarySlopes = veh_route.getLeftBoundarySlopes();
+
+	std::vector<double> leftBoundaryOffsets = veh_route.getLeftBoundaryOffsets();
+
+	// Comment code
+	/*size_t epsilon_array_size = leftBoundaryOffsets.size() + 1;
+	double* epsilon_array = (double*) malloc(sizeof(double)* epsilon_array_size);
+	assert(epsilon_array != NULL);
+	if (epsilon_array == NULL) {
+		std::cout << "Error on malloc operation!\n";
+		return;
+	}
+	for (size_t i = 0; i < epsilon_array_size; i++) {
+		*(epsilon_array+i) = (sign_coeff==1.0)*1.5+(sign_coeff==-1)*0.5;
+	}
+
+	lf_plugin_set_epsilon_left_boundary((char*)veh_route.getID().c_str(), epsilon_array, epsilon_array_size);*/
+
+	std::vector<double> leftBoundaryLevelPoints = veh_route.getLeftBoundaryLevelPointsWithEpsilon();
 	
-	std::vector<double> leftBoundaryLevelPoints = veh_route.getLeftBoundaryLevelPoints();
+	//veh_route.getLeftBoundaryLevelPointsEpsilonCoefficients(leftBoundaryLevelPoints);
+
 	if (leftBoundaryLevelPoints.size() == 0) {
 		std::cout << "ERROR: left boundary parameters not provided!\n";
 		return;
 	}
-
-	std::vector<double> leftBoundarySlopes = veh_route.getLeftBoundarySlopes();
-
-	std::vector<double> leftBoundaryOffsets = veh_route.getLeftBoundaryOffsets();
+	
 
 	double global_pos_x = myveh->getPosition().x() - (myveh->getLength() / 2) * cos(myveh->getAngleRelative());
 	double global_pos_y = myveh->getPosition().y() - (myveh->getLength() / 2) * sin(myveh->getAngleRelative());
@@ -1130,7 +1072,7 @@ void lf_plugin_get_distance_to_road_boundaries_at(NumericalID veh_id, double lon
 
 	//std::cout << "Current veh "<<myveh->getID()<<" at pos:(" << global_pos_x << "," << global_pos_y << ") with boundary at long pos " << global_pos_x + longitudinal_distance_x << " is :" << left_boundary << ". Result on lateral distance is :"<< left_boundary - global_pos_y<<"\n";
 	
-	double sign_coeff{ cos(myveh->getAngle()) > 0 ? 1.0 : -1.0 }; // if vehicle is on the opposite side, distances should be multiplied by -1
+	
 	
 	*left_boundary_distance = sign_coeff * (left_boundary_y - (global_pos_y + lateral_distance_y) );
 
@@ -1154,6 +1096,7 @@ void lf_plugin_get_distance_to_road_boundaries_at(NumericalID veh_id, double lon
 	else {
 		veh_speed = lfveh->get_speed_x();
 	}
+	
 
 	boundary_value(mid_height, rightBoundaryLevelPoints, rightBoundarySlopes, rightBoundaryOffsets, global_pos_x + longitudinal_distance_x, veh_speed, &right_boundary_y, right_boundary_speed);
 
@@ -1225,6 +1168,7 @@ void lf_plugin_set_desired_speed(NumericalID veh_id, double new_d_speed){
 	lfveh->set_desired_speed(new_d_speed);
 
 }
+
 // get the desired speed of a given vehicle
 double lf_plugin_get_desired_speed(NumericalID veh_id){
 	MSLaneFreeVehicle* lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(veh_id);
@@ -1234,7 +1178,6 @@ double lf_plugin_get_desired_speed(NumericalID veh_id){
 	}
 
 	return lfveh->get_desired_speed();
-	
 }
 
 
@@ -1251,7 +1194,8 @@ void lf_plugin_apply_acceleration(NumericalID veh_id, double accel_x, double acc
 		std::cout << "Error! Function call apply_acceleration(veh_id, accel_x, accel_y) is not appropriate for Vehicle with id:" << lfveh->get_vehicle()->getID() << " since it adheres to the bicycle model!\n";
 		return;
 	}
-
+	//std::cout << "Acceleration:" << accel_x << "," << accel_y << " for veh:" << lfveh->get_vehicle()->getID() << "\n";
+	accel_x = 0;
 	lfveh->apply_acceleration(accel_x, accel_y);
 
 }
@@ -2387,6 +2331,56 @@ int collision_check_with_orientation(double x1, double y1, double theta1, double
 	return 0;
 }
 
+void
+// this internal function is used only for the ring road case, and provides information on vehicles upstream or downstream, considering the emulated ring road behavior (vehicles re-entering)
+LaneFreeSimulationPlugin::get_all_neighbors_ring_road_internal(MSLaneFreeVehicle* lfveh, const MSEdge* current_edge, SortedVehiclesVector* current_edge_sorted_vehs, size_t veh_index, double distance, bool front, int cross_edge, std::vector<std::pair<double, MSVehicle*>>& neighbors_with_distance) {
+
+
+	// local position of vehicle
+	double x_vid = lfveh->get_position_x();
+
+	int j = (int)veh_index + front*1 - (!front)*1;
+	double x_other;
+	int vehs_size = (int)current_edge_sorted_vehs->size();
+	double road_length = current_edge->getLength() ;
+	
+	double cur_distance, abs_distance;
+	// do a for loop that automatically continues iterating when reaching the end of the vector
+	// break condition is either the desired distance is reached, or the half of the road's length. We also break if we reach the ego's index	
+	for (;; j = j + front * 1 - (!front) * 1) {
+		if (j < 0) {
+			j = vehs_size - 1;
+		}
+		if (j > vehs_size - 1) {
+			j = 0;
+		}
+		
+		if (j == (int)veh_index) {
+			// full iteration, reached again ego
+			break;
+		}
+		x_other = get_position_x(current_edge_sorted_vehs->at(j)->getNumericalID());
+		cur_distance = x_other - x_vid;
+		abs_distance = fabs(cur_distance);
+
+		if (abs_distance > 0.5 * road_length) {
+			cur_distance = (cur_distance >= 0) ? (cur_distance - road_length) : (cur_distance + road_length);
+			abs_distance = fabs(cur_distance);
+		}	
+			
+
+		// if we exceed the desired distance, or half of the road's length
+		if ((abs_distance > distance) || (front && cur_distance < 0) || ((!front) && cur_distance > 0)) {
+			
+			break;
+		}
+
+		neighbors_with_distance.push_back(std::make_pair(abs_distance, (MSVehicle*)current_edge_sorted_vehs->at(j)));
+
+	}
+
+}
+
 void 
 LaneFreeSimulationPlugin::get_all_neighbors_internal(MSLaneFreeVehicle* lfveh, const MSEdge* current_edge, SortedVehiclesVector* current_edge_sorted_vehs, size_t veh_index, double distance, bool front, int cross_edge, std::vector<std::pair<double, MSVehicle*>>& neighbors_with_distance) {
 
@@ -3034,6 +3028,7 @@ LaneFreeSimulationPlugin::change_edge(MSVehicle* veh){
 	NumericalID new_edge_id = veh->getLane()->getEdge().getNumericalID();
 	NumericalID old_edge_id = find_stored_edge(veh);
 	//std::cout << "old edge " << old_edge_id << " new edge " << new_edge_id << " with name:"<< veh->getLane()->getEdge().getID() <<"\n";
+	//std::cout << " new lane " << veh->getLane()->getID() << "\n";
 	if(old_edge_id==new_edge_id){
 		return;
 	}
