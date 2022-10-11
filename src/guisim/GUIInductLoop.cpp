@@ -129,7 +129,14 @@ GUIInductLoop::MyWrapper::drawGL(const GUIVisualizationSettings& s) const {
     glLineWidth(1.0);
     const double exaggeration = s.addSize.getExaggeration(s, this);
     // shape
-    glColor3d(1, 1, 0);
+    
+    // LFPlugin Begin
+    // turn detector to black color, with white borders
+    glColor3d(0, 0, 0);
+    //instead of yellow (original code below)
+    // glColor3d(1, 1, 0);
+    // LFPlugin End
+
     glPushMatrix();
     glTranslated(0, 0, getType());
     glTranslated(myFGPosition.x(), myFGPosition.y(), 0);
@@ -145,10 +152,9 @@ GUIInductLoop::MyWrapper::drawGL(const GUIVisualizationSettings& s) const {
     glBegin(GL_LINES);
     glVertex2d(0, 2 - .1);
     glVertex2d(0, -2 + .1);
-    glEnd();
-
+    glEnd();    
     if (mySpecialColor == nullptr) {
-        glColor3d(1, 1, 1);
+        glColor3d(1, 1, 1);        
     } else {
         GLHelper::setColor(*mySpecialColor);
     }
