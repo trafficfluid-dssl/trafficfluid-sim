@@ -2473,11 +2473,12 @@ LaneFreeSimulationPlugin::get_all_neighbors_internal(MSLaneFreeVehicle* lfveh, c
 			// reset manually the longitudinal position for the next edge
 			my_pos = my_pos - front_back * edge_length;
 			
-			if (lfveh->get_vehicle()->getGlobalCoordinatesControl()) {
+			if (lfveh->get_vehicle()->getGlobalCoordinatesControl() && veh_edges[my_edge_index]->isInternal()) {
 				// check whether there are other internal lanes in the current edge based on the observed vehicles
 				internal_lanes = veh_edges[my_edge_index]->getFromJunction()->getInternalLanes();
 
 				if (internal_lanes.size() > 1) { // there are other augmented edges with different directions in the same junction that contain vehicles
+					
 					get_vehicles_from_other_direction_edges(lfveh->get_vehicle()->getNumericalID(), global_pos_x, global_pos_y, global_theta, front, internal_lanes, edge_id, neighbors_with_distance);
 				}
 				
@@ -2529,7 +2530,7 @@ LaneFreeSimulationPlugin::get_all_neighbors_internal(MSLaneFreeVehicle* lfveh, c
 
 		if (lfveh->get_vehicle()->getGlobalCoordinatesControl()) {
 			// use global coordinates to determine the distance, and check other edges
-
+			
 			transform_neighbor_vehicle_distance_and_add_to_neighbors((MSVehicle*)neighbor_veh, global_pos_x, global_pos_y, cos_theta, sin_theta, front, neighbors_with_distance);
 		}
 		else {
@@ -2583,6 +2584,7 @@ LaneFreeSimulationPlugin::transform_neighbor_vehicle_distance_and_add_to_neighbo
 	if (front) {
 		// vehicle is in front if dx>0. In case they are side by side (dx==0), we consider it in front when it is further on the left (dy>0)
 		if (dx_neigh_transform > 0 || (dx_neigh_transform == 0 && (global_dy_neigh * cos_theta - global_dx_neigh * sin_theta) >= 0)) {
+			
 			neighbors_with_distance.push_back(std::make_pair(dx_neigh_transform, veh_ptr));
 		}
 	}
@@ -2607,16 +2609,18 @@ LaneFreeSimulationPlugin::get_vehicles_from_other_direction_edges(NumericalID ve
 
 	double sin_theta{ sin(global_theta) }, cos_theta{ cos(global_theta) };
 	
-
+	int i = -1;
 	for (MSLane* lane_ptr : internal_lanes) {
 		edge_ptr = &(lane_ptr->getEdge());
 
 		edge_id = edge_ptr->getNumericalID();
-		
+		i++;
 		// skip the existing edge of our vehicle ved_id, as this is handled normally
 		if (edge_id == current_edge_id) {
+						
 			continue;
 		}
+		
 
 		vehs_in_edge = get_sorted_vehicles_in_edge(edge_id);
 		
@@ -2624,6 +2628,7 @@ LaneFreeSimulationPlugin::get_vehicles_from_other_direction_edges(NumericalID ve
 			continue;
 		}
 		// first, simply add all vehicles. Then, we can check through the angle the front/back
+		
 		
 		for (const SUMOVehicle* sumo_veh_ptr : *vehs_in_edge) {
 
@@ -2634,6 +2639,7 @@ LaneFreeSimulationPlugin::get_vehicles_from_other_direction_edges(NumericalID ve
 				continue;
 			}
 			// call function with Mehdi's transformation
+			
 			transform_neighbor_vehicle_distance_and_add_to_neighbors(veh_ptr, global_pos_x, global_pos_y, cos_theta, sin_theta, front, neighbors_with_distance);
 		}
 
@@ -2661,9 +2667,10 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 	double xv1, yv1, lv1, wv1, theta1=0, xv2, yv2, lv2, wv2, theta2=0, half_vwidth, dx, dy,roadwidth, roadlength;
 	double xv1_gl, yv1_gl, theta1_gl;
 	double distance_no_collide;
+	
 	for (MSEdge* edge : edges_v) {
 		edge_id = edge->getNumericalID();
-
+		
 		//Following lines are replaced with function get_sorted_vehicles_in_edge
 		//it_sorted_edge = sortedVehiclesVectorEdges.find(edge_id);
 		//if (it_sorted_edge == sortedVehiclesVectorEdges.end()) {
@@ -2683,7 +2690,9 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 		double veh_diag{ 0 };
 		double front_distance;
 		std::vector<std::pair<double, MSVehicle*>> neighbors_with_distance;
+		
 		for(i=0;i<n_v;i++){ //one potential improvement here is to have a memory for all the info requested, because for each vehicle, same info is requested multiple times
+			
 			neighbors_with_distance.clear();
 			veh1 = (MSVehicle*)(*vehs_in_edge)[i];
 			lv1 = veh1->getVehicleType().getLength();
@@ -2724,12 +2733,14 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 			}
 			
 			get_all_neighbors_internal(lfv1, edge, vehs_in_edge, (size_t)i, front_distance, true, 1, neighbors_with_distance);
+			
 			for(j = 0;j < neighbors_with_distance.size(); j++){				
+				
 				veh2 = neighbors_with_distance.at(j).second;
 				lv2 = veh2->getVehicleType().getLength();
 				wv2 = veh2->getVehicleType().getWidth();
 				
-				// Code below is now deprecated, will be removed completely in future versions
+				
 				if (veh2->getVehicleType().getParameter().cmdModel == SUMO_TAG_LF_CMD_BICYCLE) {
 					// this vehicle also uses the bicycle model, meaning that we should consider the fact that it may have a non-zero orientation
 					theta2 = veh2->getAngleRelativeAlways();
@@ -2762,7 +2773,9 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 
 					if (collision_true) {
 						event_vehicles_collide(veh1->getNumericalID(), veh2->getNumericalID());
-						//std::cout << veh1->getID() << " at pos (" << xv1 << "," << yv1 << ") with angle " << theta1 << "and dimensions ("<< lv1<<","<<wv1 << ") ;" << veh2->getID() << " at pos (" << xv2 << "," << yv2 << ") with angle " << theta2 << "and dimensions (" << lv2 << "," << wv2 << ") \n";
+						//std::cout << "At edge:"<< edge->getID() << " with idx:"<< edge_idx << ", veh idx:"<< veh_idx<< ", neigh idx:"<<neigh_idx << " Time-step:" << lf_plugin_get_current_time_step() << "\n";
+						//std::cout << veh1->getID() << " at pos (" << xv1 << "," << yv1 << ") with angle " << theta1 << " and dimensions ("<< lv1<<","<<wv1 << ") ;" << veh2->getID() << " at pos (" << xv2 << "," << yv2 << ") with angle " << theta2 << "and dimensions (" << lv2 << "," << wv2 << ") \n";
+						
 						MSNet::getInstance()->getVehicleControl().registerCollision();
 						lfv1->just_collided_with(veh2->getNumericalID());
 						if (!(lfv1->has_collided_with(veh2->getNumericalID()) || lfv2->has_collided_with(veh1->getNumericalID()))) {
