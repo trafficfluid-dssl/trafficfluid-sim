@@ -192,15 +192,17 @@ public:
         double pos_x = myveh->getPositionOnLane() - (myveh->getLength() / 2)* cos_angle;
 
         //avoid negative positions when circular movement
-        /*
-        if (is_circular() && pos_x < 0) { // This creates issues when checking the order of vehicles
-            return myveh->getLane()->getEdge().getLength() + pos_x;
-        }
-
-        */
+        
+        //if (is_circular() && pos_x < 0) { // This creates issues when checking the order of vehicles
+        //    return myveh->getLane()->getEdge().getLength() + pos_x;
+        //}
+        //
+        
 
         return pos_x;
     }
+
+
 
     double get_position_y(){ // generalize here for angle!
         double latOffset = 0;

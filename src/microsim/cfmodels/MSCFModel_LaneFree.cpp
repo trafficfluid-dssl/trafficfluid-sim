@@ -1060,21 +1060,29 @@ void lf_plugin_get_distance_to_road_boundaries_at(NumericalID veh_id, double lon
 		return;
 	}
 	
-
+	
 	double global_pos_x = myveh->getPosition().x() - (myveh->getLength() / 2) * cos(myveh->getAngleRelative());
 	double global_pos_y = myveh->getPosition().y() - (myveh->getLength() / 2) * sin(myveh->getAngleRelative());
 
 	double mid_height = 0.5;
 	double left_boundary_y;
+
+	if (myveh->getPosition() == Position::INVALID) {
+		std::cout << "Invalid position when calculating moving boundaries for veh:" << myveh->getID() << "at time:"<< time2string(MSNet::getInstance()->getCurrentTimeStep()) << "\n";
+		global_pos_x = 0;
+		global_pos_y = 0;
+	}
 	
 	boundary_value(mid_height, leftBoundaryLevelPoints, leftBoundarySlopes, leftBoundaryOffsets, global_pos_x + longitudinal_distance_x, lfveh->get_speed_x(), &left_boundary_y, left_boundary_speed);
 
 
-	//std::cout << "Current veh "<<myveh->getID()<<" at pos:(" << global_pos_x << "," << global_pos_y << ") with boundary at long pos " << global_pos_x + longitudinal_distance_x << " is :" << left_boundary << ". Result on lateral distance is :"<< left_boundary - global_pos_y<<"\n";
 	
 	
 	
 	*left_boundary_distance = sign_coeff * (left_boundary_y - (global_pos_y + lateral_distance_y) );
+
+	//std::cout << "Current veh " << myveh->getID() << " at pos:(" << global_pos_x << "," << global_pos_y << ") with boundary at long pos " << global_pos_x + longitudinal_distance_x << " is :" << *left_boundary_distance << ". Result on lateral distance is :" << lateral_distance_y << "\n";
+
 
 	std::vector<double> rightBoundaryLevelPoints = veh_route.getRightBoundaryLevelPoints();
 	if (rightBoundaryLevelPoints.size() == 0) {
@@ -2700,9 +2708,10 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 			lfv1 = find_vehicle_in_edge(veh1->getNumericalID(), edge_id); //we could somehow remove the need for this, maybe have the get_position_x, get_position_y as a function that gets the veh object as attribute
 			xv1 = lfv1->get_position_x();
 			yv1 = lfv1->get_position_y();
-			// std::cout << "veh:" << veh1->getID() << " with length:" << lv1 << " and width:" << wv1 <<"\n";
 			
-
+			//double left_boundary_distance=0, right_boundary_distance=0;
+			//lf_plugin_get_distance_to_road_boundaries_at(veh1->getNumericalID(), 0, 0, &left_boundary_distance, &right_boundary_distance, NULL, NULL, NULL);
+			
 			if (veh1->getVehicleType().getParameter().cmdModel == SUMO_TAG_LF_CMD_BICYCLE) {
 				// this vehicle uses the bicycle model, meaning that we should consider the fact that it may have a non-zero orientation
 				theta1 = veh1->getAngleRelativeAlways();

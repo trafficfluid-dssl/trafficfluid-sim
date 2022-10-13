@@ -346,6 +346,18 @@ Position
 PositionVector::positionAtOffset(const Position& p1, const Position& p2, double pos, double lateralOffset) {
     const double dist = p1.distanceTo(p2);
     if (pos < 0. || dist < pos) {
+        // LFPlugin Begin
+        // for ring-road case, when vehicles reenter
+        if (pos < 0.) {
+            double theta = p1.angleTo2D(p2);
+            double dx = -pos;
+            double dy = lateralOffset;
+            // TODO check the transformation for multiple examples
+            double dx_transform = dx * cos(theta) - dy * sin(theta);
+            double dy_transform = dy * cos(theta) + dx * sin(theta);
+            return Position(p1.x() - dx_transform, p1.y() - dy_transform);
+        }
+        // LFPlugin Begin
         return Position::INVALID;
     }
     if (lateralOffset != 0) {

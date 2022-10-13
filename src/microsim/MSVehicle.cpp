@@ -1229,11 +1229,15 @@ Position
 MSVehicle::validatePosition(Position result, double offset) const {
     int furtherIndex = 0;
     double lastLength = getPositionOnLane();
+    
     while (result == Position::INVALID) {
         if (furtherIndex >= (int)myFurtherLanes.size()) {
+            //std::cout << "Could not compute position for vehicle '" + getID() + "', time=" + time2string(MSNet::getInstance()->getCurrentTimeStep()) + "\n";
+            
             //WRITE_WARNING("Could not compute position for vehicle '" + getID() + "', time=" + time2string(MSNet::getInstance()->getCurrentTimeStep()) + ".");
             break;
         }
+        
         //std::cout << SIMTIME << " veh=" << getID() << " lane=" << myLane->getID() << " pos=" << getPositionOnLane() << " posLat=" << getLateralPositionOnLane() << " offset=" << offset << " result=" << result << " i=" << furtherIndex << " further=" << myFurtherLanes.size() << "\n";
         MSLane* further = myFurtherLanes[furtherIndex];
         offset += lastLength;
@@ -1318,14 +1322,14 @@ MSVehicle::computeAngle() const {
         }
     }
     if (myLaneChangeModel->isChangingLanes()) {
-        // cannot use getPosition() because it already includes the offset to the side and thus messes up the angle
+        // cannot use getPosition() because it already includes the offset to the side and thus messes up the angle        
         p1 = myLane->geometryPositionAtOffset(myState.myPos, lefthandSign * posLat);
     } else {
         p1 = getPosition();
     }
 
     Position p2 = getBackPosition();
-    if (p2 == Position::INVALID) {
+    if (p2 == Position::INVALID) {        
         // Handle special case of vehicle's back reaching out of the network
         if (myFurtherLanes.size() > 0) {
             p2 = myFurtherLanes.back()->geometryPositionAtOffset(0, -myFurtherLanesPosLat.back());
@@ -1348,7 +1352,8 @@ MSVehicle::computeAngle() const {
         result = myAngleRelative;
     }
     else {
-        //std::cout << "myangle relative for veh " << getID() << ":" << myAngleRelative << "\n";
+        //std::cout << "myangle relative for veh " << getID() << ":" << myAngleRelative << " and p1:"<< p1<< " and p2:"<< p2 << "\n";
+        
         result = (p1 != p2 ? myAngleRelative + p2.angleTo2D(p1) :
         myAngleRelative + myLane->getShape().rotationAtOffset(myLane->interpolateLanePosToGeometryPos(getPositionOnLane())));    
     }
@@ -1372,7 +1377,12 @@ MSVehicle::computeAngle() const {
 const Position
 MSVehicle::getBackPosition() const {
     const double posLat = MSGlobals::gLefthand ? myState.myPosLat : -myState.myPosLat;
-    if (myState.myPos >= myType->getLength()) {
+    if (myState.myPos >= myType->getLength() 
+        // LFPlugin Begin 
+        // for the ring road case, we occasionally have vehicles with negative x positions, this ensures that the backPosition will be properly returned
+        || myState.myPos < 0
+        // LFPlugin End
+        ) {
         // vehicle is fully on the new lane
         return myLane->geometryPositionAtOffset(myState.myPos - myType->getLength(), posLat);
     } else {
