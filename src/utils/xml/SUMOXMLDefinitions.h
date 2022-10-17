@@ -880,6 +880,7 @@ enum SumoXMLAttr {
     SUMO_ATTR_LF_RIGHT_BOUNDARY_LVL_POINTS,
     SUMO_ATTR_LF_RIGHT_BOUNDARY_SLOPES,
     SUMO_ATTR_LF_RIGHT_BOUNDARY_OFFSETS,
+    SUMO_ATTR_LF_RIGHT_BOUNDARY_CONSTANT,
     // LFPlugin End
 
     /// @brief link,node: the traffic light id responsible for this link

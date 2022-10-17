@@ -73,10 +73,7 @@ typedef struct ArrayMem arrayMemStruct;
 
 typedef std::unordered_map<NumericalID, std::array<double, 2>> LastVehicleStatus;
 
-double fRand(double fMin, double fMax);
 
-
-double lf_plugin_get_global_position_x(NumericalID veh_id);
 
 //declare here the api functions ("C compatible", in terms if arguments, and return value) (maybe implement them directly, or inside the cpp file alternatively)
 
@@ -527,6 +524,15 @@ typedef std::unordered_map<NumericalID, SortedVehiclesVector*> SortedVehiclesVec
 typedef std::unordered_map<NumericalID, std::vector<double>> InsertedAdditionalInitStatus;
 
 class MSLaneFreeVehicle;
+
+
+// internal functions definition begin
+
+MSEdge* find_edge_ptr(NumericalID edge_id);
+int binary_search_find_index(SortedVehiclesVector* sorted_vehs, int start, int end, NumericalID veh_id, double pos_x);
+void boundary_value(double mid_height, std::vector<double>& lim, std::vector<double>& slope, std::vector<double>& offset, double long_pos, double veh_speed_x, double* boundary_distance, double* boundary_speed);
+
+// internal functions end
 
 class LaneFreeSimulationPlugin {
 

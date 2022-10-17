@@ -153,16 +153,32 @@ void
 MSRoute::updateLeftBoundaryLevelPointsEpsilonCoefficients(std::vector<double>& leftBoundaryEpsilons){
     
     double boundaries_width;
+
+    size_t boundaries_size = leftBoundaryLevelPoints.size();
+    if (boundaries_size == 0) {
+        std::cout << "Error for route " << getID() << "! Left boundary level points are not defined!\n";
+    }
+
+    if (leftBoundaryEpsilons.size() != boundaries_size) {
+        std::cout << "Error for route " << getID() << "! Size of epsilon vector is:" << leftBoundaryEpsilons.size() << " whereas the defined size of left boundary level points is: " << boundaries_size << "\n";
+    }
+
     
+    double epsilon_val;
     for (int i = 0; i < leftBoundaryLevelPoints.size(); i++) {
         boundaries_width = leftBoundaryLevelPoints.at(i) - rightBoundaryConstantLevelPoint;
-        leftBoundaryLevelPointsEpsilonCoefficients.at(i) = rightBoundaryConstantLevelPoint + boundaries_width * leftBoundaryEpsilons.at(i);
+        epsilon_val = leftBoundaryEpsilons.at(i);
+        if (epsilon_val < 0 || epsilon_val>2) {
+            std::cout << "All epsilon values should lie within the range 0<epsilon<2! Error for route " << getID() << " at epsilon index " << i << ". This value will be neglected\n";
+            epsilon_val = 1;
+        }
+        leftBoundaryLevelPointsEpsilonCoefficients.at(i) = rightBoundaryConstantLevelPoint + boundaries_width * epsilon_val;        
     }
 
 }
 
 void 
-MSRoute::setRightBoundary(std::string& rightBoundaryLevelPointsString, std::string& rightBoundarySlopesString, std::string& rightBoundaryOffsetsString) {
+MSRoute::setRightBoundary(std::string& rightBoundaryLevelPointsString, std::string& rightBoundarySlopesString, std::string& rightBoundaryOffsetsString, std::string& rightBoundaryConstant) {
     hasRightBoundary = true;
 
     // use StringTokenizer to get the string xml value as a vector of string values
@@ -240,13 +256,18 @@ MSRoute::setRightBoundary(std::string& rightBoundaryLevelPointsString, std::stri
     }
     MSLane* myFirstLane{ myLanes.at(0) };
     double pathAngle = myFirstLane->getShape().angleAt2D(0);
-
-    if (cos(pathAngle) > 0) {
-        rightBoundaryConstantLevelPoint = max_element;
+    if (rightBoundaryConstant == "empty") {
+        if (cos(pathAngle) > 0) {
+            rightBoundaryConstantLevelPoint = max_element;
+        }
+        else {
+            rightBoundaryConstantLevelPoint = min_element;
+        }
     }
     else {
-        rightBoundaryConstantLevelPoint = min_element;
+        rightBoundaryConstantLevelPoint = StringUtils::toDouble(rightBoundaryConstant);
     }
+    
     if (cos(pathAngle) != 1 && cos(pathAngle) != -1) {
         std::cout << "Warning! Constant right boundary value for internal control was set for left or right direction, but the path's angle is: "<< pathAngle << " rad \n";
     }

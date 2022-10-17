@@ -866,6 +866,7 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
     { "rightBoundaryLevelPoints",    SUMO_ATTR_LF_RIGHT_BOUNDARY_LVL_POINTS },
     { "rightBoundarySlopes",         SUMO_ATTR_LF_RIGHT_BOUNDARY_SLOPES },
     { "rightBoundaryOffsets",        SUMO_ATTR_LF_RIGHT_BOUNDARY_OFFSETS },
+    { "rightBoundaryConstant",       SUMO_ATTR_LF_RIGHT_BOUNDARY_CONSTANT },
     // LFPlugin End
 
     // Other

@@ -212,6 +212,7 @@ protected:
     std::string rightBoundaryLevelPoints;
     std::string rightBoundarySlopes;
     std::string rightBoundaryOffsets;
+    std::string rightBoundaryConstant;
     // LFPlugin End
 
 private:

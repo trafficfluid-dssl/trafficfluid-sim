@@ -532,6 +532,13 @@ MSRouteHandler::openRoute(const SUMOSAXAttributes& attrs) {
         rightBoundaryLevelPoints = attrs.get<std::string>(SUMO_ATTR_LF_RIGHT_BOUNDARY_LVL_POINTS, myActiveRouteID.c_str(), ok);
         rightBoundarySlopes = attrs.get<std::string>(SUMO_ATTR_LF_RIGHT_BOUNDARY_SLOPES, myActiveRouteID.c_str(), ok);
         rightBoundaryOffsets = attrs.get<std::string>(SUMO_ATTR_LF_RIGHT_BOUNDARY_OFFSETS, myActiveRouteID.c_str(), ok);
+        if (attrs.hasAttribute(SUMO_ATTR_LF_RIGHT_BOUNDARY_CONSTANT)) {
+            rightBoundaryConstant = attrs.get<std::string>(SUMO_ATTR_LF_RIGHT_BOUNDARY_CONSTANT, myActiveRouteID.c_str(), ok);
+        }
+        else {
+            // constant was not defined, so have an "empty" string to flag that
+            rightBoundaryConstant = "empty";
+        }
     }
     // LFPlugin End
 }
@@ -638,7 +645,7 @@ MSRouteHandler::closeRoute(const bool mayBeDisconnected) {
         }
 
         if (hasRightBoundary) {
-            route->setRightBoundary(rightBoundaryLevelPoints, rightBoundarySlopes, rightBoundaryOffsets);
+            route->setRightBoundary(rightBoundaryLevelPoints, rightBoundarySlopes, rightBoundaryOffsets, rightBoundaryConstant);
         }
         hasLeftBoundary = false;
         hasRightBoundary = false;
