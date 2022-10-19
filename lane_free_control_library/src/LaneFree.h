@@ -273,6 +273,10 @@ EXTERN libLaneFreePlugin_EXPORT double (* get_last_step_app_time)();
 EXTERN libLaneFreePlugin_EXPORT void (* set_epsilon_left_boundary)(char* route_name, double* epsilon_array, size_t epsilon_array_size);
 
 
+// returns a double array with veh densities (veh/km) associated with the segments formed by the left boundary, providing the associated route_name with a char array
+EXTERN libLaneFreePlugin_EXPORT double* (*get_density_left_boundary_segments)(char* route_name, size_t* number_of_segments);
+
+
 // calculates the lateral distance from left and right road boundaries for veh_id, at longitudinal_distance_x (vehicle can also observe upstream with negative values) and lateral_distance_y
 // regarding the boundaries, it calculates the boundaries's distances (with left_boundary_distance, right_boundary_distance variables) and first derivative (with left_boundary_speed, right_boundary_speed variables)
 // if speed information is not useful, one can simply place NULL pointers to the respective arguments (left_boundary_speed, right_boundary_speed)
