@@ -1364,9 +1364,9 @@ int lf_plugin_get_detector_value_for_type(NumericalID detector_id, char* veh_typ
 double lf_plugin_get_density_on_segment_region_on_edge(NumericalID edge_id, double segment_start, double segment_end) {
 
 
-	int num_of_vehs = get_number_of_vehicles_on_segment_region_on_edge(edge_id, segment_start, segment_end); // TODO this should be changed to the function pointer of the api header file
+	int num_of_vehs = get_number_of_vehicles_on_segment_region_on_edge(edge_id, segment_start, segment_end);
 	if (num_of_vehs == -1) {
-		return -1.0;
+		return -1.;
 	}
 
 
@@ -2152,6 +2152,108 @@ void lf_plugin_set_epsilon_left_boundary(char* route_name, double* epsilon_array
 
 }
 
+// returns a double array with veh densities (veh/km) associated with the segments formed by the left boundary, providing the associated route_name with a char array
+double* lf_plugin_get_density_left_boundary_segments(char* route_name, size_t* number_of_segments) {
+
+	std::string route_str{ route_name };
+
+	// The dictionary function returns a const pointer to myRoute, but we cannot work with a const route object. We use casting to remove const, and consider finding a better alternative here in the future
+	MSRoute* myRoute = (MSRoute*)MSRoute::dictionary(route_str);
+
+	if (myRoute == nullptr) {
+		std::cout << "Error! Route with name:" << route_str << " not found!\n";
+		return NULL;
+	}
+
+	
+	const std::vector<std::pair<NumericalID, double>> localPosLeftBoundaryOffsets = myRoute->getLeftBoundaryOffsetsLocalPositions();
+
+	
+
+	size_t num_segments = localPosLeftBoundaryOffsets.size() + 1;
+	//std::cout << "num of segments:" << num_segments << "\n";
+	
+	if (num_segments == 1) {
+		std::cout << "Error! Left Boundary offset values not provided for route: " << route_str << "\n";
+		return NULL;
+	}
+
+	 
+	arrayMemStruct* density_left_boundary = LaneFreeSimulationPlugin::getInstance()->get_density_array_left_boundary_mem();
+	update_arraymemory_size(density_left_boundary, num_segments);
+	double* density_left_boundary_array = (double*)density_left_boundary->ptr;
+	
+	const ConstMSEdgeVector veh_edges = myRoute->getEdgeswInternal();
+	if (veh_edges.size() == 0) {
+		std::cout << "Route " << route_str << " does not contain any edges!\n";
+	}
+
+	size_t edges_idx = 0, densities_idx=0;
+	double segment_length=0;
+	int num_of_vehs=0;
+	double start_point=0, end_point;
+	NumericalID edge_id_tmp = veh_edges.at(0)->getNumericalID();
+
+	// we need to add an additional offset at the end of the path
+	std::vector <std::pair<NumericalID, double>> localPosLeftBoundaryOffsetsWithEnd = localPosLeftBoundaryOffsets;
+	NumericalID last_edge = veh_edges.at(veh_edges.size() - 1)->getNumericalID();
+	double last_pos = veh_edges.at(veh_edges.size() - 1)->getLength();
+	localPosLeftBoundaryOffsetsWithEnd.push_back(std::make_pair(last_edge, last_pos)); // TODO there is an extreme case not handled when someone specifies this exact offset point 
+	for (std::pair<NumericalID, double> local_offset : localPosLeftBoundaryOffsetsWithEnd) {
+		
+		// we will get the number of vehicles until the specified point
+
+		while (local_offset.first != edge_id_tmp) {
+			end_point = veh_edges.at(edges_idx)->getLength();
+			num_of_vehs += get_number_of_vehicles_on_segment_region_on_edge(edge_id_tmp, start_point, end_point);
+			
+			// contains the length of the segment we measured the vehicles
+			segment_length += (end_point - start_point);
+			if (segment_length == 0) {
+				std::cout << "Error! Segment length is calcaulated zero!\n";
+				return NULL;
+			}
+
+
+			do {
+				edges_idx++;
+				edge_id_tmp = veh_edges.at(edges_idx)->getNumericalID();
+			} while (veh_edges.at(edges_idx)->isInternal() && edges_idx < (veh_edges.size() - 1) && (veh_edges.at(edges_idx)->getLanes().at(veh_edges.at(edges_idx)->getLanes().size() - 1)->getShape()[0] == (veh_edges.at(edges_idx + 1))->getLanes().at(veh_edges.at(edges_idx)->getLanes().size() - 1)->getShape()[0]));
+
+			start_point = 0;
+			if (edges_idx == veh_edges.size()) {
+				std::cout << "Error! All edges were parsed, but not all segments are complete!\n";
+				return NULL;
+			}
+		}
+		
+		
+		end_point = local_offset.second;
+		num_of_vehs += get_number_of_vehicles_on_segment_region_on_edge(edge_id_tmp, start_point, end_point);
+		segment_length += (end_point - start_point);
+		if (segment_length == 0) {
+			std::cout << "Error! Segment length is calcaulated zero!\n";
+			return NULL;
+		}
+		start_point = end_point;
+			
+
+		
+
+		density_left_boundary_array[densities_idx] = ((double)num_of_vehs) * 1000. / segment_length;
+		densities_idx++;
+	}
+
+	
+
+
+	density_left_boundary->updated = true;
+	density_left_boundary->usize = (size_t)localPosLeftBoundaryOffsets.size() + 1;
+
+	*number_of_segments = num_segments;
+	return density_left_boundary_array;
+
+}
 
 // calculates the lateral distance from left and right road boundaries for veh_id, at longitudinal_distance_x (vehicle can also observe upstream with negative values) and lateral_distance_y
 // regarding the boundaries, it calculates the boundaries's distances (with left_boundary_distance, right_boundary_distance variables) and first derivative (with left_boundary_speed, right_boundary_speed variables)
@@ -2338,6 +2440,7 @@ LaneFreeSimulationPlugin::LaneFreeSimulationPlugin(){
 
 
 	set_epsilon_left_boundary = &lf_plugin_set_epsilon_left_boundary;
+	get_density_left_boundary_segments = &lf_plugin_get_density_left_boundary_segments;
 	get_distance_to_road_boundaries_at = &lf_plugin_get_distance_to_road_boundaries_at;
 
 	srand(lf_plugin_get_seed());
@@ -2358,6 +2461,8 @@ LaneFreeSimulationPlugin::LaneFreeSimulationPlugin(){
 	initialise_arraymemory(&detector_name, CHAR_M);
 	initialise_arraymemory(&detector_values,DOUBLE_M);
 	initialise_arraymemory(&density_per_segment_per_edge,DOUBLE_M);
+
+	initialise_arraymemory(&density_array_left_boundary, DOUBLE_M);
 
 	initialise_arraymemory(&all_neighbor_ids_front, NUMID_M);
 	initialise_arraymemory(&all_neighbor_ids_back, NUMID_M);
@@ -2396,6 +2501,7 @@ LaneFreeSimulationPlugin::~LaneFreeSimulationPlugin() {
 	free_mem(detector_name.ptr);
 	free_mem(detector_values.ptr);
 	free_mem(density_per_segment_per_edge.ptr);
+	free_mem(density_array_left_boundary.ptr);
 	free_mem(all_neighbor_ids_front.ptr);
 	free_mem(all_neighbor_ids_back.ptr);
 	myInstance = nullptr;
@@ -2444,6 +2550,17 @@ LaneFreeSimulationPlugin::lf_simulation_step(){
 	detector_values.updated = false;
 
 	density_per_segment_per_edge.updated = false;
+
+	density_array_left_boundary.updated = false;
+	/*
+	size_t segments_num = 0;
+	double* res_dens = lf_plugin_get_density_left_boundary_segments("main_highway",&segments_num);
+	for (size_t i = 0; i < segments_num; i++) {
+		std::cout << " Segment " << i << " with density:" << res_dens[i];
+	}
+
+	double epsilon_array[6] = { 1,0.8,1.2,1.4,0.6,0.8 };
+	lf_plugin_set_epsilon_left_boundary("main_highway", epsilon_array, 6);*/
 	lf_simulation_checkCollisions();
 
 	before_step_time = std::chrono::steady_clock::now();

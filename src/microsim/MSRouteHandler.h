@@ -207,6 +207,7 @@ protected:
     std::string leftBoundaryLevelPoints;
     std::string leftBoundarySlopes;
     std::string leftBoundaryOffsets;
+    std::string influencedBy;
 
     bool hasRightBoundary;
     std::string rightBoundaryLevelPoints;

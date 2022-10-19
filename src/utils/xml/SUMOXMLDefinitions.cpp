@@ -862,6 +862,7 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
     { "leftBoundaryLevelPoints",    SUMO_ATTR_LF_LEFT_BOUNDARY_LVL_POINTS},
     { "leftBoundarySlopes",         SUMO_ATTR_LF_LEFT_BOUNDARY_SLOPES },
     { "leftBoundaryOffsets",        SUMO_ATTR_LF_LEFT_BOUNDARY_OFFSETS },
+    { "influencedBy",               SUMO_ATTR_LF_INFLUENCED_BY },
 
     { "rightBoundaryLevelPoints",    SUMO_ATTR_LF_RIGHT_BOUNDARY_LVL_POINTS },
     { "rightBoundarySlopes",         SUMO_ATTR_LF_RIGHT_BOUNDARY_SLOPES },

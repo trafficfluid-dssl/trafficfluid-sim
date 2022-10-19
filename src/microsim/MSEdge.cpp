@@ -710,6 +710,8 @@ MSEdge::getInternalFollowingEdgefromLane(const MSLane* l, const MSEdge* follower
     }
     return nullptr;
 }
+
+
 double
 MSEdge::getLateralShiftToFollowingEdge(const MSEdge* followerAfterInternal) const {
     double ls=0;

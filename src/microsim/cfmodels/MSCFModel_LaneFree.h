@@ -621,6 +621,10 @@ public:
         return &density_per_segment_per_edge;
     }
 
+    arrayMemStruct* get_density_array_left_boundary_mem() {
+        return &density_array_left_boundary;
+    }
+
     arrayMemStruct* get_all_neighbor_ids_front_mem() {
         return &all_neighbor_ids_front;
     }
@@ -692,6 +696,7 @@ protected:
     arrayMemStruct detector_name;
     arrayMemStruct detector_values;
     arrayMemStruct density_per_segment_per_edge;
+    arrayMemStruct density_array_left_boundary;
 
     arrayMemStruct all_neighbor_ids_front;
     arrayMemStruct all_neighbor_ids_back;

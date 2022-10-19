@@ -88,7 +88,7 @@ MSRoute::MSRoute(const std::string& id,
 // LFPlugin Begin
 
 void 
-MSRoute::setLeftBoundary(std::string& leftBoundaryLevelPointsString, std::string& leftBoundarySlopesString, std::string& leftBoundaryOffsetsString) {
+MSRoute::setLeftBoundary(std::string& leftBoundaryLevelPointsString, std::string& leftBoundarySlopesString, std::string& leftBoundaryOffsetsString, std::string& influencedBy) {
     hasLeftBoundary = true;
 
     // use StringTokenizer to get the string xml value as a vector of string values
@@ -145,7 +145,45 @@ MSRoute::setLeftBoundary(std::string& leftBoundaryLevelPointsString, std::string
 
         
     }
-    
+
+    //std::cout << "For route:" << getID() << "\n";
+
+    // obtain local position of the offsets. This is useful for calculating the densities of each segment formed by two offsets
+    const ConstMSEdgeVector veh_edges = getEdgeswInternal();
+    int i = -1;
+    size_t offset_idx = 0;    
+    for (const MSEdge* edge_ptr : veh_edges) {
+        i++;
+        if (edge_ptr->isInternal() && i < (veh_edges.size() - 1) && (edge_ptr->getLanes().at(edge_ptr->getLanes().size() - 1)->getShape()[0] == (veh_edges.at(i + 1))->getLanes().at(edge_ptr->getLanes().size() - 1)->getShape()[0])) {
+            continue;
+        }
+        //std::cout << "Edge:" << edge_ptr->getID() << " " << edge_ptr->isInternal() << " with starting point:" << edge_ptr->getLanes().at(edge_ptr->getLanes().size() - 1)->getShape()[0] << " and length:" << edge_ptr->getLength() << " ";
+        while(fabs(edge_ptr->getLanes().at(edge_ptr->getLanes().size() - 1)->getShape()[0].x() - leftBoundaryOffsets.at(offset_idx)) < edge_ptr->getLength()) {
+            //std::cout << "\nOffset:" << leftBoundaryOffsets.at(offset_idx) << " is on edge:" << edge_ptr->getID() << " at local pos x:" << leftBoundaryOffsets.at(offset_idx) - edge_ptr->getLanes().at(edge_ptr->getLanes().size() - 1)->getShape()[0].x() << "\n";
+            localEdgePosLeftBoundaryOffsets.push_back(std::make_pair(edge_ptr->getNumericalID(), fabs(leftBoundaryOffsets.at(offset_idx) - edge_ptr->getLanes().at(edge_ptr->getLanes().size() - 1)->getShape()[0].x())));
+            offset_idx++;
+            if (offset_idx == leftBoundaryOffsets.size()) {
+                break;
+            }
+        }
+
+        if (offset_idx == leftBoundaryOffsets.size()) {
+            break;
+        }
+        
+    }
+    //std::cout << "\n";
+
+    if (influencedBy.size() > 0 && influencedBy != "") {
+        //this variable is not empty
+
+        MSRoute* influencer = (MSRoute*)MSRoute::dictionary(influencedBy);
+        if (influencer == nullptr) {
+            std::cout << "Error! When parsing information for route " << getID() << ", influencer route " << influencedBy << " could not be found!\n";
+            return;
+        }
+        influencer->addInfluencedRoute(this, leftBoundaryOffsets);
+    }
     
 }
 
@@ -153,7 +191,12 @@ void
 MSRoute::updateLeftBoundaryLevelPointsEpsilonCoefficients(std::vector<double>& leftBoundaryEpsilons){
     
     double boundaries_width;
-
+    
+    std::cout << "Update route " << getID() << " with epsilons: ";
+    for (double elem : leftBoundaryEpsilons) {
+        std::cout << elem<<" ";
+    }
+    std::cout << "\n";
     size_t boundaries_size = leftBoundaryLevelPoints.size();
     if (boundaries_size == 0) {
         std::cout << "Error for route " << getID() << "! Left boundary level points are not defined!\n";
@@ -174,6 +217,43 @@ MSRoute::updateLeftBoundaryLevelPointsEpsilonCoefficients(std::vector<double>& l
         }
         leftBoundaryLevelPointsEpsilonCoefficients.at(i) = rightBoundaryConstantLevelPoint + boundaries_width * epsilon_val;        
     }
+
+
+
+    std::vector<double> influenced_epsilons;
+    size_t influenced_size_epsilons, start_idx, end_idx, start_my_idx, end_my_idx, my_idx;
+    MSRoute* influenced;
+    for (size_t influenced_idx = 0; influenced_idx < influencedRoutes.size(); influenced_idx++) {
+        influenced_epsilons.clear();
+        influenced = influencedRoutes.at(influenced_idx);
+        influenced_size_epsilons = influenced->getLeftBoundaryLevelPoints().size();
+
+        // initialize all epsilons with 1
+        influenced_epsilons = std::vector<double>(influenced_size_epsilons, 1);
+        
+        start_idx = influencedRoutesEpsilonIndicesStartEnd.at(influenced_idx).first;
+        end_idx = influencedRoutesEpsilonIndicesStartEnd.at(influenced_idx).second;
+        
+        start_my_idx = influencedRoutesInfluencerEpsilonIndicesStartEnd.at(influenced_idx).first;
+        end_my_idx = influencedRoutesInfluencerEpsilonIndicesStartEnd.at(influenced_idx).second;
+        my_idx = start_my_idx;
+        for (size_t epsilon_idx = start_idx; epsilon_idx <= end_idx; epsilon_idx++) {
+            if (my_idx == end_my_idx + 1) {
+                std::cout << "Error in the association of epsilons for influencer route " << getID() << " and influenced " << influenced->getID() << "\n";
+            }
+
+            // override the associated epsilons from the influencer
+            influenced_epsilons.at(epsilon_idx) = leftBoundaryEpsilons.at(my_idx);
+            my_idx++;
+            
+        }
+        std::cout << "Update influenced route " << influenced->getID() << " with epsilons:";
+        for (double elem : influenced_epsilons) {
+            std::cout << elem << " ";
+        }
+        std::cout << "\n";
+        influenced->updateLeftBoundaryLevelPointsEpsilonCoefficients(influenced_epsilons);
+    }   
 
 }
 
@@ -271,6 +351,82 @@ MSRoute::setRightBoundary(std::string& rightBoundaryLevelPointsString, std::stri
     if (cos(pathAngle) != 1 && cos(pathAngle) != -1) {
         std::cout << "Warning! Constant right boundary value for internal control was set for left or right direction, but the path's angle is: "<< pathAngle << " rad \n";
     }
+
+}
+
+void MSRoute::addInfluencedRoute(MSRoute* influenced, std::vector<double>& influencedLeftBoundaryOffsets) {
+
+
+    size_t my_idx = 0, influenced_idx = 0;
+    int epsilon_start_idx = -1, epsilon_end_idx = -1;
+    int epsilon_influencer_start_idx, epsilon_influencer_end_idx;
+    // we choose the path direction according to the first lane on the path
+    const std::vector<MSLane*> myLanes = myEdges.at(0)->getLanes();
+    if (myLanes.size() == 0) {
+        std::cout << "Error initializing the right boundary constant value for internal boundary control. Empty lane set for first edge!\n";
+        return;
+    }
+    MSLane* myFirstLane{ myLanes.at(0) };
+    double pathAngle = myFirstLane->getShape().angleAt2D(0);
+    bool direction = cos(pathAngle) > 0;
+
+    while ((my_idx <= leftBoundaryOffsets.size()-1) && (influenced_idx <= influencedLeftBoundaryOffsets.size()-1)) {
+        
+        if (leftBoundaryOffsets[my_idx] == influencedLeftBoundaryOffsets[influenced_idx]) {
+            if (epsilon_start_idx == -1) {
+                // epsilons control the level points, so we should start from the level point after the first occurence
+                epsilon_start_idx = influenced_idx+1;
+                epsilon_influencer_start_idx = my_idx+1;
+            }
+            my_idx++;
+            influenced_idx++;
+        }
+        else if(epsilon_start_idx != -1) {
+            // we stop finding common boundary offsets, therefore the region that is common among influencer and influenced is complete
+            epsilon_end_idx = influenced_idx;
+            epsilon_influencer_end_idx = my_idx;
+            break;
+        }
+        else if (leftBoundaryOffsets[my_idx] < influencedLeftBoundaryOffsets[influenced_idx]) {
+            // left to right direction
+            if (direction) {
+                my_idx++;
+            }
+            else {
+                influenced_idx++;
+            }
+            
+        }
+        else if (leftBoundaryOffsets[my_idx] > influencedLeftBoundaryOffsets[influenced_idx]) {
+            // left to right direction
+            if (direction) {
+                influenced_idx++;
+            }
+            else {
+                my_idx++;                
+            }
+        }
+        else {
+            std::cout << "Error at obtaining influenced path's common epsilons! we shouldn't reach this point!\n";
+            return;
+        }
+    }
+
+    if (epsilon_start_idx == -1) {
+        std::cout << "Error at obtaining influenced path's "<< influenced->getID()<<" common epsilons! Offset values do not coincide with influencer's"<<getID()<<"!\n";
+        std::cout << "Start:" << epsilon_start_idx;
+        return;
+    }
+
+    if (epsilon_end_idx == -1) {
+        // means that up to the last element we had equality of terms
+        epsilon_end_idx = influencedLeftBoundaryOffsets.size();
+        epsilon_influencer_end_idx = leftBoundaryOffsets.size();
+    }
+
+    influencedRoutes.push_back(influenced);
+    influencedRoutesEpsilonIndicesStartEnd.push_back(std::make_pair((size_t)epsilon_start_idx, (size_t)epsilon_end_idx));
+    influencedRoutesInfluencerEpsilonIndicesStartEnd.push_back(std::make_pair((size_t)epsilon_influencer_start_idx, (size_t)epsilon_influencer_end_idx));
 
 }
 // LFPlugin End

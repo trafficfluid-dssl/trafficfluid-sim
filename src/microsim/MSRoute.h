@@ -127,7 +127,7 @@ public:
     }
 
 
-    void setLeftBoundary(std::string& leftBoundaryLevelPointsString, std::string& leftBoundarySlopesString, std::string& leftBoundaryOffsetsString);
+    void setLeftBoundary(std::string& leftBoundaryLevelPointsString, std::string& leftBoundarySlopesString, std::string& leftBoundaryOffsetsString, std::string& influencedBy);
 
     void setRightBoundary(std::string& rightBoundaryLevelPointsString, std::string& rightBoundarySlopesString, std::string& rightBoundaryOffsetsString, std::string& rightBoundaryConstant);
     
@@ -165,6 +165,12 @@ public:
     const std::vector<double>& getRightBoundaryOffsets() const {
         return rightBoundaryOffsets;
     }
+
+    const std::vector<std::pair<long long, double>>& getLeftBoundaryOffsetsLocalPositions() const {
+        return localEdgePosLeftBoundaryOffsets;
+    }
+
+    void addInfluencedRoute(MSRoute* influenced, std::vector<double>& influencedLeftBoundaryOffsets);
 
     // LFPlugin End
 
@@ -346,7 +352,10 @@ private:
     
     double rightBoundaryConstantLevelPoint; // this is useful for the use of epsilon
     std::vector<double> leftBoundaryLevelPointsEpsilonCoefficients;
-
+    std::vector<std::pair<long long, double>> localEdgePosLeftBoundaryOffsets;
+    std::vector<MSRoute*> influencedRoutes;
+    std::vector<std::pair<size_t,size_t>> influencedRoutesEpsilonIndicesStartEnd;
+    std::vector<std::pair<size_t, size_t>> influencedRoutesInfluencerEpsilonIndicesStartEnd;
     // LFPlugin End
 
     /// whether the route may be deleted after the last vehicle abandoned it

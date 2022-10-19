@@ -515,6 +515,12 @@ MSRouteHandler::openRoute(const SUMOSAXAttributes& attrs) {
         leftBoundaryLevelPoints = attrs.get<std::string>(SUMO_ATTR_LF_LEFT_BOUNDARY_LVL_POINTS, myActiveRouteID.c_str(), ok);
         leftBoundarySlopes = attrs.get<std::string>(SUMO_ATTR_LF_LEFT_BOUNDARY_SLOPES, myActiveRouteID.c_str(), ok);
         leftBoundaryOffsets = attrs.get<std::string>(SUMO_ATTR_LF_LEFT_BOUNDARY_OFFSETS, myActiveRouteID.c_str(), ok);
+        if (attrs.hasAttribute(SUMO_ATTR_LF_INFLUENCED_BY)) {
+            influencedBy = attrs.get<std::string>(SUMO_ATTR_LF_INFLUENCED_BY, myActiveRouteID.c_str(), ok);
+        }
+        else {
+            influencedBy = "";
+        }
     }
 
     // same thing for the right boundary
@@ -641,7 +647,7 @@ MSRouteHandler::closeRoute(const bool mayBeDisconnected) {
         route->setReroute(mustReroute);
         // LFPlugin Begin
         if(hasLeftBoundary) {
-            route->setLeftBoundary(leftBoundaryLevelPoints, leftBoundarySlopes, leftBoundaryOffsets);
+            route->setLeftBoundary(leftBoundaryLevelPoints, leftBoundarySlopes, leftBoundaryOffsets, influencedBy);
         }
 
         if (hasRightBoundary) {
