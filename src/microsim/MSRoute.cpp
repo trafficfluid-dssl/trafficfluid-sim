@@ -192,11 +192,11 @@ MSRoute::updateLeftBoundaryLevelPointsEpsilonCoefficients(std::vector<double>& l
     
     double boundaries_width;
     
-    std::cout << "Update route " << getID() << " with epsilons: ";
+    /*std::cout << "Update route " << getID() << " with epsilons: ";
     for (double elem : leftBoundaryEpsilons) {
         std::cout << elem<<" ";
     }
-    std::cout << "\n";
+    std::cout << "\n";*/
     size_t boundaries_size = leftBoundaryLevelPoints.size();
     if (boundaries_size == 0) {
         std::cout << "Error for route " << getID() << "! Left boundary level points are not defined!\n";
@@ -247,11 +247,11 @@ MSRoute::updateLeftBoundaryLevelPointsEpsilonCoefficients(std::vector<double>& l
             my_idx++;
             
         }
-        std::cout << "Update influenced route " << influenced->getID() << " with epsilons:";
+        /*std::cout << "Update influenced route " << influenced->getID() << " with epsilons:";
         for (double elem : influenced_epsilons) {
             std::cout << elem << " ";
         }
-        std::cout << "\n";
+        std::cout << "\n";*/
         influenced->updateLeftBoundaryLevelPointsEpsilonCoefficients(influenced_epsilons);
     }   
 
