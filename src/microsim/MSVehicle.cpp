@@ -1377,10 +1377,13 @@ MSVehicle::computeAngle() const {
 const Position
 MSVehicle::getBackPosition() const {
     const double posLat = MSGlobals::gLefthand ? myState.myPosLat : -myState.myPosLat;
+    // LFPlugin Begin
+    MSLaneFreeVehicle* lfveh;
+    // LFPlugin End
     if (myState.myPos >= myType->getLength() 
         // LFPlugin Begin 
         // for the ring road case, we occasionally have vehicles with negative x positions, this ensures that the backPosition will be properly returned
-        || myState.myPos < 0
+        || (myState.myPos < 0 && ((lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(getNumericalID())) != nullptr && lfveh->is_circular()))
         // LFPlugin End
         ) {
         // vehicle is fully on the new lane
@@ -1400,9 +1403,31 @@ MSVehicle::getBackPosition() const {
                 std::cout << "    getBackPosition veh=" << getID() << " myLane=" << myLane->getID() << " further=" << toString(myFurtherLanes) << " myFurtherLanesPosLat=" << toString(myFurtherLanesPosLat) << "\n";
             }
 #endif
+            // LFPlugin Begin
+            double lateralShift = 0;
+            if (myFurtherLanes.size() > 0) {
+                const MSLink* const link = myFurtherLanes.back()->getLinkTo(myLane);
+
+                if (link != nullptr) {
+
+                    lateralShift = link->getLateralShift();
+
+                }
+            }
+
+            double myPrevLanePosLat = -posLat + lateralShift;
+
+
             return myFurtherLanes.size() > 0 && !myLaneChangeModel->isChangingLanes()
-                   ? myFurtherLanes.back()->geometryPositionAtOffset(getBackPositionOnLane(myFurtherLanes.back()), -myFurtherLanesPosLat.back() * (MSGlobals::gLefthand ? -1 : 1))
-                   : myLane->geometryPositionAtOffset(0, posLat);
+                ? myFurtherLanes.back()->geometryPositionAtOffset(getBackPositionOnLane(myFurtherLanes.back()), -myPrevLanePosLat * (MSGlobals::gLefthand ? -1 : 1))
+                : myLane->geometryPositionAtOffset(0, posLat);
+
+            // Original Code below
+            // return myFurtherLanes.size() > 0 && !myLaneChangeModel->isChangingLanes()
+            //        ? myFurtherLanes.back()->geometryPositionAtOffset(getBackPositionOnLane(myFurtherLanes.back()), -myFurtherLanesPosLat.back() * (MSGlobals::gLefthand ? -1 : 1))
+            //        : myLane->geometryPositionAtOffset(0, posLat);
+
+            // LFPlugin End
         }
     }
 }
