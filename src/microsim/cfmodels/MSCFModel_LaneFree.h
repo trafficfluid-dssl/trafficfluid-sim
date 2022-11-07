@@ -418,13 +418,12 @@ protected:
 
 
             deltaPos_y_back = v_cur * sin(theta_cur) * TS + F * sin(theta_cur) * pow(TS, 2);
-        
         }
         else {
-            deltaPos_x_back = (sigma) * (sin(theta_next)/tan_delta - sin(theta_cur)/tan_delta);
+            deltaPos_x_back = (sigma) * (sin(theta_next) / tan_delta - sin(theta_cur) / tan_delta);
             
 
-            deltaPos_y_back = (sigma) * (cos(theta_cur)/tan_delta - cos(theta_next)/tan_delta);
+            deltaPos_y_back = (sigma) * (cos(theta_cur) / tan_delta - cos(theta_next) / tan_delta);
         
         }
 
@@ -530,7 +529,9 @@ class MSLaneFreeVehicle;
 
 MSEdge* find_edge_ptr(NumericalID edge_id);
 int binary_search_find_index(SortedVehiclesVector* sorted_vehs, int start, int end, NumericalID veh_id, double pos_x);
-void boundary_value(double mid_height, std::vector<double>& lim, std::vector<double>& slope, std::vector<double>& offset, double long_pos, double veh_speed_x, double* boundary_distance, double* boundary_speed);
+
+// this is now a function of LaneFreeSimulatorPlugin
+//void boundary_value(double mid_height, std::vector<double>& lim, std::vector<double>& slope, std::vector<double>& offset, double long_pos, double veh_speed_x, double* boundary_distance, double* boundary_speed);
 
 // internal functions end
 
@@ -581,6 +582,7 @@ public:
 
     void add_new_veh_additional_stats(NumericalID veh_id, double pos_x, double pos_y, double speed_y, double theta, bool use_global_coordinates);
 
+    void boundary_value(double mid_height, double direction, std::vector<double>& lim, std::vector<double>& slope, std::vector<double>& offset, double long_pos, double veh_speed_x, double* boundary_distance, double* boundary_speed);
 
     arrayMemStruct* get_all_ids_mem() {
         return &all_ids;

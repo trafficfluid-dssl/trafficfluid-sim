@@ -209,27 +209,7 @@ int binary_search_find_index(SortedVehiclesVector* sorted_vehs, int start, int e
 
 
 
-// This code calculates the boundary's values and is based from Karteek's implementation. This is an internal function
-void boundary_value(double mid_height, double direction, std::vector<double>& lim, std::vector<double>& slope, std::vector<double>& offset, double long_pos, double veh_speed_x, double* boundary_distance, double* boundary_speed) {
-	double boundary_distance_tmp = 0;
-	double boundary_speed_tmp = 0;
-	int size_points = lim.size();
-	for (size_t i = 0; i < size_points - 1; i++) {
-		if (long_pos*direction < offset[i]*direction) {
-			boundary_distance_tmp += mid_height * (lim[i + 1] - lim[i]) * tanh(slope[i] * direction*(long_pos - offset[i]));
-			boundary_speed_tmp += mid_height * (lim[i + 1] - lim[i]) * pow(cosh(slope[i] * direction*(long_pos - offset[i])), -2) * slope[i] * veh_speed_x;
-		}
-		else {
-			boundary_distance_tmp += (1 - mid_height) * (lim[i + 1] - lim[i]) * tanh((mid_height / (1 - mid_height)) * slope[i] * direction*(long_pos - offset[i]));
-			boundary_speed_tmp += mid_height * slope[i] * veh_speed_x * (lim[i + 1] - lim[i]) * pow(cosh((mid_height / (1 - mid_height)) * slope[i] * direction*(long_pos - offset[i])), -2);
-		}
-	}
-	*boundary_distance = boundary_distance_tmp + lim[0] + mid_height * (lim[size_points - 1] - lim[0]);
-	if (boundary_speed == nullptr) {
-		return;
-	}
-	*boundary_speed = boundary_speed_tmp;
-}
+
 
 // From this point onwards, we have the implementation of every provided function from the API. The "lf_plugin" expression proceeds the API functions' names to provide a distinction with the other functions.
 
@@ -2318,14 +2298,17 @@ void lf_plugin_get_distance_to_road_boundaries_at(NumericalID veh_id, double lon
 		veh_speed = lfveh->get_speed_x();
 	}
 
-	boundary_value(mid_height, sign_coeff, leftBoundaryLevelPoints, leftBoundarySlopes, leftBoundaryOffsets, global_pos_x, veh_speed, &left_boundary_y, left_boundary_speed);
+	LaneFreeSimulationPlugin::getInstance()->boundary_value(mid_height, sign_coeff, leftBoundaryLevelPoints, leftBoundarySlopes, leftBoundaryOffsets, global_pos_x, veh_speed, &left_boundary_y, left_boundary_speed);
 
 
 
 
 
 	*left_boundary_distance = sign_coeff * (left_boundary_y - (global_pos_y + lateral_distance_y));
-	*left_boundary_speed = sign_coeff * (*left_boundary_speed);
+
+	if (left_boundary_speed != NULL) {
+		*left_boundary_speed = sign_coeff * (*left_boundary_speed);
+	}
 	/*std::cout << "left boundary levels:";
 	for (double elem : leftBoundaryLevelPoints) {
 		std::cout << elem << ", ";
@@ -2353,12 +2336,15 @@ void lf_plugin_get_distance_to_road_boundaries_at(NumericalID veh_id, double lon
 	double right_boundary_y;
 
 
-	boundary_value(mid_height, sign_coeff, rightBoundaryLevelPoints, rightBoundarySlopes, rightBoundaryOffsets, global_pos_x, veh_speed, &right_boundary_y, right_boundary_speed);
+	LaneFreeSimulationPlugin::getInstance()->boundary_value(mid_height, sign_coeff, rightBoundaryLevelPoints, rightBoundarySlopes, rightBoundaryOffsets, global_pos_x, veh_speed, &right_boundary_y, right_boundary_speed);
 
 
 	
-	*right_boundary_distance = sign_coeff * ((global_pos_y + lateral_distance_y) - right_boundary_y);
-	*right_boundary_speed = sign_coeff * (*right_boundary_speed);
+	*right_boundary_distance = sign_coeff * ((global_pos_y + lateral_distance_y) - right_boundary_y);	
+
+	if (right_boundary_speed != NULL) {
+		*right_boundary_speed = sign_coeff * (*right_boundary_speed);
+	}
 	//std::cout << "Current veh " << myveh->getID() << " at pos:(" << global_pos_x << "," << global_pos_y << ") with right boundary at " << right_boundary_y << " has distance :" << *right_boundary_distance << "\n";
 }
 
@@ -2493,6 +2479,8 @@ LaneFreeSimulationPlugin::LaneFreeSimulationPlugin(){
 	rest_app_timer_seconds = -1;;
 
 	myInstance = this;
+
+	
 }
 
 void free_mem(void* ptr) {
@@ -2772,6 +2760,8 @@ LaneFreeSimulationPlugin::get_all_neighbors_internal(MSLaneFreeVehicle* lfveh, c
 	// current edge id
 	NumericalID edge_id = current_edge->getNumericalID();//lfveh->get_vehicle()->getLane()->getEdge().getNumericalID();//this will contain the edge, also accounting for intersection
 
+	
+
 	// find the current edge's index on the route array
 	int my_edge_index{ veh_route.edge_index(current_edge) };
 
@@ -2809,6 +2799,9 @@ LaneFreeSimulationPlugin::get_all_neighbors_internal(MSLaneFreeVehicle* lfveh, c
 		std::cout << "\nVehicle " << lfveh->get_vehicle()->getID() << " not found in sorted vector of edge " << veh_edges[my_edge_index]->getID() << "!\n";
 		return;
 	}
+
+	// my veh id
+	NumericalID my_veh_id = current_edge_sorted_vehs->at(veh_index)->getNumericalID();
 
 	// starting from the next (or previous for upstream visibility) vehicle in the current segment 
 
@@ -2914,7 +2907,7 @@ LaneFreeSimulationPlugin::get_all_neighbors_internal(MSLaneFreeVehicle* lfveh, c
 			// my_pos is updated whenever we change edge, so that it is w.r.t. the local coordinates of current edge (i.e., negative value if vehicle before the segments start)
 			neighbor_distance = neighbor_pos - my_pos;
 
-			if ((front && (neighbor_distance <= distance)) || ((!front) && (neighbor_distance > -distance))) {
+			if ((front && (neighbor_distance <= distance)) || ((!front) && (neighbor_distance > -distance)) && (neighbor_id != my_veh_id)) {
 				neighbors_with_distance.push_back(std::make_pair(neighbor_distance, (MSVehicle*)neighbor_veh));
 				//std::cout << " " << neighbor_veh->getID() << " dist:" << neighbor_distance << "lat dist:" << get_relative_distance_y(veh_id, neighbor_id);
 			}
@@ -3193,6 +3186,29 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 		
 	}	
 	
+}
+
+// This code calculates the boundary's values and is based from Karteek's implementation. This is an internal function
+void
+LaneFreeSimulationPlugin::boundary_value(double mid_height, double direction, std::vector<double>& lim, std::vector<double>& slope, std::vector<double>& offset, double long_pos, double veh_speed_x, double* boundary_distance, double* boundary_speed) {
+	double boundary_distance_tmp = 0;
+	double boundary_speed_tmp = 0;
+	int size_points = lim.size();
+	for (size_t i = 0; i < size_points - 1; i++) {
+		if (long_pos * direction < offset[i] * direction) {
+			boundary_distance_tmp += mid_height * (lim[i + 1] - lim[i]) * tanh(slope[i] * direction * (long_pos - offset[i]));
+			boundary_speed_tmp += mid_height * (lim[i + 1] - lim[i]) * pow(cosh(slope[i] * direction * (long_pos - offset[i])), -2) * slope[i] * veh_speed_x;
+		}
+		else {
+			boundary_distance_tmp += (1 - mid_height) * (lim[i + 1] - lim[i]) * tanh((mid_height / (1 - mid_height)) * slope[i] * direction * (long_pos - offset[i]));
+			boundary_speed_tmp += mid_height * slope[i] * veh_speed_x * (lim[i + 1] - lim[i]) * pow(cosh((mid_height / (1 - mid_height)) * slope[i] * direction * (long_pos - offset[i])), -2);
+		}
+	}
+	*boundary_distance = boundary_distance_tmp + lim[0] + mid_height * (lim[size_points - 1] - lim[0]);
+	if (boundary_speed == nullptr) {
+		return;
+	}
+	*boundary_speed = boundary_speed_tmp;
 }
 
 
