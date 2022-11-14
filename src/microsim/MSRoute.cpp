@@ -32,6 +32,11 @@
 #include "MSLane.h"
 #include "MSRoute.h"
 
+// LFPlugin Begin
+#include <utils/shapes/ShapeContainer.h>
+#include <microsim/cfmodels/MSCFModel_LaneFree.h>
+// LFPlugin End
+
 
 // ===========================================================================
 // static member variables
@@ -57,11 +62,14 @@ MSRoute::MSRoute(const std::string& id,
     myCosts(-1),
     mySavings(0),
     myReroute(false),
-    myStops(stops)
+    myStops(stops),
+    visualizeLeftBoundary(false)
     // LFPlugin Begin
     ,
     hasLeftBoundary(false),
-    hasRightBoundary(false)    
+    hasRightBoundary(false),
+    num_of_steps_visualization_update_delay(1),
+    visualization_update_remaining_steps(0)
     // LFPlugin End
     {
     // LFPlugin Begin
@@ -81,14 +89,64 @@ MSRoute::MSRoute(const std::string& id,
         
 
         tmp_edge_prev = (*it);
-    }
+    }    
     // LFPlugin End
     }
 
 // LFPlugin Begin
 
 void 
-MSRoute::setLeftBoundary(std::string& leftBoundaryLevelPointsString, std::string& leftBoundarySlopesString, std::string& leftBoundaryOffsetsString, std::string& influencedBy) {
+MSRoute::getBoundaryShape(std::vector<double>& boundaryLevelPoints, std::vector<double>& boundaryOffsets, std::vector<double>& boundarySlopes, double step, PositionVector& boundaryShape) {
+    
+    // we choose the path direction according to the first lane on the path
+    const std::vector<MSLane*> myLanes = myEdges.at(0)->getLanes();
+    if (myLanes.size() == 0) {
+        std::cout << "Error initializing the right boundary constant value for internal boundary control. Empty lane set for first edge!\n";
+        return;
+    }
+    MSLane* myFirstLane{ myLanes.at(0) };
+
+
+    // we consider routes with consistent angle
+    double pathAngle = myFirstLane->getShape().angleAt2D(0);
+
+    double sign_coeff = cos(pathAngle) > 0 ? +1. : -1.;
+
+
+    // in global coordinates
+    double x_origin = myFirstLane->getShape()[0].x();
+
+    // find x position of the route's end in global coordinates. It will be the last point of the last lane's shape
+    const std::vector<MSLane*> myLanes_last = myEdges.at(myEdges.size() - 1)->getLanes();
+    MSLane* myLastLane{ myLanes_last.at(myLanes_last.size() - 1) };
+    double x_end = myLastLane->getShape()[myLastLane->getShape().size() - 1].x();
+
+    //std::cout << "For route:" << getID() << " x start:" << x_origin << " and x end:" << x_end << "\n";
+    bool finish = false;
+
+    // we want to calculate the y_pos of the boundary
+    double x_pos_tmp=0,y_pos;
+    
+    for (double x_pos = x_origin; x_pos * sign_coeff <= x_end * sign_coeff; x_pos = x_pos + sign_coeff * step) {
+        
+        // y_pos gets the boundary's value
+        LaneFreeSimulationPlugin::getInstance()->boundary_value(0.5, sign_coeff, boundaryLevelPoints, boundarySlopes, boundaryOffsets, x_pos, 0., &y_pos, NULL);
+
+        boundaryShape.push_back(Position(x_pos, y_pos));
+        x_pos_tmp = x_pos;
+    }
+    
+    if (x_pos_tmp != x_end) {
+        // y_pos gets the boundary's value
+        LaneFreeSimulationPlugin::getInstance()->boundary_value(0.5, sign_coeff, boundaryLevelPoints, boundarySlopes, boundaryOffsets, x_end, 0., &y_pos, NULL);
+        boundaryShape.push_back(Position(x_end, y_pos));
+
+    }
+    
+}
+
+void 
+MSRoute::setLeftBoundary(std::string& leftBoundaryLevelPointsString, std::string& leftBoundarySlopesString, std::string& leftBoundaryOffsetsString, std::string& influencedBy, std::string& visualizeLeftBoundaryColor, std::string& vizualizeLeftBoundaryStep, std::string& vizualizeLeftBoundaryLineWidth, std::string& vizualizeLeftBoundaryUpdateDelaySeconds) {
     hasLeftBoundary = true;
 
     // use StringTokenizer to get the string xml value as a vector of string values
@@ -132,7 +190,12 @@ MSRoute::setLeftBoundary(std::string& leftBoundaryLevelPointsString, std::string
         leftBoundaryLevelPoints.push_back(element_value);
         // initialize leftBoundaryLevelPointsEpsilonCoefficients with epsilon=1, i.e., the same values with leftBoundaryLevelPoints
         leftBoundaryLevelPointsEpsilonCoefficients.push_back(element_value);
-        
+
+        // visualized boundary also will start with the same value
+        leftBoundaryLevelPointsEpsilonCoefficientsVisualized.push_back(element_value);
+        leftBoundaryLevelPointsEpsilonCoefficientsStep.push_back(0.);
+
+
         if (i == points_size - 1) {
             continue; // or break; It is the last iteration so they are equivalent
         }
@@ -173,17 +236,127 @@ MSRoute::setLeftBoundary(std::string& leftBoundaryLevelPointsString, std::string
         
     }
     //std::cout << "\n";
-
+    size_t influencedIdx = 0;
+    MSRoute* influencer{ nullptr };
     if (influencedBy.size() > 0 && influencedBy != "") {
         //this variable is not empty
 
-        MSRoute* influencer = (MSRoute*)MSRoute::dictionary(influencedBy);
+        influencer = (MSRoute*)MSRoute::dictionary(influencedBy);
         if (influencer == nullptr) {
             std::cout << "Error! When parsing information for route " << getID() << ", influencer route " << influencedBy << " could not be found!\n";
             return;
         }
-        influencer->addInfluencedRoute(this, leftBoundaryOffsets);
+        influencedIdx = influencer->addInfluencedRoute(this, leftBoundaryOffsets);
+        
     }
+
+
+    // visualization is not specified
+    if (visualizeLeftBoundaryColor.empty() || visualizeLeftBoundaryColor == "") {
+        //std::cout << "Returns here!\n";
+        return;
+    }
+    //std::cout << "Called for route " << getID() << "\n";
+    visualizeLeftBoundary = true;
+    const std::vector<MSLane*> myLanes = myEdges.at(0)->getLanes();
+    if (myLanes.size() == 0) {
+        std::cout << "Error initializing the right boundary constant value for internal boundary control. Empty lane set for first edge!\n";
+        return;
+    }
+    MSLane* myFirstLane{ myLanes.at(0) };
+
+
+    // in global coordinates
+    double x_origin = myFirstLane->getShape()[0].x();
+
+    // find x position of the route's end in global coordinates. It will be the last point of the last lane's shape
+    const std::vector<MSLane*> myLanes_last = myEdges.at(myEdges.size() - 1)->getLanes();
+    MSLane* myLastLane{ myLanes_last.at(myLanes_last.size() - 1) };
+    double x_end = myLastLane->getShape()[myLastLane->getShape().size() - 1].x();
+
+    // by default we select a step that will create visualization segments of at least twice the amount of offset points
+    leftBoundaryVisualizationStep = abs(x_end - x_origin) / (8 * leftBoundaryOffsets.size());
+
+    if ((!vizualizeLeftBoundaryStep.empty()) && vizualizeLeftBoundaryStep != "") {
+        double step_parse = StringUtils::toDouble(vizualizeLeftBoundaryStep);
+
+        if (step_parse > leftBoundaryVisualizationStep) {
+            std::cout << "Warning! Step selected for the vizualisation of left boundary at route " << getID() << " will be overwritten! We want the step selection to provide at least twice the number of offset points!\n";
+        }
+        else {
+            leftBoundaryVisualizationStep = step_parse;
+        }
+
+    }
+
+    // default value
+    double visualizeBoundaryLineWidth = 0.1;
+    if ((!vizualizeLeftBoundaryLineWidth.empty()) && vizualizeLeftBoundaryLineWidth != "") {
+        double line_width = StringUtils::toDouble(vizualizeLeftBoundaryLineWidth);
+        if (line_width <= 0) {
+            std::cout << "Line width for left boundary at route " << getID() << " cannot be non-positive! Default value of 0.1 will be selected instead.\n";
+        }
+        else {
+            visualizeBoundaryLineWidth = line_width;
+        }
+    }
+
+
+    
+
+
+
+
+    ShapeContainer& shapeCont = MSNet::getInstance()->getShapeContainer();
+    PositionVector pShape;
+
+    
+ 
+    getBoundaryShape(leftBoundaryLevelPoints, leftBoundaryOffsets, leftBoundarySlopes, leftBoundaryVisualizationStep, pShape);
+    
+    RGBColor col = RGBColor::parseColor(visualizeLeftBoundaryColor);
+    
+    if (!shapeCont.addPolygon("leftBoundary_"+getID(), "leftBoundary", col, 130.-(double)influencedIdx, Shape::DEFAULT_ANGLE, Shape::DEFAULT_IMG_FILE, Shape::DEFAULT_RELATIVEPATH, pShape, false, false, visualizeBoundaryLineWidth)) {
+        std::cout << "Error! could not visualize left boundary of route:"<< getID()<<"\n";
+    }
+    
+    
+    // we also need to update the veh out of bounds event function
+
+
+    
+
+    if (influencer != nullptr) {
+        // if this is influeced by another route, this will inherit its delay
+        num_of_steps_visualization_update_delay = influencer->getVisualizerUpdateDelaySteps();
+    }
+    else {
+        // default value is 2 seconds
+        double visualizeBoundariesUpdateDelaySeconds = 2.;
+        if ((!vizualizeLeftBoundaryUpdateDelaySeconds.empty()) && vizualizeLeftBoundaryUpdateDelaySeconds != "") {
+            double parse_delay = StringUtils::toDouble(vizualizeLeftBoundaryUpdateDelaySeconds);
+            
+            if (parse_delay < 0) {
+                std::cout << "Delay for epsilon update for left boundary at route " << getID() << " cannot be negative! Default value of 2 seconds will be selected instead.\n";
+            }
+            else {
+                visualizeBoundariesUpdateDelaySeconds = parse_delay;
+            }
+        }
+
+        if (visualizeBoundariesUpdateDelaySeconds == 0.) {
+            num_of_steps_visualization_update_delay = 1;
+        }
+        else {
+            num_of_steps_visualization_update_delay = std::ceil(visualizeBoundariesUpdateDelaySeconds / TS);
+        }
+        //std::cout << "Selected step is:"<< num_of_steps_visualization_update_delay << " with delay:" << visualizeBoundariesUpdateDelaySeconds << " and step:" << TS << "\n";
+    }
+
+    
+
+    // we use ceil in case the value of seconds is not proportional to the time-step selected
+    
     
 }
 
@@ -192,11 +365,11 @@ MSRoute::updateLeftBoundaryLevelPointsEpsilonCoefficients(std::vector<double>& l
     
     double boundaries_width;
     
-    /*std::cout << "Update route " << getID() << " with epsilons: ";
-    for (double elem : leftBoundaryEpsilons) {
+    //std::cout << "Update route " << getID() << " with epsilons: ";
+   /* for (double elem : leftBoundaryEpsilons) {
         std::cout << elem<<" ";
-    }
-    std::cout << "\n";*/
+    }*/
+    //std::cout << "\n";
     size_t boundaries_size = leftBoundaryLevelPoints.size();
     if (boundaries_size == 0) {
         std::cout << "Error for route " << getID() << "! Left boundary level points are not defined!\n";
@@ -207,18 +380,30 @@ MSRoute::updateLeftBoundaryLevelPointsEpsilonCoefficients(std::vector<double>& l
     }
 
     
-    double epsilon_val;
+    double epsilon_val, deviation;
     for (int i = 0; i < leftBoundaryLevelPoints.size(); i++) {
         boundaries_width = leftBoundaryLevelPoints.at(i) - rightBoundaryConstantLevelPoint;
+        
         epsilon_val = leftBoundaryEpsilons.at(i);
         if (epsilon_val < 0 || epsilon_val>2) {
             std::cout << "All epsilon values should lie within the range 0<epsilon<2! Error for route " << getID() << " at epsilon index " << i << ". This value will be neglected\n";
             epsilon_val = 1;
         }
-        leftBoundaryLevelPointsEpsilonCoefficients.at(i) = rightBoundaryConstantLevelPoint + boundaries_width * epsilon_val;        
+        // update the left boundary
+        leftBoundaryLevelPointsEpsilonCoefficients.at(i) = rightBoundaryConstantLevelPoint + boundaries_width * epsilon_val;
+
+        // calculate the deviation of the visualized boundary and the updated value
+        deviation = leftBoundaryLevelPointsEpsilonCoefficients.at(i) - leftBoundaryLevelPointsEpsilonCoefficientsVisualized.at(i);
+        //std::cout << "deviation is:" << deviation << " where leftboundary is at:"<< leftBoundaryLevelPointsEpsilonCoefficients.at(i) << ", and visualized at:"<< leftBoundaryLevelPointsEpsilonCoefficientsVisualized.at(i) << "\n";
+        // calculate the visualization step for every time-step
+        leftBoundaryLevelPointsEpsilonCoefficientsStep.at(i) = deviation / (double)num_of_steps_visualization_update_delay;
+        //std::cout << "norm deviation is:" << leftBoundaryLevelPointsEpsilonCoefficientsStep.at(i) << "\n";
     }
 
 
+    // reset the visualization delay counter
+    visualization_update_remaining_steps = num_of_steps_visualization_update_delay;
+    //std::cout << "remaining steps:" << visualization_update_remaining_steps << "\n";
 
     std::vector<double> influenced_epsilons;
     size_t influenced_size_epsilons, start_idx, end_idx, start_my_idx, end_my_idx, my_idx;
@@ -253,12 +438,72 @@ MSRoute::updateLeftBoundaryLevelPointsEpsilonCoefficients(std::vector<double>& l
         }
         std::cout << "\n";*/
         influenced->updateLeftBoundaryLevelPointsEpsilonCoefficients(influenced_epsilons);
-    }   
+    }
+
+
 
 }
 
+
+bool
+MSRoute::updateVisualizationLeftBoundary() {
+
+    if (!isLeftBoundaryVisualized()) {
+        return false;
+    }
+    PositionVector pShape;
+
+    
+    if (visualization_update_remaining_steps <= 0) {
+        
+        if (visualization_update_remaining_steps == 0) {
+           
+            //consider numerical errors due to floating point arithmetic. Make the visualized value be equal to the actual one after the last step
+            for (size_t i = 0; i < leftBoundaryLevelPointsEpsilonCoefficients.size(); i++) {
+                // update the visualized left boundary
+                
+                leftBoundaryLevelPointsEpsilonCoefficientsVisualized.at(i) = leftBoundaryLevelPointsEpsilonCoefficients.at(i);
+            }
+            
+            getBoundaryShape(leftBoundaryLevelPointsEpsilonCoefficientsVisualized, leftBoundaryOffsets, leftBoundarySlopes, leftBoundaryVisualizationStep, pShape);
+            
+            ShapeContainer& shapeCont = MSNet::getInstance()->getShapeContainer();
+            
+            // shape was added already
+            shapeCont.reshapePolygon("leftBoundary_" + getID(), pShape);
+        }
+        return false;
+    }
+
+
+    for (size_t i = 0; i < leftBoundaryLevelPointsEpsilonCoefficients.size(); i++) {
+        // update the visualized left boundary
+        leftBoundaryLevelPointsEpsilonCoefficientsVisualized.at(i) = leftBoundaryLevelPointsEpsilonCoefficientsVisualized.at(i) + leftBoundaryLevelPointsEpsilonCoefficientsStep.at(i);
+    }
+
+    getBoundaryShape(leftBoundaryLevelPointsEpsilonCoefficientsVisualized, leftBoundaryOffsets, leftBoundarySlopes, leftBoundaryVisualizationStep, pShape);
+
+    ShapeContainer& shapeCont = MSNet::getInstance()->getShapeContainer();
+
+    // shape was added already
+    shapeCont.reshapePolygon("leftBoundary_" + getID(), pShape);
+
+
+    visualization_update_remaining_steps--;
+
+
+    // TODO add influencers to be visualized as well
+
+    for (MSRoute* influenced : influencedRoutes) {
+        influenced->updateVisualizationLeftBoundary();
+    }
+
+    return true;
+}
+
+
 void 
-MSRoute::setRightBoundary(std::string& rightBoundaryLevelPointsString, std::string& rightBoundarySlopesString, std::string& rightBoundaryOffsetsString, std::string& rightBoundaryConstant) {
+MSRoute::setRightBoundary(std::string& rightBoundaryLevelPointsString, std::string& rightBoundarySlopesString, std::string& rightBoundaryOffsetsString, std::string& rightBoundaryConstant, std::string& visualizeRightBoundaryColor, std::string& vizualizeRightBoundaryStep, std::string& vizualizeRightBoundaryLineWidth) {
     hasRightBoundary = true;
 
     // use StringTokenizer to get the string xml value as a vector of string values
@@ -318,43 +563,100 @@ MSRoute::setRightBoundary(std::string& rightBoundaryLevelPointsString, std::stri
 
     }
 
+    if (rightBoundaryConstant == "empty") {
+        const std::vector<MSLane*> myLanes = myEdges.at(0)->getLanes();
+        if (myLanes.size() == 0) {
+            std::cout << "Error initializing the right boundary constant value for internal boundary control. Empty lane set for first edge!\n";
+            return;
+        }
+        MSLane* myFirstLane{ myLanes.at(0) };
+        double pathAngle = myFirstLane->getShape().angleAt2D(0);
+        bool direction = cos(pathAngle) > 0;
+        rightBoundaryConstantLevelPoint = direction ? min_element : max_element;
+    }
+    else {
+        element_value = StringUtils::toDouble(rightBoundaryConstant);
+        rightBoundaryConstantLevelPoint = element_value;
+        
 
-    // initialize the right Boundary level that is taken for the internal boundary control through the epsilon values
-    // Considering it is used for scenarios with on-ramps and off-ramps. It makes sense to pick the level point associated with the main highway
-    // This will be either the max or min level point depending on the direction
-    // We can get direction through the first lane
-    if (myEdges.size() == 0) {
-        std::cout << "Error initializing the right boundary constant value for internal boundary control. Empty path!\n";
-        return;
     }
 
-    // we choose the path direction according to the first lane on the path
+    // visualization is not specified
+    if (visualizeRightBoundaryColor.empty() || visualizeRightBoundaryColor == "") {
+        
+        return;
+    }
+    
+
     const std::vector<MSLane*> myLanes = myEdges.at(0)->getLanes();
     if (myLanes.size() == 0) {
         std::cout << "Error initializing the right boundary constant value for internal boundary control. Empty lane set for first edge!\n";
         return;
     }
     MSLane* myFirstLane{ myLanes.at(0) };
-    double pathAngle = myFirstLane->getShape().angleAt2D(0);
-    if (rightBoundaryConstant == "empty") {
-        if (cos(pathAngle) > 0) {
-            rightBoundaryConstantLevelPoint = max_element;
+
+
+    // in global coordinates
+    double x_origin = myFirstLane->getShape()[0].x();
+
+    // find x position of the route's end in global coordinates. It will be the last point of the last lane's shape
+    const std::vector<MSLane*> myLanes_last = myEdges.at(myEdges.size() - 1)->getLanes();
+    MSLane* myLastLane{ myLanes_last.at(myLanes_last.size() - 1) };
+    double x_end = myLastLane->getShape()[myLastLane->getShape().size() - 1].x();
+
+    // by default we select a step that will create visualization segments of at least twice the amount of offset points
+    double rightBoundaryVisualizationStep = abs(x_end - x_origin) / (8 * rightBoundaryOffsets.size());
+
+    if ((!vizualizeRightBoundaryStep.empty()) && vizualizeRightBoundaryStep != "") {
+        double step_parse = StringUtils::toDouble(vizualizeRightBoundaryStep);
+
+        if (step_parse > rightBoundaryVisualizationStep) {
+            std::cout << "Warning! Step selected for the vizualisation of left boundary at route " << getID() << " will be overwritten! We want the step selection to provide at least twice the number of offset points!\n";
         }
         else {
-            rightBoundaryConstantLevelPoint = min_element;
+            rightBoundaryVisualizationStep = step_parse;
+        }
+
+    }
+
+    // default value
+    double vizualizeBoundaryLineWidth = 0.1;
+    if ((!vizualizeRightBoundaryLineWidth.empty()) && vizualizeRightBoundaryLineWidth != "") {
+        double line_width = StringUtils::toDouble(vizualizeRightBoundaryLineWidth);
+        if (line_width <= 0) {
+            std::cout << "Line width for left boundary at route " << getID() << " cannot be non-positive! Default value of 0.1 will be selected instead.\n";
+        }
+        else {
+            vizualizeBoundaryLineWidth = line_width;
         }
     }
-    else {
-        rightBoundaryConstantLevelPoint = StringUtils::toDouble(rightBoundaryConstant);
-    }
+
+
     
-    if (cos(pathAngle) != 1 && cos(pathAngle) != -1) {
-        std::cout << "Warning! Constant right boundary value for internal control was set for left or right direction, but the path's angle is: "<< pathAngle << " rad \n";
+
+
+
+
+    ShapeContainer& shapeCont = MSNet::getInstance()->getShapeContainer();
+    PositionVector pShape;
+
+
+
+    getBoundaryShape(rightBoundaryLevelPoints, rightBoundaryOffsets, rightBoundarySlopes, rightBoundaryVisualizationStep, pShape);
+
+    RGBColor col = RGBColor::parseColor(visualizeRightBoundaryColor);
+
+    if (!shapeCont.addPolygon("rightBoundary_" + getID(), "rightBoundary", col, 130., Shape::DEFAULT_ANGLE, Shape::DEFAULT_IMG_FILE, Shape::DEFAULT_RELATIVEPATH, pShape, false, false, vizualizeBoundaryLineWidth)) {
+        std::cout << "Error! could not visualize right boundary of route:" << getID() << "\n";
     }
+
+
+    // we also need to update the veh out of bounds event function
+  
 
 }
 
-void MSRoute::addInfluencedRoute(MSRoute* influenced, std::vector<double>& influencedLeftBoundaryOffsets) {
+size_t MSRoute::addInfluencedRoute(MSRoute* influenced, std::vector<double>& influencedLeftBoundaryOffsets) {
 
 
     size_t my_idx = 0, influenced_idx = 0;
@@ -364,7 +666,7 @@ void MSRoute::addInfluencedRoute(MSRoute* influenced, std::vector<double>& influ
     const std::vector<MSLane*> myLanes = myEdges.at(0)->getLanes();
     if (myLanes.size() == 0) {
         std::cout << "Error initializing the right boundary constant value for internal boundary control. Empty lane set for first edge!\n";
-        return;
+        return 0;
     }
     MSLane* myFirstLane{ myLanes.at(0) };
     double pathAngle = myFirstLane->getShape().angleAt2D(0);
@@ -408,14 +710,14 @@ void MSRoute::addInfluencedRoute(MSRoute* influenced, std::vector<double>& influ
         }
         else {
             std::cout << "Error at obtaining influenced path's common epsilons! we shouldn't reach this point!\n";
-            return;
+            return 0;
         }
     }
 
     if (epsilon_start_idx == -1) {
         std::cout << "Error at obtaining influenced path's "<< influenced->getID()<<" common epsilons! Offset values do not coincide with influencer's"<<getID()<<"!\n";
         std::cout << "Start:" << epsilon_start_idx;
-        return;
+        return 0;
     }
 
     if (epsilon_end_idx == -1) {
@@ -427,6 +729,8 @@ void MSRoute::addInfluencedRoute(MSRoute* influenced, std::vector<double>& influ
     influencedRoutes.push_back(influenced);
     influencedRoutesEpsilonIndicesStartEnd.push_back(std::make_pair((size_t)epsilon_start_idx, (size_t)epsilon_end_idx));
     influencedRoutesInfluencerEpsilonIndicesStartEnd.push_back(std::make_pair((size_t)epsilon_influencer_start_idx, (size_t)epsilon_influencer_end_idx));
+
+    return influencedRoutes.size();
 
 }
 // LFPlugin End

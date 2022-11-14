@@ -859,15 +859,22 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
 
 
     // for the boundaries
-    { "leftBoundaryLevelPoints",    SUMO_ATTR_LF_LEFT_BOUNDARY_LVL_POINTS},
-    { "leftBoundarySlopes",         SUMO_ATTR_LF_LEFT_BOUNDARY_SLOPES },
-    { "leftBoundaryOffsets",        SUMO_ATTR_LF_LEFT_BOUNDARY_OFFSETS },
-    { "influencedBy",               SUMO_ATTR_LF_INFLUENCED_BY },
+    { "leftBoundaryLevelPoints",            SUMO_ATTR_LF_LEFT_BOUNDARY_LVL_POINTS},
+    { "leftBoundarySlopes",                 SUMO_ATTR_LF_LEFT_BOUNDARY_SLOPES },
+    { "leftBoundaryOffsets",                SUMO_ATTR_LF_LEFT_BOUNDARY_OFFSETS },
+    { "influencedBy",                       SUMO_ATTR_LF_INFLUENCED_BY },
+    { "leftBoundaryVisualizerColor",        SUMO_ATTR_LF_LEFT_BOUNDARY_VISUALIZER_COLOR },
+    { "leftBoundaryVisualizerStep",         SUMO_ATTR_LF_LEFT_BOUNDARY_VISUALIZER_STEP },
+    { "leftBoundaryVisualizerLineWidth",    SUMO_ATTR_LF_LEFT_BOUNDARY_VISUALIZER_LINE_WIDTH },
+    { "leftBoundaryVisualizerUpdateDelay",  SUMO_ATTR_LF_LEFT_BOUNDARY_VISUALIZER_UPDATE_DELAY },
 
-    { "rightBoundaryLevelPoints",    SUMO_ATTR_LF_RIGHT_BOUNDARY_LVL_POINTS },
-    { "rightBoundarySlopes",         SUMO_ATTR_LF_RIGHT_BOUNDARY_SLOPES },
-    { "rightBoundaryOffsets",        SUMO_ATTR_LF_RIGHT_BOUNDARY_OFFSETS },
-    { "rightBoundaryConstant",       SUMO_ATTR_LF_RIGHT_BOUNDARY_CONSTANT },
+    { "rightBoundaryLevelPoints",           SUMO_ATTR_LF_RIGHT_BOUNDARY_LVL_POINTS },
+    { "rightBoundarySlopes",                SUMO_ATTR_LF_RIGHT_BOUNDARY_SLOPES },
+    { "rightBoundaryOffsets",               SUMO_ATTR_LF_RIGHT_BOUNDARY_OFFSETS },
+    { "rightBoundaryConstant",              SUMO_ATTR_LF_RIGHT_BOUNDARY_CONSTANT },
+    { "rightBoundaryVisualizerColor",       SUMO_ATTR_LF_RIGHT_BOUNDARY_VISUALIZER_COLOR },
+    { "rightBoundaryVisualizerStep",        SUMO_ATTR_LF_RIGHT_BOUNDARY_VISUALIZER_STEP },
+    { "rightBoundaryVisualizerLineWidth",   SUMO_ATTR_LF_RIGHT_BOUNDARY_VISUALIZER_LINE_WIDTH },
     // LFPlugin End
 
     // Other

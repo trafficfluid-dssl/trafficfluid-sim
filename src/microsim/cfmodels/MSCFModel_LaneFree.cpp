@@ -1457,7 +1457,7 @@ double* lf_plugin_get_density_per_segment_per_edge(NumericalID edge_id, double s
 
 	// initialize all values to zero
 	for (i = 0; i < size_segments; i++) {
-		dens_per_segment[segment_i] = 0;
+		dens_per_segment[i] = 0;
 	}
 		
 	for (i = 0; i < n_v; i++) {
@@ -2129,6 +2129,8 @@ void lf_plugin_set_epsilon_left_boundary(char* route_name, double* epsilon_array
 
 	std::vector<double> epsilons(epsilon_array, epsilon_array + epsilon_array_size);
 	myRoute->updateLeftBoundaryLevelPointsEpsilonCoefficients(epsilons);
+	
+	LaneFreeSimulationPlugin::getInstance()->addRouteForBoundariesVisualizer(myRoute);
 
 }
 
@@ -2265,6 +2267,7 @@ void lf_plugin_get_distance_to_road_boundaries_at(NumericalID veh_id, double lon
 	double sign_coeff{ cos(myveh->getAngle()) > 0 ? 1.0 : -1.0 }; // if vehicle is on the opposite side, distances should be multiplied by -1
 	std::vector<double> leftBoundarySlopes = veh_route.getLeftBoundarySlopes();
 
+
 	std::vector<double> leftBoundaryOffsets = veh_route.getLeftBoundaryOffsets();
 
 
@@ -2273,7 +2276,7 @@ void lf_plugin_get_distance_to_road_boundaries_at(NumericalID veh_id, double lon
 
 
 	if (leftBoundaryLevelPoints.size() == 0) {
-		std::cout << "ERROR: left boundary parameters not provided!\n";
+		std::cout << "ERROR! Left Boundary not defined for route " << veh_route.getID() << "\n";
 		return;
 	}
 
@@ -2302,8 +2305,6 @@ void lf_plugin_get_distance_to_road_boundaries_at(NumericalID veh_id, double lon
 
 
 
-
-
 	*left_boundary_distance = sign_coeff * (left_boundary_y - (global_pos_y + lateral_distance_y));
 
 	if (left_boundary_speed != NULL) {
@@ -2325,7 +2326,7 @@ void lf_plugin_get_distance_to_road_boundaries_at(NumericalID veh_id, double lon
 
 	std::vector<double> rightBoundaryLevelPoints = veh_route.getRightBoundaryLevelPoints();
 	if (rightBoundaryLevelPoints.size() == 0) {
-		std::cout << "ERROR: right boundary parameters not provided!\n";
+		std::cout << "ERROR! Right Boundary not defined for route " << veh_route.getID() << "\n";
 		return;
 	}
 
@@ -2569,6 +2570,7 @@ LaneFreeSimulationPlugin::lf_simulation_step(){
 	double epsilon_array[6] = { 1,0.8,1.2,1.4,0.6,0.8 };
 	lf_plugin_set_epsilon_left_boundary("main_highway", epsilon_array, 6);*/
 	lf_simulation_checkCollisions();
+	updateBoundariesVisualizer();
 
 	before_step_time = std::chrono::steady_clock::now();
 	
@@ -3577,6 +3579,36 @@ LaneFreeSimulationPlugin::convert_to_local_coordinates(double* x_pos_local, doub
 		*y_pos_local = -*y_pos_local;
 	}
 
+}
+
+
+void
+LaneFreeSimulationPlugin::addRouteForBoundariesVisualizer(MSRoute* route) {
+	if (route->isLeftBoundaryVisualized()) {
+		std::string routeID = route->getID();
+		//updateRouteBoundaries.insert(std::make_pair(routeID, route));
+		updateRouteBoundaries[routeID] = route;
+		//std::cout << "Update visualization for route " << routeID << "\n";
+	}
+	
+}
+
+void
+LaneFreeSimulationPlugin::updateBoundariesVisualizer() {
+	std::vector<std::string> to_delete;
+	//std::cout << "Called update visualizer!\n";
+	bool is_not_done;
+	for (std::map<std::string, MSRoute* >::iterator map_iterator = updateRouteBoundaries.begin(); map_iterator != updateRouteBoundaries.end(); map_iterator++) {
+		is_not_done = map_iterator->second->updateVisualizationLeftBoundary();
+		//std::cout << "Update left boundary for route " << map_iterator->first << "\n";
+		if (!is_not_done) {
+			to_delete.push_back(map_iterator->first);
+		}
+	}
+
+	for (std::string elem : to_delete) {
+		updateRouteBoundaries.erase(elem);
+	}
 }
 
 //to be removed

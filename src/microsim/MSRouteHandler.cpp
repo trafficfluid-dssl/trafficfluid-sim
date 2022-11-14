@@ -521,6 +521,17 @@ MSRouteHandler::openRoute(const SUMOSAXAttributes& attrs) {
         else {
             influencedBy = "";
         }
+
+        // check for visualizer
+        if (attrs.hasAttribute(SUMO_ATTR_LF_LEFT_BOUNDARY_VISUALIZER_COLOR)) {
+            leftBoundaryVisualizerColor = attrs.get<std::string>(SUMO_ATTR_LF_LEFT_BOUNDARY_VISUALIZER_COLOR, myActiveRouteID.c_str(), ok);
+            leftBoundaryVisualizerStep = attrs.get<std::string>(SUMO_ATTR_LF_LEFT_BOUNDARY_VISUALIZER_STEP, myActiveRouteID.c_str(), ok, false);
+            leftBoundaryVisualizerLineWidth = attrs.get<std::string>(SUMO_ATTR_LF_LEFT_BOUNDARY_VISUALIZER_LINE_WIDTH, myActiveRouteID.c_str(), ok, false);
+            leftBoundaryVisualizerUpdateDelay = attrs.get<std::string>(SUMO_ATTR_LF_LEFT_BOUNDARY_VISUALIZER_UPDATE_DELAY, myActiveRouteID.c_str(), ok, false);
+        }
+        else {
+            leftBoundaryVisualizerColor = "";
+        }
     }
 
     // same thing for the right boundary
@@ -545,7 +556,20 @@ MSRouteHandler::openRoute(const SUMOSAXAttributes& attrs) {
             // constant was not defined, so have an "empty" string to flag that
             rightBoundaryConstant = "empty";
         }
+
+        // check for visualizer
+        if (attrs.hasAttribute(SUMO_ATTR_LF_RIGHT_BOUNDARY_VISUALIZER_COLOR)) {
+            rightBoundaryVisualizerColor = attrs.get<std::string>(SUMO_ATTR_LF_RIGHT_BOUNDARY_VISUALIZER_COLOR, myActiveRouteID.c_str(), ok);            
+            rightBoundaryVisualizerStep = attrs.get<std::string>(SUMO_ATTR_LF_RIGHT_BOUNDARY_VISUALIZER_STEP, myActiveRouteID.c_str(), ok, false);
+            rightBoundaryVisualizerLineWidth = attrs.get<std::string>(SUMO_ATTR_LF_RIGHT_BOUNDARY_VISUALIZER_LINE_WIDTH, myActiveRouteID.c_str(), ok, false);
+        }
+        else {
+            rightBoundaryVisualizerColor = "";
+        }
     }
+
+
+    
     // LFPlugin End
 }
 
@@ -647,11 +671,11 @@ MSRouteHandler::closeRoute(const bool mayBeDisconnected) {
         route->setReroute(mustReroute);
         // LFPlugin Begin
         if(hasLeftBoundary) {
-            route->setLeftBoundary(leftBoundaryLevelPoints, leftBoundarySlopes, leftBoundaryOffsets, influencedBy);
+            route->setLeftBoundary(leftBoundaryLevelPoints, leftBoundarySlopes, leftBoundaryOffsets, influencedBy, leftBoundaryVisualizerColor, leftBoundaryVisualizerStep, leftBoundaryVisualizerLineWidth, leftBoundaryVisualizerUpdateDelay);
         }
 
         if (hasRightBoundary) {
-            route->setRightBoundary(rightBoundaryLevelPoints, rightBoundarySlopes, rightBoundaryOffsets, rightBoundaryConstant);
+            route->setRightBoundary(rightBoundaryLevelPoints, rightBoundarySlopes, rightBoundaryOffsets, rightBoundaryConstant, rightBoundaryVisualizerColor, rightBoundaryVisualizerStep, rightBoundaryVisualizerLineWidth);
         }
         hasLeftBoundary = false;
         hasRightBoundary = false;

@@ -126,10 +126,15 @@ public:
         return myEdgeswInternal;
     }
 
+    void getBoundaryShape(std::vector<double>& boundaryLevelPoints, std::vector<double>& boundaryOffsets, std::vector<double>& boundarySlopes, double step, PositionVector& boundaryShape);
 
-    void setLeftBoundary(std::string& leftBoundaryLevelPointsString, std::string& leftBoundarySlopesString, std::string& leftBoundaryOffsetsString, std::string& influencedBy);
 
-    void setRightBoundary(std::string& rightBoundaryLevelPointsString, std::string& rightBoundarySlopesString, std::string& rightBoundaryOffsetsString, std::string& rightBoundaryConstant);
+    void setLeftBoundary(std::string& leftBoundaryLevelPointsString, std::string& leftBoundarySlopesString, std::string& leftBoundaryOffsetsString, std::string& influencedBy, std::string& visualizeLeftBoundaryColor, std::string& vizualizeLeftBoundaryStep, std::string& vizualizeLeftBoundaryLineWidth, std::string& vizualizeLeftBoundaryUpdateDelaySeconds);
+
+
+    void setRightBoundary(std::string& rightBoundaryLevelPointsString, std::string& rightBoundarySlopesString, std::string& rightBoundaryOffsetsString, std::string& rightBoundaryConstant, std::string& visualizeRightBoundaryColor, std::string& vizualizeRightBoundaryStep, std::string& vizualizeRightBoundaryLineWidth);
+
+    
     
 
     const std::vector<double>& getLeftBoundaryLevelPoints() const {
@@ -142,9 +147,16 @@ public:
         return leftBoundaryLevelPointsEpsilonCoefficients;
     }
 
+    const bool isLeftBoundaryVisualized() const {
+
+        return visualizeLeftBoundary;
+    }
 
     // returns the left boundary offsets, according to the epsilon values selected, results will be appended in the input argument
     void updateLeftBoundaryLevelPointsEpsilonCoefficients(std::vector<double>& leftBoundaryEpsilons);
+
+    // returns false when the visualized boundary is aligned with the updated one. If further change is required, it returns true
+    bool updateVisualizationLeftBoundary();
 
     const std::vector<double>& getLeftBoundarySlopes() const {
         return leftBoundarySlopes;
@@ -170,7 +182,11 @@ public:
         return localEdgePosLeftBoundaryOffsets;
     }
 
-    void addInfluencedRoute(MSRoute* influenced, std::vector<double>& influencedLeftBoundaryOffsets);
+    size_t addInfluencedRoute(MSRoute* influenced, std::vector<double>& influencedLeftBoundaryOffsets);
+
+    int getVisualizerUpdateDelaySteps() const {
+        return num_of_steps_visualization_update_delay;
+    }
 
     // LFPlugin End
 
@@ -344,6 +360,8 @@ private:
     std::vector<double> leftBoundarySlopes;
     std::vector<double> leftBoundaryOffsets;
     
+    double leftBoundaryVisualizationStep;
+    bool visualizeLeftBoundary;
 
     bool hasRightBoundary;
     std::vector<double> rightBoundaryLevelPoints;
@@ -352,6 +370,11 @@ private:
     
     double rightBoundaryConstantLevelPoint; // this is useful for the use of epsilon
     std::vector<double> leftBoundaryLevelPointsEpsilonCoefficients;
+    std::vector<double> leftBoundaryLevelPointsEpsilonCoefficientsVisualized;
+    std::vector<double> leftBoundaryLevelPointsEpsilonCoefficientsStep;
+    int num_of_steps_visualization_update_delay;
+    int visualization_update_remaining_steps;
+
     std::vector<std::pair<long long, double>> localEdgePosLeftBoundaryOffsets;
     std::vector<MSRoute*> influencedRoutes;
     std::vector<std::pair<size_t,size_t>> influencedRoutesEpsilonIndicesStartEnd;

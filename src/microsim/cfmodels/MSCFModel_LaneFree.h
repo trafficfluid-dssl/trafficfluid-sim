@@ -669,6 +669,9 @@ public:
     }
     void get_all_neighbors_ring_road_internal(MSLaneFreeVehicle* lfveh, const MSEdge* current_edge, SortedVehiclesVector* current_edge_sorted_vehs, size_t veh_index, double distance, bool front, int cross_edge, std::vector<std::pair<double, MSVehicle*>>& neighbors_with_distance);
     void get_all_neighbors_internal(MSLaneFreeVehicle* lfveh, const  MSEdge* current_edge, SortedVehiclesVector* current_edge_sorted_vehs, size_t veh_index, double distance, bool front, int cross_edge, std::vector<std::pair<double, MSVehicle*>>& neighbors_with_distance);
+    
+    void addRouteForBoundariesVisualizer(MSRoute* route);
+    void updateBoundariesVisualizer();
 protected:
     NumericalID find_stored_edge(MSVehicle* veh);
     void get_vehicles_from_other_direction_edges(NumericalID veh_id, double global_pox_x, double global_pos_y, double global_theta, bool front, const std::vector<MSLane*>& internal_lanes, NumericalID current_edge_id, std::vector<std::pair<double, MSVehicle*>>& neighbors_with_distance);
@@ -715,6 +718,9 @@ protected:
 
     std::chrono::steady_clock::time_point before_step_time;
     std::chrono::steady_clock::time_point after_step_time;
+
+
+    std::map<std::string, MSRoute*> updateRouteBoundaries;
 };
 
 

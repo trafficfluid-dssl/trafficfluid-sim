@@ -605,7 +605,12 @@ GUILane::drawGL(const GUIVisualizationSettings& s) const {
                 // we draw the lanes with reduced width so that the lane markings below are visible
                 // (this avoids artifacts at geometry corners without having to
                 // compute lane-marking intersection points)
-                const double halfWidth = isInternal ? myQuarterLaneWidth : (myHalfLaneWidth - SUMO_const_laneMarkWidth / 2);
+                double widthToDraw = myQuarterLaneWidth*2;
+                MSLane* predesesor = getLogicalPredecessorLane();
+                if (predesesor != nullptr) {                   
+                    widthToDraw = std::fmin(myQuarterLaneWidth*2, predesesor->getWidth()/2.);
+                }
+                const double halfWidth = isInternal ? widthToDraw : (myHalfLaneWidth - SUMO_const_laneMarkWidth / 2);
                 mustDrawMarkings = !isInternal && myPermissions != 0 && myPermissions != SVC_PEDESTRIAN && exaggeration == 1.0 && !isWaterway(myPermissions);
                 const int cornerDetail = drawDetails && !isInternal ? (int)(s.scale * exaggeration) : 0;
                 const double offset = halfWidth * MAX2(0., (exaggeration - 1)) * (MSGlobals::gLefthand ? -1 : 1);
@@ -739,7 +744,11 @@ GUILane::drawMarkings(const GUIVisualizationSettings& s, double scale) const {
         }
     }
     // draw white boundings and white markings
-    glColor3d(1, 1, 1);
+    // LFPlugin Begin
+    glColor3d(0, 0, 0);
+    // original line belowe
+    //glColor3d(1, 1, 1);
+    // LFPlugin End
     GLHelper::drawBoxLines(
         getShape(),
         getShapeRotations(),

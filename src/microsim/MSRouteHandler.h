@@ -208,12 +208,19 @@ protected:
     std::string leftBoundarySlopes;
     std::string leftBoundaryOffsets;
     std::string influencedBy;
+    std::string leftBoundaryVisualizerColor;
+    std::string leftBoundaryVisualizerStep;
+    std::string leftBoundaryVisualizerLineWidth;
+    std::string leftBoundaryVisualizerUpdateDelay;
 
     bool hasRightBoundary;
     std::string rightBoundaryLevelPoints;
     std::string rightBoundarySlopes;
     std::string rightBoundaryOffsets;
     std::string rightBoundaryConstant;
+    std::string rightBoundaryVisualizerColor;
+    std::string rightBoundaryVisualizerStep;
+    std::string rightBoundaryVisualizerLineWidth;
     // LFPlugin End
 
 private:
