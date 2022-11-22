@@ -704,6 +704,67 @@ double lf_plugin_get_relative_position_x(NumericalID ego_id, NumericalID other_i
 	return r_x;
 }
 
+double get_lateral_shift(const MSRoute* ego_route, const ConstMSEdgeVector& route_edges, const MSEdge* ego_edge, const MSEdge* other_edge, int ego_index=-1, int other_index=-1) {
+
+	const MSEdge* tmp_edge = ego_edge;
+	const MSEdge* tmp_edge_next;
+	
+	double latShift, total_latShift = 0. ;
+
+
+	if (ego_index == -1) {
+		ego_index = ego_route->edge_index(ego_edge);
+	}
+
+	if (ego_index == -1) {
+		std::cout << "Error! Ego edge not found!\n";
+		return 0.;
+	}
+
+	if (other_index == -1) {
+		other_index = ego_route->edge_index(other_edge);
+	}
+	
+	if (ego_index == -1 || other_index == -1) {
+		std::cout << "Error! Other edge not found!\n";
+		return 0.;
+	}
+
+
+	int start_index, end_index;
+	int coeff;
+	if (ego_index < other_index) {
+		start_index = ego_index;
+		end_index = other_index;
+		coeff = -1;
+	}
+	else if (ego_index > other_index) {
+		start_index = other_index;
+		end_index = ego_index;
+		coeff = +1;
+	}
+	else {
+		std::cout << "Error! edge indices should not be the same";
+		return 0;
+	}
+	
+	for (int i = start_index +  1; i <= end_index; i++) {
+		// iterate over the road edges between the two vehicles, and find the accumulated lateral shift of the edges
+		tmp_edge_next = route_edges.at(i);
+
+		latShift = tmp_edge->getLateralShiftToFollowingEdge(tmp_edge_next);
+		if (latShift == 0 && i <= end_index && tmp_edge_next->isInternal()) {
+			latShift = tmp_edge->getLateralShiftToFollowingEdge(route_edges.at(i + 1));
+		}
+		//printf("%f\t", latShift);
+		total_latShift += latShift;
+		tmp_edge = tmp_edge_next;
+	}
+	//printf("\n");
+
+	return coeff * total_latShift;
+
+}
 
 // returns the relative lateral distance of a vehicle with respect to an ego vehicle
 double lf_plugin_get_relative_distance_y(NumericalID ego_id, NumericalID other_id) {
@@ -731,53 +792,59 @@ double lf_plugin_get_relative_distance_y(NumericalID ego_id, NumericalID other_i
 		int ego_index = ego_route.edge_index(ego_edge);
 		if (ego_index == -1) {
 			std::cout << "Error! edge not found!\n";
-			return -1;
+			return 0;
 		}
 		int other_index = ego_route.edge_index(other_edge);
 		if (other_index == -1) {
 			std::cout << "Error! other vehicle (" << other_lfveh->get_vehicle()->getID() << ") with route " << other_lfveh->get_vehicle()->getRoute().getID() << " not in the path of ego (" << ego_lfveh->get_vehicle()->getID() << ") with route " << ego_lfveh->get_vehicle()->getRoute().getID() << "!\n";
-			return -1;
+			return 0;
 		}
 
+		// Commented code below is now replaced by a function that performs this functionality
+		//int start_index, end_index;
+		//int coeff;
+		//if (ego_index < other_index) {
+		//	start_index = ego_index;
+		//	end_index = other_index;
+		//	coeff = -1;
+		//}
+		//else if (ego_index > other_index) {
+		//	start_index = other_index;
+		//	end_index = ego_index;
+		//	coeff = +1;
+		//}
+		//else {
+		//	std::cout << "Error! edge indices should not be the same";
+		//	return -1;
+		//}
+		//ConstMSEdgeVector route_edges = ego_route.getEdgeswInternal();
 
-		int start_index, end_index;
-		int coeff;
-		if (ego_index < other_index) {
-			start_index = ego_index;
-			end_index = other_index;
-			coeff = -1;
-		}
-		else if (ego_index > other_index) {
-			start_index = other_index;
-			end_index = ego_index;
-			coeff = +1;
-		}
-		else {
-			std::cout << "Error! edge indices should not be the same";
-			return -1;
-		}
-		ConstMSEdgeVector route_edges = ego_route.getEdgeswInternal();
+		//const MSEdge* tmp_edge = route_edges.at(start_index);
+		//const MSEdge* tmp_edge_next;
+		////printf("latshift:");
+		//for (int i = start_index + 1; i <= end_index; i++) {
+		//	// iterate over the road edges between the two vehicles, and find the accumulated lateral shift of the edges
+		//	tmp_edge_next = route_edges.at(i);
 
-		const MSEdge* tmp_edge = route_edges.at(start_index);
-		const MSEdge* tmp_edge_next;
-		//printf("latshift:");
-		for (int i = start_index + 1; i <= end_index; i++) {
-			// iterate over the road edges between the two vehicles, and find the accumulated lateral shift of the edges
-			tmp_edge_next = route_edges.at(i);
+		//	latShift = tmp_edge->getLateralShiftToFollowingEdge(tmp_edge_next);
+		//	if (latShift == 0 && i <= end_index && tmp_edge_next->isInternal()) {
+		//		latShift = tmp_edge->getLateralShiftToFollowingEdge(route_edges.at(i + 1));
+		//	}
+		//	//printf("%f\t", latShift);
+		//	total_latShift += latShift;
+		//	tmp_edge = tmp_edge_next;
+		//}
+		////printf("\n");
 
-			latShift = tmp_edge->getLateralShiftToFollowingEdge(tmp_edge_next);
-			if (latShift == 0 && i <= end_index && tmp_edge_next->isInternal()) {
-				latShift = tmp_edge->getLateralShiftToFollowingEdge(route_edges.at(i + 1));
-			}
-			//printf("%f\t", latShift);
-			total_latShift += latShift;
-			tmp_edge = tmp_edge_next;
-		}
-		//printf("\n");
+		//total_latShift = coeff * total_latShift;
 
-		total_latShift = coeff * total_latShift;
+		const ConstMSEdgeVector route_edges = ego_route.getEdgeswInternal();
 
+		total_latShift = get_lateral_shift(&ego_route, route_edges, ego_edge, other_edge);
 	}
+
+
+	
 
 	double dy = other_lfveh->get_position_y() - ego_lfveh->get_position_y() + total_latShift;
 
@@ -2738,7 +2805,7 @@ LaneFreeSimulationPlugin::get_all_neighbors_ring_road_internal(MSLaneFreeVehicle
 			break;
 		}
 
-		neighbors_with_distance.push_back(std::make_pair(abs_distance, (MSVehicle*)current_edge_sorted_vehs->at(j)));
+		neighbors_with_distance.push_back(std::make_pair(cur_distance, (MSVehicle*)current_edge_sorted_vehs->at(j)));
 
 	}
 
@@ -3011,8 +3078,7 @@ LaneFreeSimulationPlugin::get_vehicles_from_other_direction_edges(NumericalID ve
 			transform_neighbor_vehicle_distance_and_add_to_neighbors(veh_ptr, global_pos_x, global_pos_y, cos_theta, sin_theta, front, neighbors_with_distance);
 		}
 
-		// sort the neighbors vector according to longutidinal distance
-		//std::sort(neighbors_with_distance.begin(), neighbors_with_distance.end());
+
 	}
 }
 
@@ -3035,7 +3101,10 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 	double xv1, yv1, lv1, wv1, theta1=0, xv2, yv2, lv2, wv2, theta2=0, half_vwidth, dx, dy,roadwidth, roadlength;
 	double xv1_gl, yv1_gl, theta1_gl;
 	double distance_no_collide;
-	
+	const MSRoute* v1_route=nullptr;
+	const ConstMSEdgeVector* v1_route_edges=nullptr;
+	const MSEdge* v1_edge=nullptr,* v2_edge=nullptr;
+	int v1_edge_index;
 	for (MSEdge* edge : edges_v) {
 		edge_id = edge->getNumericalID();
 		
@@ -3089,7 +3158,14 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 			}
 			else {
 				front_distance = (lv1 + max_vehicle_length) / 2.0;
+
+				v1_route = &veh1->getRoute();
+				v1_route_edges = &v1_route->getEdgeswInternal();
+				v1_edge_index = -1;
+				v1_edge = edge;
 			}
+
+			
 			// 
 			// 
 			// std::cout<< "veh:" << veh1->getID() << " updated length:" << lv1<<" and width:" << wv1<< " at angle:"<< veh1->getAngleRelative() << "\n";
@@ -3103,7 +3179,7 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 			
 			get_all_neighbors_internal(lfv1, edge, vehs_in_edge, (size_t)i, front_distance, true, 1, neighbors_with_distance);
 			
-			for(j = 0;j < neighbors_with_distance.size(); j++){				
+			for(j = 0;j < neighbors_with_distance.size(); j++){		
 				
 				veh2 = neighbors_with_distance.at(j).second;
 				lv2 = veh2->getVehicleType().getLength();
@@ -3159,12 +3235,36 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 					continue;
 				}
 
-				// calculate dx with local coordinates, in order to check
-				dx = abs(xv2 - xv1);
-				dy = abs(yv2 - yv1);
+				
+				if (edge_id == ((v2_edge=&veh2->getLane()->getEdge())->getNumericalID())) {
+					// calculate dx with local coordinates, in order to check
+					dx = abs(xv2 - xv1);
+					dy = abs(yv2 - yv1);
+				}
+				else {
+					// find the lateral shift as well for dy
+
+					dx = abs(neighbors_with_distance.at(j).first);
+					if (v1_route == nullptr || v1_route_edges == nullptr || v1_edge == nullptr || v2_edge == nullptr) {
+						std::cout << "Error, null pointers when trying to obtain lateral shift among vehicles:" << veh1->getID() << "," << veh2->getID() << "\n";
+						dy = abs(yv2 - yv1);
+					}
+					else {
+						if (v1_edge_index == -1) {
+							v1_edge_index = v1_route->edge_index(v1_edge);							
+						}						
+						dy = abs(yv2 - yv1 + get_lateral_shift(v1_route, *v1_route_edges, v1_edge, v2_edge, v1_edge_index));
+					}
+					
+					//std::cout << "For vehs:" << veh1->getID() << "," << veh2->getID() << " we have actual (dx,dy)=(" << dx << "," << dy << ") and previously:(" << abs(xv2 - xv1) << "," << abs(yv2 - yv1) << ")\n";
+					
+				}
+				
 				
 
-				if((dx<((lv1 + lv2)/2)) && (dy<((wv1 + wv2)/2))){
+				if((dx<((lv1 + lv2) / 2)) && (dy<((wv1 + wv2) / 2))) {
+					//std::cout << "Collision between:" << veh1->getID() << "," << veh2->getID() << "with x1,y1:"<<xv1<<","<<yv1<<" and x2,y2:"<<xv2<<","<<yv2<<", l1,w1:"<< lv1<<","<<wv1<< " and l2,w2:" << lv2 << "," << wv2 << "\n";
+
 					event_vehicles_collide(veh1->getNumericalID(), veh2->getNumericalID());
 					MSNet::getInstance()->getVehicleControl().registerCollision();
 
@@ -3175,7 +3275,7 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 					}
 				}
 				theta2 = 0;
-				if(dx>(lv1+max_vehicle_length)/2){ // since vehicles are sorted based on x pos, we stop searching downstream vehicles for collisions when the dx distance exceeds the one corresponding to a vehicle with the maximum length within the network TODO: orientiation should be taken into account for the bicycle model
+				if(fabs(dx) >(lv1+max_vehicle_length)/2){ // since vehicles are sorted based on x pos, we stop searching downstream vehicles for collisions when the dx distance exceeds the one corresponding to a vehicle with the maximum length within the network TODO: orientiation should be taken into account for the bicycle model
 					break;
 				}
 			}

@@ -392,7 +392,7 @@ protected:
 
         v_next = v_cur + F * TS;
 
-        bool global_coordinates=myveh->getGlobalCoordinatesControl();
+        bool global_coordinates = myveh->getGlobalCoordinatesControl();
         //printf("curr step local:\n x:%f,y:%f\n", get_position_x()+ (sigma / 2) * cos(theta_cur), get_position_y() + (sigma / 2) * sin(theta_cur));
         if (global_coordinates) {
             get_global_coordinates_bicycle_model(&x_cur_back, &y_cur_back, sigma, theta_cur);
