@@ -719,6 +719,10 @@ GUILane::drawMarkings(const GUIVisualizationSettings& s, double scale) const {
     glTranslated(0, 0, GLO_EDGE);
     setColor(s);
     // optionally draw inverse markings
+    // LFPlugin Begin
+    // color lane markings
+    glColor3d(1, 1, 1);
+    // LFPlugin End
     if (myIndex > 0 && (myEdge->getLanes()[myIndex - 1]->getPermissions() & myPermissions) != 0) {
         double mw = (myHalfLaneWidth + SUMO_const_laneMarkWidth) * scale;
         double mw2 = (myHalfLaneWidth - SUMO_const_laneMarkWidth) * scale;
@@ -737,14 +741,15 @@ GUILane::drawMarkings(const GUIVisualizationSettings& s, double scale) const {
                 glVertex2d(-mw, -t);
                 glVertex2d(-mw, -t - length);
                 glVertex2d(-mw2, -t - length);
-                glVertex2d(-mw2, -t);
+                glVertex2d(-mw2, -t);               
                 glEnd();
             }
-            glPopMatrix();
+            glPopMatrix();            
         }
     }
     // draw white boundings and white markings
     // LFPlugin Begin
+    // draw edge boundings with black color
     glColor3d(0, 0, 0);
     // original line belowe
     //glColor3d(1, 1, 1);
@@ -753,7 +758,7 @@ GUILane::drawMarkings(const GUIVisualizationSettings& s, double scale) const {
         getShape(),
         getShapeRotations(),
         getShapeLengths(),
-        (myHalfLaneWidth + SUMO_const_laneMarkWidth) * scale);
+        (myHalfLaneWidth + SUMO_const_laneMarkWidth) * scale);    
     glPopMatrix();
 }
 
