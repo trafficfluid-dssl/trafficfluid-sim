@@ -2256,7 +2256,7 @@ double* lf_plugin_get_density_left_boundary_segments(char* route_name, size_t* n
 		while (local_offset.first != edge_id_tmp) {
 			end_point = veh_edges.at(edges_idx)->getLength();
 			//std::cout << "Call getter for edge " << veh_edges.at(edges_idx)->getID() << " from " << start_point << " to " << end_point << "\n";
-			num_of_vehs += get_number_of_vehicles_on_segment_region_on_edge(edge_id_tmp, start_point, end_point);
+			num_of_vehs += get_number_of_vehicles_on_segment_region_on_edge_only_highway(edge_id_tmp, start_point, end_point);
 			
 			// contains the length of the segment we measured the vehicles
 			segment_length += (end_point - start_point);
