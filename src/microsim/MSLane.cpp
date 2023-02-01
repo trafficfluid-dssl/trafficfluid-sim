@@ -254,6 +254,23 @@ MSLane::addLink(MSLink* link) {
 
 void
 MSLane::addNeigh(const std::string& id) {
+    // LFPlugin Begin
+    // Note for obtaining lane on the opposite direction
+    // we simply add the lane id to the .net file as in the example below
+    //
+    /*
+    <edge id="segment5" from="gneJ5" to="gneJ6" priority="-1">
+        <lane id = "segment5_0" index = "0" speed = "50.00" length = "482.00" width = "3.00" acceleration = "1" shape = "2514.00,-11.70 2996.00,-11.70" / >
+        <lane id = "segment5_1" index = "1" speed = "50.00" length = "482.00" width = "10.20" shape = "2514.00,-5.10 2996.00,-5.10" / >
+        <neigh lane = "segment5_opp_1" / >
+    < / edge>
+    <edge id = "segment5_opp" from = "gneJ8" to = "gneJ9" priority = "-1">
+        <lane id = "segment5_opp_0" index = "0" speed = "50.00" length = "492.00" width = "3.00" shape = "2996.00,11.70 2504.00,11.70" / >
+        <lane id = "segment5_opp_1" index = "1" speed = "50.00" length = "492.00" width = "10.20" shape = "2996.00,5.10 2504.00,5.10" / >
+    < / edge>
+    */
+    //std::cout << "Lane " << getID() << "has now opposite: " << id << "\n";
+    // LFPlugin End
     myNeighs.push_back(id);
     // warn about lengths after loading the second lane of the pair
     if (getOpposite() != nullptr && getLength() != getOpposite()->getLength()) {

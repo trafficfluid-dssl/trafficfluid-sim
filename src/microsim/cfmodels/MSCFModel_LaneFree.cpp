@@ -23,6 +23,7 @@
 #include "MSCFModel_LaneFree.h"
 #include <microsim/MSVehicle.h>
 
+//#define DEFINE_VARIABLES
 #include "LaneFree.h"
 
 
@@ -2203,7 +2204,7 @@ void lf_plugin_set_epsilon_left_boundary(char* route_name, double* epsilon_array
 
 // returns a double array with veh densities (veh/km) associated with the segments formed by the left boundary, providing the associated route_name with a char array
 double* lf_plugin_get_density_left_boundary_segments(char* route_name, size_t* number_of_segments) {
-
+	
 	std::string route_str{ route_name };
 
 	// The dictionary function returns a const pointer to myRoute, but we cannot work with a const route object. We use casting to remove const, and consider finding a better alternative here in the future
@@ -3173,7 +3174,7 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 			//std::cout << "veh:" << veh1->getID() << " angle:" << veh1->computeAngle() * (180.0 / 3.141592653589793238463)<<"\n";
 			
 			half_vwidth = wv1 / 2;
-			if (yv1 > (roadwidth - half_vwidth) || yv1 < half_vwidth) {
+			if (yv1 > (roadwidth - half_vwidth) || yv1 < half_vwidth) { // This needs to be extended
 				event_vehicle_out_of_bounds(veh1->getNumericalID());
 			}
 			
@@ -3256,10 +3257,8 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 						dy = abs(yv2 - yv1 + get_lateral_shift(v1_route, *v1_route_edges, v1_edge, v2_edge, v1_edge_index));
 					}
 					
-					//std::cout << "For vehs:" << veh1->getID() << "," << veh2->getID() << " we have actual (dx,dy)=(" << dx << "," << dy << ") and previously:(" << abs(xv2 - xv1) << "," << abs(yv2 - yv1) << ")\n";
 					
 				}
-				
 				
 
 				if((dx<((lv1 + lv2) / 2)) && (dy<((wv1 + wv2) / 2))) {
@@ -3299,11 +3298,16 @@ LaneFreeSimulationPlugin::boundary_value(double mid_height, double direction, st
 	for (size_t i = 0; i < size_points - 1; i++) {
 		if (long_pos * direction < offset[i] * direction) {
 			boundary_distance_tmp += mid_height * (lim[i + 1] - lim[i]) * tanh(slope[i] * direction * (long_pos - offset[i]));
-			boundary_speed_tmp += mid_height * (lim[i + 1] - lim[i]) * pow(cosh(slope[i] * direction * (long_pos - offset[i])), -2) * slope[i] * veh_speed_x;
+			if (boundary_speed != nullptr) {
+				boundary_speed_tmp += mid_height * (lim[i + 1] - lim[i]) * pow(cosh(slope[i] * direction * (long_pos - offset[i])), -2) * slope[i] * veh_speed_x;
+			}
+			
 		}
 		else {
 			boundary_distance_tmp += (1 - mid_height) * (lim[i + 1] - lim[i]) * tanh((mid_height / (1 - mid_height)) * slope[i] * direction * (long_pos - offset[i]));
-			boundary_speed_tmp += mid_height * slope[i] * veh_speed_x * (lim[i + 1] - lim[i]) * pow(cosh((mid_height / (1 - mid_height)) * slope[i] * direction * (long_pos - offset[i])), -2);
+			if (boundary_speed != nullptr) {
+				boundary_speed_tmp += mid_height * slope[i] * veh_speed_x * (lim[i + 1] - lim[i]) * pow(cosh((mid_height / (1 - mid_height)) * slope[i] * direction * (long_pos - offset[i])), -2);
+			}			
 		}
 	}
 	*boundary_distance = boundary_distance_tmp + lim[0] + mid_height * (lim[size_points - 1] - lim[0]);
