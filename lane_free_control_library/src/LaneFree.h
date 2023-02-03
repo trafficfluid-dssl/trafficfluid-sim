@@ -113,6 +113,10 @@ EXTERN libLaneFreePlugin_EXPORT NumericalID (* get_veh_type_id)(NumericalID veh_
 EXTERN libLaneFreePlugin_EXPORT char* (* get_veh_type_name)(NumericalID veh_id);
 
 
+// changes the type of vehicle veh_id to the type of type_name (type_name is the string name defined within the .rou.xml file)
+EXTERN libLaneFreePlugin_EXPORT void (*set_veh_type)(NumericalID veh_id, char* veh_type);
+
+
 // returns the length of a given vehicle id
 EXTERN libLaneFreePlugin_EXPORT double (* get_veh_length)(NumericalID veh_id);
 

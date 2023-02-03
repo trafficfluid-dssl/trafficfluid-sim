@@ -1220,6 +1220,12 @@ NumericalID lf_plugin_insert_new_vehicle(char* veh_name, char* route_id, char* t
 
 }
 
+void lf_plugin_set_veh_type(NumericalID veh_id, char* veh_type_name) {
+	std::string veh_type_str(veh_type_name);
+	std::string veh_id_str(lf_plugin_get_vehicle_name(veh_id));
+	libsumo::Vehicle::setType(veh_id_str, veh_type_str);
+}
+
 
 // returns the ids of the detectors
 NumericalID* lf_plugin_get_detectors_ids(){
@@ -2454,7 +2460,8 @@ LaneFreeSimulationPlugin::LaneFreeSimulationPlugin(){
 	get_desired_speed = &lf_plugin_get_desired_speed;
 	set_desired_speed = &lf_plugin_set_desired_speed;
 	get_veh_type_id = &lf_plugin_get_veh_type_id; 
-	get_veh_type_name = &lf_plugin_get_veh_type_name; 
+	get_veh_type_name = &lf_plugin_get_veh_type_name;
+	set_veh_type = &lf_plugin_set_veh_type;
 	get_time_step_length = &lf_plugin_get_time_step_length;
 	get_current_time_step = &lf_plugin_get_current_time_step;
 	get_seed = &lf_plugin_get_seed;
