@@ -34,6 +34,9 @@
 #include <utils/xml/SUMOSAXAttributes.h>
 #include "MSDevice_Vehroutes.h"
 #include "MSDevice_Tripinfo.h"
+// LFPlugin Begin
+#include <microsim/cfmodels/MSCFModel_LaneFree.h>
+// LFPlugin End
 
 #define NOT_ARRIVED TIME2STEPS(-1)
 
@@ -52,6 +55,10 @@ SUMOTime MSDevice_Tripinfo::myTotalTimeLoss(0);
 SUMOTime MSDevice_Tripinfo::myTotalDepartDelay(0);
 SUMOTime MSDevice_Tripinfo::myWaitingDepartDelay(-1);
 
+// LFPlugin Begin
+SUMOTime MSDevice_Tripinfo::myTotalExpectedTime(0);
+SUMOTime MSDevice_Tripinfo::myTotalDelayTime(0);
+// LFPlugin End
 int MSDevice_Tripinfo::myWalkCount(0);
 double MSDevice_Tripinfo::myTotalWalkRouteLength(0);
 SUMOTime MSDevice_Tripinfo::myTotalWalkDuration(0);
@@ -131,6 +138,10 @@ MSDevice_Tripinfo::cleanup() {
     myTotalDepartDelay = 0;
     myWaitingDepartDelay = -1;
 
+    // LFPlugin Begin
+    myTotalExpectedTime = 0;
+    myTotalDelayTime = 0;
+    // LFPlugin End
     myWalkCount = 0;
     myTotalWalkRouteLength = 0;
     myTotalWalkDuration = 0;
@@ -267,7 +278,11 @@ MSDevice_Tripinfo::generateOutput(OutputDevice* tripinfoOut) const {
     const SUMOTime timeLoss = MSGlobals::gUseMesoSim ? myMesoTimeLoss : static_cast<MSVehicle&>(myHolder).getTimeLoss();
     const double routeLength = myRouteLength + (myArrivalTime == NOT_ARRIVED ? myHolder.getPositionOnLane() : myArrivalPos);
     const SUMOTime duration = (myArrivalTime == NOT_ARRIVED ? SIMSTEP : myArrivalTime) - myHolder.getDeparture();
-
+    
+    // LFPlugin Begin
+    const SUMOTime expectedTime = (routeLength/static_cast<MSVehicle&>(myHolder).getDesiredSpeed())*1000; // convert From sec to ms
+    // LFPlugin End
+    
     myVehicleCount++;
     myTotalRouteLength += routeLength;
     myTotalSpeed += routeLength / STEPS2TIME(duration);
@@ -275,6 +290,13 @@ MSDevice_Tripinfo::generateOutput(OutputDevice* tripinfoOut) const {
     myTotalWaitingTime += myWaitingTime;
     myTotalTimeLoss += timeLoss;
     myTotalDepartDelay += myHolder.getDepartDelay();
+    
+    // LFPlugin Begin
+    myTotalExpectedTime += expectedTime;
+    const SUMOTime myDelay = duration - expectedTime;
+
+    myTotalDelayTime = myTotalDelayTime + myDelay;
+    // LFPlugin End
     myPendingOutput.erase(this);
     if (tripinfoOut == nullptr) {
         return;
@@ -331,6 +353,11 @@ MSDevice_Tripinfo::generateOutput(OutputDevice* tripinfoOut) const {
             vaporized = (myHolder.getEdge() == *(myHolder.getRoute().end() - 1) ? "" : "end");
 
     }
+
+    // LFPlugin Begin
+    os.writeAttr("expected time", time2string(expectedTime));
+    os.writeAttr("delay", time2string(myDelay));
+    // LFPlugin End
     os.writeAttr("vaporized", vaporized);
     // cannot close tag because emission device output might follow
 }
@@ -481,6 +508,12 @@ MSDevice_Tripinfo::writeStatistics(OutputDevice& od) {
     od.writeAttr("timeLoss", getAvgTimeLoss());
     od.writeAttr("departDelay", getAvgDepartDelay());
     od.writeAttr("departDelayWaiting", myWaitingDepartDelay);
+    // LFPlugin Begin
+    od.writeAttr("delay", getAvgDelay());
+    // od.writeAttr("total delay", time2string(myTotalDelayTime));
+    // od.writeAttr("Avg delay", time2string(myAvgDelay));
+    // od.writeAttr("total expected time", time2string(myTotalExpectedTime));
+    // LFPlugin End
     od.closeTag();
     od.openTag("pedestrianStatistics");
     od.writeAttr("number", myWalkCount);
@@ -595,6 +628,17 @@ MSDevice_Tripinfo::getAvgWalkTimeLoss() {
     }
 }
 
+// LFPlugin Begin
+double 
+MSDevice_Tripinfo::getAvgDelay() {
+    if (myVehicleCount > 0) {
+        return STEPS2TIME((myTotalDuration - myTotalExpectedTime)/myVehicleCount);
+    }
+    else {
+        return 0;
+    }
+}
+// LFPlugin End
 
 double
 MSDevice_Tripinfo::getAvgRideDuration() {

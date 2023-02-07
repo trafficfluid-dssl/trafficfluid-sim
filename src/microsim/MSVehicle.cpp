@@ -3455,7 +3455,11 @@ void
 MSVehicle::updateTimeLoss(double vNext) {
     // update time loss (depends on the updated edge)
     if (!isStopped()) {
-        const double vmax = myLane->getVehicleMaxSpeed(this);
+        // LFPlugin Begin
+        // original code below
+        const double vmax = getDesiredSpeed();
+        // const double vmax = myLane->getVehicleMaxSpeed(this);
+        // LFPlugin End
         if (vmax > 0) {
             myTimeLoss += TS * (vmax - vNext) / vmax;
         }

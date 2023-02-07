@@ -92,6 +92,10 @@ public:
     static double getAvgRideRouteLength();
     static double getAvgRideWaitingTime();
     static double getAvgRideDuration();
+    
+    // LFPlugin Begin
+    static double getAvgDelay();
+    // LFPlugin End
 
 public:
     /// @brief Destructor.
@@ -263,6 +267,11 @@ private:
     static SUMOTime myTotalTimeLoss;
     static SUMOTime myTotalDepartDelay;
     static SUMOTime myWaitingDepartDelay;
+
+    // LFPlugin Begin
+    static SUMOTime myTotalExpectedTime;
+    static SUMOTime myTotalDelayTime;
+    // LFPlugin End
 
     static int myWalkCount;
     static double myTotalWalkRouteLength;
