@@ -324,7 +324,10 @@ MSDevice_Tripinfo::generateOutput(OutputDevice* tripinfoOut) const {
     os.writeAttr("waitingTime", time2string(myWaitingTime));
     os.writeAttr("waitingCount", myWaitingCount);
     os.writeAttr("stopTime", time2string(myStoppingTime));
-    os.writeAttr("timeLoss", time2string(timeLoss));
+    // LFPlugin Begin
+    // removed next line
+    // os.writeAttr("timeLoss", time2string(timeLoss));
+    // LFPlugin End
     os.writeAttr("rerouteNo", myHolder.getNumberReroutes());
     os.writeAttr("devices", toString(myHolder.getDevices()));
     os.writeAttr("vType", myHolder.getVehicleType().getID());
@@ -355,7 +358,7 @@ MSDevice_Tripinfo::generateOutput(OutputDevice* tripinfoOut) const {
     }
 
     // LFPlugin Begin
-    os.writeAttr("expected time", time2string(expectedTime));
+    os.writeAttr("expectedTime", time2string(expectedTime));
     os.writeAttr("delay", time2string(myDelay));
     // LFPlugin End
     os.writeAttr("vaporized", vaporized);
@@ -505,7 +508,10 @@ MSDevice_Tripinfo::writeStatistics(OutputDevice& od) {
     od.writeAttr("speed", getAvgTripSpeed());
     od.writeAttr("duration", getAvgDuration());
     od.writeAttr("waitingTime", getAvgWaitingTime());
-    od.writeAttr("timeLoss", getAvgTimeLoss());
+    // LFPlugin Begin
+    // removed next line
+    // od.writeAttr("timeLoss", getAvgTimeLoss());
+    // LFPlugin End
     od.writeAttr("departDelay", getAvgDepartDelay());
     od.writeAttr("departDelayWaiting", myWaitingDepartDelay);
     // LFPlugin Begin
