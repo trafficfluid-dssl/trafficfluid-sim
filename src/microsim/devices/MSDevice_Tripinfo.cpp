@@ -58,6 +58,7 @@ SUMOTime MSDevice_Tripinfo::myWaitingDepartDelay(-1);
 // LFPlugin Begin
 SUMOTime MSDevice_Tripinfo::myTotalExpectedTime(0);
 SUMOTime MSDevice_Tripinfo::myTotalDelayTime(0);
+long long MSDevice_Tripinfo::myTotalVehicleCount(0);
 // LFPlugin End
 int MSDevice_Tripinfo::myWalkCount(0);
 double MSDevice_Tripinfo::myTotalWalkRouteLength(0);
@@ -141,6 +142,7 @@ MSDevice_Tripinfo::cleanup() {
     // LFPlugin Begin
     myTotalExpectedTime = 0;
     myTotalDelayTime = 0;
+    myTotalVehicleCount = 0;
     // LFPlugin End
     myWalkCount = 0;
     myTotalWalkRouteLength = 0;
@@ -504,18 +506,21 @@ void
 MSDevice_Tripinfo::writeStatistics(OutputDevice& od) {
     od.setPrecision(gPrecision);
     od.openTag("vehicleTripStatistics");
-    od.writeAttr("routeLength", getAvgRouteLength());
-    od.writeAttr("speed", getAvgTripSpeed());
-    od.writeAttr("duration", getAvgDuration());
-    od.writeAttr("waitingTime", getAvgWaitingTime());
+    od.writeAttr("routeLengthAvg", getAvgRouteLength());
+    od.writeAttr("speedAvg", getAvgTripSpeed());
+    od.writeAttr("durationAvg", getAvgDuration());
+    od.writeAttr("waitingTimeAvg", getAvgWaitingTime());
     // LFPlugin Begin
     // removed next line
     // od.writeAttr("timeLoss", getAvgTimeLoss());
     // LFPlugin End
-    od.writeAttr("departDelay", getAvgDepartDelay());
+    od.writeAttr("departDelayAvg", getAvgDepartDelay());
     od.writeAttr("departDelayWaiting", myWaitingDepartDelay);
     // LFPlugin Begin
-    od.writeAttr("delay", getAvgDelay());
+    od.writeAttr("delayAvg", getAvgDelay());
+    od.writeAttr("totalTimeSpent_hours", getTotalTimeSpent());
+    // od.writeAttr("totalTimeSpent_sec", getTotalTimeSpent() * 3600);
+    od.writeAttr("totalDuration", myTotalDuration);
     // od.writeAttr("total delay", time2string(myTotalDelayTime));
     // od.writeAttr("Avg delay", time2string(myAvgDelay));
     // od.writeAttr("total expected time", time2string(myTotalExpectedTime));
@@ -523,9 +528,9 @@ MSDevice_Tripinfo::writeStatistics(OutputDevice& od) {
     od.closeTag();
     od.openTag("pedestrianStatistics");
     od.writeAttr("number", myWalkCount);
-    od.writeAttr("routeLength", getAvgWalkRouteLength());
-    od.writeAttr("duration", getAvgWalkDuration());
-    od.writeAttr("timeLoss", getAvgWalkTimeLoss());
+    od.writeAttr("routeLengthAvg", getAvgWalkRouteLength());
+    od.writeAttr("durationAvg", getAvgWalkDuration());
+    od.writeAttr("timeLossAvg", getAvgWalkTimeLoss());
     od.closeTag();
     writeRideStatistics(od, "rideStatistics", 0);
     writeRideStatistics(od, "transportStatistics", 1);
@@ -547,6 +552,13 @@ MSDevice_Tripinfo::writeRideStatistics(OutputDevice& od, const std::string& cate
     }
     od.closeTag();
 }
+
+// LFPlugin Begin
+double
+MSDevice_Tripinfo::getTotalTimeSpent() {
+    return myTotalVehicleCount * TS / 3600;
+}
+// LFPlugin End
 
 
 double

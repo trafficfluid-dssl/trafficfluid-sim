@@ -77,6 +77,12 @@ public:
     /// @brief write statistic output to (xml) file
     static void writeStatistics(OutputDevice& od);
 
+    // LFPlugin Begin
+    static void updateMyTotalVehicleCount(long long count) {
+        myTotalVehicleCount += count;
+    } 
+    // LFPlugin End
+
     /// @brief accessors for GUINet-Parameters
     static double getAvgRouteLength();
     static double getAvgTripSpeed();
@@ -95,6 +101,7 @@ public:
     
     // LFPlugin Begin
     static double getAvgDelay();
+    static double getTotalTimeSpent();
     // LFPlugin End
 
 public:
@@ -271,6 +278,7 @@ private:
     // LFPlugin Begin
     static SUMOTime myTotalExpectedTime;
     static SUMOTime myTotalDelayTime;
+    static long long myTotalVehicleCount;
     // LFPlugin End
 
     static int myWalkCount;

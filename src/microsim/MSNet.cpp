@@ -662,6 +662,9 @@ MSNet::simulationStep() {
             myPersonsMoved += myPersonControl->getRunningNumber();
         }
     }
+    // LFPlugin Begin
+    MSDevice_Tripinfo::updateMyTotalVehicleCount(myVehicleControl->getRunningVehicleNo());
+    // LFPlugin End
     myStep += DELTA_T;
 }
 
