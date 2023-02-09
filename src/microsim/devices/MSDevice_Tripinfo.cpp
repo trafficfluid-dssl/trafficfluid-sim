@@ -520,7 +520,7 @@ MSDevice_Tripinfo::writeStatistics(OutputDevice& od) {
     od.writeAttr("delayAvg", getAvgDelay());
     od.writeAttr("totalTimeSpent_hours", getTotalTimeSpent());
     // od.writeAttr("totalTimeSpent_sec", getTotalTimeSpent() * 3600);
-    od.writeAttr("totalDuration", myTotalDuration);
+    // od.writeAttr("totalDuration", myTotalDuration);
     // od.writeAttr("total delay", time2string(myTotalDelayTime));
     // od.writeAttr("Avg delay", time2string(myAvgDelay));
     // od.writeAttr("total expected time", time2string(myTotalExpectedTime));
