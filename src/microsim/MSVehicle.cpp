@@ -3765,7 +3765,10 @@ MSVehicle::executeMove() {
     }
 #endif
 
-
+    // LFPlugin Begin
+    // is this id correct?
+    LaneFreeSimulationPlugin::videoRecordReplay(this->myID);
+    // LFPlugin End
     // Maximum safe velocity
     double vSafe = std::numeric_limits<double>::max();
     // Minimum safe velocity (lower bound).

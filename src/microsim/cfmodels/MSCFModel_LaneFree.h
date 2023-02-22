@@ -181,6 +181,22 @@ public:
         return speed_y;
     }
 
+    double get_acceleration_x(){
+        return accel_x;
+    }
+    
+    double get_acceleration_y(){
+        return accel_y;
+    }
+
+    void set_acceleration_x(double ac_x){
+        accel_x = ac_x;
+    }
+    
+    void set_acceleration_y(double ac_y){
+        accel_y = ac_y;
+    }
+
     double get_position_x(){ 
 
         // consider non-zero orientation only for the bicycle model
@@ -568,8 +584,8 @@ public:
     }
 
 
-
-
+    void videoRecordReplay(NumericalID veh_id);
+    void videoReadWriteLine();
     void insert_vehicle(MSVehicle* veh);
     void remove_vehicle(MSVehicle* veh);
     void change_edge(MSVehicle* veh);
@@ -721,6 +737,12 @@ protected:
 
 
     std::map<std::string, MSRoute*> updateRouteBoundaries;
+
+    std::string video_file_line;
+	std::string video_filename;
+	bool record_flag = false;
+	bool replay_flag = false;
+	FILE *video_fp;
 };
 
 

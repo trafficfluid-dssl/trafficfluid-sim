@@ -186,6 +186,16 @@ MSFrame::fillOptions() {
     oc.addSynonyme("tripinfo-output", "tripinfo");
     oc.addDescription("tripinfo-output", "Output", "Save single vehicle trip info into FILE");
 
+    // LFPlugin Begin
+    oc.doRegister("video-record-or-replay", new Option_String("nothing"));
+    oc.addSynonyme("video-record-or-replay", "videorecordorreplay");
+    oc.addDescription("video-record-or-replay", "Input", "Selection of record or replay");
+
+    oc.doRegister("video-logfile", new Option_FileName());
+    oc.addSynonyme("video-logfile", "videologfile");
+    oc.addDescription("video-logfile", "Input/Output", "Video logfile for either record or replay");
+    // LFPlugin End
+
     oc.doRegister("tripinfo-output.write-unfinished", new Option_Bool(false));
     oc.addDescription("tripinfo-output.write-unfinished", "Output", "Write tripinfo output for vehicles which have not arrived at simulation end");
 
