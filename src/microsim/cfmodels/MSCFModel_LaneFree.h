@@ -189,13 +189,6 @@ public:
         return accel_y;
     }
 
-    void set_acceleration_x(double ac_x){
-        accel_x = ac_x;
-    }
-    
-    void set_acceleration_y(double ac_y){
-        accel_y = ac_y;
-    }
 
     double get_position_x(){ 
 

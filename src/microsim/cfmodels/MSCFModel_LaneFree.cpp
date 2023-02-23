@@ -2558,9 +2558,9 @@ LaneFreeSimulationPlugin::LaneFreeSimulationPlugin(){
 
 	std::string video_file_line;
 	std::string video_filename;
-	bool record_flag = false;
-	bool replay_flag = false;
-	FILE *video_fp;
+	record_flag = false;
+	replay_flag = false;
+	video_fp = NULL;
 	// probably add this in a function such as initialise_video();
 	if (OptionsCont::getOptions().isSet("video-logfile")){
 		video_filename = OptionsCont::getOptions().getString("video-logfile");
@@ -2596,6 +2596,10 @@ LaneFreeSimulationPlugin::finalize_event() {
 LaneFreeSimulationPlugin::~LaneFreeSimulationPlugin() {
 	
 	free_hashmap();
+
+	if (video_fp != NULL) {
+		fclose(video_fp);
+	}
 	
 	free_mem(all_ids.ptr);
 	free_mem(lane_free_ids.ptr);
@@ -3741,27 +3745,36 @@ LaneFreeSimulationPlugin::videoRecordReplay(NumericalID veh_id){
 		double accelerations[2];
 		accelerations[0] = veh->get_acceleration_x();
 		accelerations[1] = veh->get_acceleration_y();
-		// format should be available for c++20 (feb 2020), are we fine with that restriction? if no, change this
-		video_file_line = std::format("%la,%la,", accelerations[0], accelerations[1]);
+		// format should be available for c++20 (feb 2020), are we fine with that restriction? if no, change this.  | Yes, we should change this.
+		//video_file_line = std::format("%la,%la,", accelerations[0], accelerations[1]); // this will overwrite the variable instead of appending things, we do not want that!
+		char buffer[200];
+		sprintf(buffer, "%la,%la,", accelerations[0], accelerations[1]);
+		video_file_line.append(buffer);
 		return;
 	}
 	if (replay_flag){
 		MSLaneFreeVehicle *veh = find_vehicle(veh_id);
 		double accelerations[2];
-		sscanf(video_file_line.c_str(), "%la,%la,", &accelerations[0], &accelerations[1]);
-		veh->set_acceleration_x(accelerations[0]);
-		veh->set_acceleration_y(accelerations[1]);
+
+		char buffer[200];
+		sscanf(video_file_line.c_str(), "%la,%la,", &accelerations[0], &accelerations[1]); // this will not work!
+		//veh->set_acceleration_x(accelerations[0]); // This is not needed! 
+		//veh->set_acceleration_y(accelerations[1]);
+
+
+		veh->apply_acceleration(accelerations[0], accelerations[1]);
 	}
 }
 
 void
 LaneFreeSimulationPlugin::videoReadWriteLine(){
 	if(record_flag){
-		fprintf(video_fp, "%s\n", video_file_line);
+		fprintf(video_fp, "%s\n", video_file_line.c_str());
 		return;
 	}
 	if(replay_flag){
-		fscanf(video_fp, "%s\n", &video_file_line);
+		fscanf(video_fp, "%s\n", &video_file_line); // I don't think this will work!
+		
 	}
 }
 
