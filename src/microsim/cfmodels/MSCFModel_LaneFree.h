@@ -578,7 +578,8 @@ public:
 
 
     void videoRecordReplay(NumericalID veh_id);
-    void videoReadWriteLine();
+    void videoReplayLine();
+    void videoRecordLine();
     void insert_vehicle(MSVehicle* veh);
     void remove_vehicle(MSVehicle* veh);
     void change_edge(MSVehicle* veh);
@@ -733,9 +734,11 @@ protected:
 
     std::string video_file_line;
 	std::string video_filename;
-	bool record_flag = false;
-	bool replay_flag = false;
-	FILE *video_fp;
+	bool record_flag;
+	bool replay_flag;
+	FILE *video_record_file;
+    std::ifstream video_replay_file;
+    std::stringstream video_replay_line;
 };
 
 

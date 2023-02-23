@@ -602,8 +602,18 @@ MSNet::simulationStep() {
         // register junction approaches based on planned velocities as basis for right-of-way decision
         myEdges->setJunctionApproaches(myStep);
 
+        // LFPlugin Begin
+        LaneFreeSimulationPlugin::getInstance()->videoReplayLine();
+        // LFPlugin End
+        
+
         // decide right-of-way and execute movements
         myEdges->executeMovements(myStep);
+
+        // LFPlugin Begin
+        LaneFreeSimulationPlugin::getInstance()->videoRecordLine();
+        // LFPlugin End
+        
         if (MSGlobals::gCheck4Accidents) {
             myEdges->detectCollisions(myStep, STAGE_MOVEMENTS);
         }

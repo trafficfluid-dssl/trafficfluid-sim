@@ -2552,15 +2552,15 @@ LaneFreeSimulationPlugin::LaneFreeSimulationPlugin(){
 	uniform_real_dis = std::uniform_real_distribution<double>(0, 1);
 
 	step_timer_seconds = -1;
-	rest_app_timer_seconds = -1;;
-
+	rest_app_timer_seconds = -1;
 	myInstance = this;
 
 	std::string video_file_line;
 	std::string video_filename;
 	record_flag = false;
 	replay_flag = false;
-	video_fp = NULL;
+	video_record_file = NULL;
+	// TODO init this---->   video_replay_file 
 	// probably add this in a function such as initialise_video();
 	if (OptionsCont::getOptions().isSet("video-logfile")){
 		video_filename = OptionsCont::getOptions().getString("video-logfile");
@@ -2568,11 +2568,12 @@ LaneFreeSimulationPlugin::LaneFreeSimulationPlugin(){
 	if (OptionsCont::getOptions().isSet("video-record-or-replay")){
 		std::string selection = OptionsCont::getOptions().getString("video-record-or-replay");
 		if (selection == "record"){
-			video_fp = fopen(video_filename.c_str(), "w");
+			video_record_file = fopen(video_filename.c_str(), "w");
 			record_flag = true;
 		}
 		if (selection == "replay"){
-			video_fp = fopen(video_filename.c_str(), "r");
+			// video_record_file = fopen(video_filename.c_str(), "r");
+			video_replay_file.open(video_filename, std::ios::in);
 			replay_flag = true;
 		}
 	}
@@ -2597,9 +2598,10 @@ LaneFreeSimulationPlugin::~LaneFreeSimulationPlugin() {
 	
 	free_hashmap();
 
-	if (video_fp != NULL) {
-		fclose(video_fp);
+	if (video_record_file != NULL) {
+		fclose(video_record_file);
 	}
+	video_replay_file.close();
 	
 	free_mem(all_ids.ptr);
 	free_mem(lane_free_ids.ptr);
@@ -2687,8 +2689,6 @@ LaneFreeSimulationPlugin::lf_simulation_step(){
 	if(!replay_flag){ // skip this step, we are going to guide the acceleration values from our replay file
 		simulation_step();
 	}
-	// UNCOMMENT THIS FOR VIDEO READ/WRITE FILE to work 
-	// videoReadWriteLine();
 
 	after_step_time = std::chrono::steady_clock::now();
 
@@ -3755,26 +3755,36 @@ LaneFreeSimulationPlugin::videoRecordReplay(NumericalID veh_id){
 	if (replay_flag){
 		MSLaneFreeVehicle *veh = find_vehicle(veh_id);
 		double accelerations[2];
+		std::string accelerations_string[2];
 
-		char buffer[200];
-		sscanf(video_file_line.c_str(), "%la,%la,", &accelerations[0], &accelerations[1]); // this will not work!
-		//veh->set_acceleration_x(accelerations[0]); // This is not needed! 
-		//veh->set_acceleration_y(accelerations[1]);
+		std::getline(video_replay_line, accelerations_string[0], ',');
+		std::getline(video_replay_line, accelerations_string[1], ',');
+		std::cout << accelerations_string[0] << ",\t" << accelerations_string[1] << "\n";
+		// sscanf(video_file_line.c_str(), "%la,%la,", &accelerations[0], &accelerations[1]); // this will not work!
+		sscanf(accelerations_string[0].c_str(), "%la", &accelerations[0]);
+		sscanf(accelerations_string[1].c_str(), "%la", &accelerations[1]);
 
-
+		// std::cout << accelerations[0] << ",\t" << accelerations[1] << "\n";
 		veh->apply_acceleration(accelerations[0], accelerations[1]);
 	}
 }
 
 void
-LaneFreeSimulationPlugin::videoReadWriteLine(){
-	if(record_flag){
-		fprintf(video_fp, "%s\n", video_file_line.c_str());
-		return;
-	}
+LaneFreeSimulationPlugin::videoReplayLine(){
 	if(replay_flag){
-		fscanf(video_fp, "%s\n", &video_file_line); // I don't think this will work!
-		
+		std::getline(video_replay_file, video_file_line);
+		video_replay_line.clear();
+		video_replay_line = std::stringstream(video_file_line);
+		// fscanf(video_record_file, "%s\n", &video_file_line); // I don't think this will work!
+	}
+}
+
+void
+LaneFreeSimulationPlugin::videoRecordLine(){
+	if(record_flag){
+		fprintf(video_record_file, "%s\n", video_file_line.c_str());
+		video_file_line.clear();
+		return;
 	}
 }
 
