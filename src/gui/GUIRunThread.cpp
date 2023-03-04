@@ -44,6 +44,9 @@
 #include <traci-server/TraCIServer.h>
 #include <libsumo/Simulation.h>
 
+// LFPlugin Begin
+#include <microsim/cfmodels/MSCFModel_LaneFree.h>
+// LFPlugin End
 
 // ===========================================================================
 // member method definitions
@@ -142,7 +145,16 @@ GUIRunThread::run() {
             getNet().setSimDuration((int)(end - beg));
             wait -= (end - beg);
             if (wait > 0) {
-                sleep(wait);
+                // LFPlugin Begin
+                if (LaneFreeSimulationPlugin::getInstance()->isReplayMode()) { // Workaround for accurate wait time
+                    while (SysUtils::getCurrentMillis() < end + wait );
+                }
+                else {
+                    sleep(wait);
+                }
+                // original code commented below
+                // sleep(wait);
+                // LFPlugin End                
             }
         } else {
             // sleep if the simulation is not running

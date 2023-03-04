@@ -682,6 +682,12 @@ public:
     
     void addRouteForBoundariesVisualizer(MSRoute* route);
     void updateBoundariesVisualizer();
+
+    bool isReplayMode() {
+        return replay_flag;
+    }
+
+
 protected:
     NumericalID find_stored_edge(MSVehicle* veh);
     void get_vehicles_from_other_direction_edges(NumericalID veh_id, double global_pox_x, double global_pos_y, double global_theta, bool front, const std::vector<MSLane*>& internal_lanes, NumericalID current_edge_id, std::vector<std::pair<double, MSVehicle*>>& neighbors_with_distance);
