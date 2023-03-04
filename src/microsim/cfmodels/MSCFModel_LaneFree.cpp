@@ -3759,7 +3759,7 @@ LaneFreeSimulationPlugin::videoRecordReplay(NumericalID veh_id){
 
 		std::getline(video_replay_line, accelerations_string[0], ',');
 		std::getline(video_replay_line, accelerations_string[1], ',');
-		std::cout << accelerations_string[0] << ",\t" << accelerations_string[1] << "\n";
+		
 		// sscanf(video_file_line.c_str(), "%la,%la,", &accelerations[0], &accelerations[1]); // this will not work!
 		sscanf(accelerations_string[0].c_str(), "%la", &accelerations[0]);
 		sscanf(accelerations_string[1].c_str(), "%la", &accelerations[1]);

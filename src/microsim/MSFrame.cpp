@@ -193,7 +193,7 @@ MSFrame::fillOptions() {
 
     oc.doRegister("video-logfile", new Option_FileName());
     oc.addSynonyme("video-logfile", "videologfile");
-    oc.addDescription("video-logfile", "Input/Output", "Video logfile for either record or replay");
+    oc.addDescription("video-logfile", "Output", "Video logfile for either record or replay");
     // LFPlugin End
 
     oc.doRegister("tripinfo-output.write-unfinished", new Option_Bool(false));
