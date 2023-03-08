@@ -2425,6 +2425,83 @@ void lf_plugin_get_distance_to_road_boundaries_at(NumericalID veh_id, double lon
 
 
 
+// calculates the lateral position (in global coordinates) of both left and right road boundaries for veh_id, at longitudinal_distance_x (vehicle can also observe upstream with negative values)
+// regarding the boundaries, it calculates the boundaries's global positions (with left_boundary_global_position, right_boundary_global_position variables)
+void lf_plugin_get_global_position_of_road_boundaries_at(NumericalID veh_id, double longitudinal_distance_x, double* left_boundary_global_position, double* right_boundary_global_position) {
+	MSLaneFreeVehicle* lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(veh_id);
+
+	if (left_boundary_global_position == nullptr || right_boundary_global_position == nullptr) {
+		std::cout << "ERROR: Null pointers for boundary distance arguments!\n";
+		return;
+	}
+	if (lfveh == nullptr) {
+		std::cout << "ERROR: Vehicle not found!\n";
+		return;
+	}
+	const MSVehicle* myveh = lfveh->get_vehicle();
+	const MSRoute veh_route = myveh->getRoute();
+	double sign_coeff{ cos(myveh->getAngle()) > 0 ? 1.0 : -1.0 }; // if vehicle is on the opposite side, distances should be multiplied by -1
+	std::vector<double> leftBoundarySlopes = veh_route.getLeftBoundarySlopes();
+
+
+	std::vector<double> leftBoundaryOffsets = veh_route.getLeftBoundaryOffsets();
+
+
+	// get the adjusted left boundary, according to the epsilon values. In case epsilon values are not provided, then returns the provided left boundary level points
+	std::vector<double> leftBoundaryLevelPoints = veh_route.getLeftBoundaryLevelPointsWithEpsilon();
+
+
+	if (leftBoundaryLevelPoints.size() == 0) {
+		std::cout << "ERROR! Left Boundary not defined for route " << veh_route.getID() << "\n";
+		return;
+	}
+
+
+	double global_pos_x = myveh->getPosition(longitudinal_distance_x).x() - (myveh->getLength() / 2) * cos(myveh->getAngleRelative()); // fixed the addition of longitudinal_distance, w.r.t. longitudinal direction 
+	double global_pos_y = myveh->getPosition(longitudinal_distance_x).y() - (myveh->getLength() / 2) * sin(myveh->getAngleRelative()); // TODO, add the lateral_distance appropriately in a future update
+
+	double mid_height = 0.5;
+	double left_boundary_y;
+
+	if (myveh->getPosition() == Position::INVALID) {
+		std::cout << "Invalid position when calculating moving boundaries for veh:" << myveh->getID() << "at time:" << time2string(MSNet::getInstance()->getCurrentTimeStep()) << "\n";
+		global_pos_x = 0;
+		global_pos_y = 0;
+	}
+	
+
+	LaneFreeSimulationPlugin::getInstance()->boundary_value(mid_height, sign_coeff, leftBoundaryLevelPoints, leftBoundarySlopes, leftBoundaryOffsets, global_pos_x, 0, &left_boundary_y, NULL);
+
+
+
+	*left_boundary_global_position = (left_boundary_y);
+
+	
+
+	std::vector<double> rightBoundaryLevelPoints = veh_route.getRightBoundaryLevelPoints();
+	if (rightBoundaryLevelPoints.size() == 0) {
+		std::cout << "ERROR! Right Boundary not defined for route " << veh_route.getID() << "\n";
+		return;
+	}
+
+	std::vector<double> rightBoundarySlopes = veh_route.getRightBoundarySlopes();
+
+	std::vector<double> rightBoundaryOffsets = veh_route.getRightBoundaryOffsets();
+
+	double right_boundary_y;
+
+
+	LaneFreeSimulationPlugin::getInstance()->boundary_value(mid_height, sign_coeff, rightBoundaryLevelPoints, rightBoundarySlopes, rightBoundaryOffsets, global_pos_x, 0, &right_boundary_y, NULL);
+
+
+
+	*right_boundary_global_position = right_boundary_y;
+
+	
+}
+
+
+
 double
 LaneFreeSimulationPlugin::get_uniform_distribution_sample(double from, double to) {
 	double val = uniform_real_dis(random_engine);
@@ -2523,6 +2600,8 @@ LaneFreeSimulationPlugin::LaneFreeSimulationPlugin(){
 	set_epsilon_left_boundary = &lf_plugin_set_epsilon_left_boundary;
 	get_density_left_boundary_segments = &lf_plugin_get_density_left_boundary_segments;
 	get_distance_to_road_boundaries_at = &lf_plugin_get_distance_to_road_boundaries_at;
+	get_global_position_of_road_boundaries_at  = &lf_plugin_get_global_position_of_road_boundaries_at;
+	
 
 	srand(lf_plugin_get_seed());
 	max_vehicle_length = 0;

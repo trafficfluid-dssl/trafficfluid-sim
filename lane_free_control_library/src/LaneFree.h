@@ -289,6 +289,11 @@ EXTERN libLaneFreePlugin_EXPORT double* (*get_density_left_boundary_segments)(ch
 EXTERN libLaneFreePlugin_EXPORT void (* get_distance_to_road_boundaries_at)(NumericalID veh_id, double longitudinal_distance_x, double lateral_distance_y, double* left_boundary_distance, double* right_boundary_distance, double* left_boundary_speed, double* right_boundary_speed, double* veh_longitudinal_speed);
 
 
+// calculates the lateral position (in global coordinates) of both left and right road boundaries for veh_id, at longitudinal_distance_x (vehicle can also observe upstream with negative values)
+// regarding the boundaries, it calculates the boundaries's global positions (with left_boundary_global_position, right_boundary_global_position variables)
+EXTERN libLaneFreePlugin_EXPORT void (* get_global_position_of_road_boundaries_at)(NumericalID veh_id, double longitudinal_distance_x, double* left_boundary_global_position, double* right_boundary_global_position);
+
+
 // is called once before the first time-step
 EXTERN libLaneFreePlugin_EXPORT void simulation_initialize();
 
