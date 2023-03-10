@@ -2601,8 +2601,8 @@ LaneFreeSimulationPlugin::LaneFreeSimulationPlugin(){
 	get_density_left_boundary_segments = &lf_plugin_get_density_left_boundary_segments;
 	get_distance_to_road_boundaries_at = &lf_plugin_get_distance_to_road_boundaries_at;
 
-	// For the update to TUM, remove this, since it is not relevant to their work, and it would require updating their header file as will
-	// get_global_position_of_road_boundaries_at  = &lf_plugin_get_global_position_of_road_boundaries_at;
+	 
+	get_global_position_of_road_boundaries_at  = &lf_plugin_get_global_position_of_road_boundaries_at;
 	
 
 	srand(lf_plugin_get_seed());
