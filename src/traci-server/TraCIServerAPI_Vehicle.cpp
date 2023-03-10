@@ -1103,9 +1103,16 @@ TraCIServerAPI_Vehicle::processSet(TraCIServer& server, tcpip::Storage& inputSto
                     return server.writeErrorStatusCmd(libsumo::CMD_SET_VEHICLE_VARIABLE, "MoveToXY vehicle requires a compound object.", outputStorage);
                 }
                 const int numArgs = inputStorage.readInt();
-                if (numArgs != 5 && numArgs != 6) {
-                    return server.writeErrorStatusCmd(libsumo::CMD_SET_VEHICLE_VARIABLE, "MoveToXY vehicle should obtain: edgeID, lane, x, y, angle and optionally keepRouteFlag.", outputStorage);
+                // LFPlugin Begin 
+                // (change for TUM, to have it compatible with the TraCI API they use)
+                if (numArgs < 5  || numArgs > 7) {
+                    return server.writeErrorStatusCmd(libsumo::CMD_SET_VEHICLE_VARIABLE, "MoveToXY vehicle should obtain: edgeID, lane, x, y, angle and optionally keepRouteFlag and matchThreshold.", outputStorage);
                 }
+                // original Code below
+                /*if (numArgs != 5 && numArgs != 6) {
+                    return server.writeErrorStatusCmd(libsumo::CMD_SET_VEHICLE_VARIABLE, "MoveToXY vehicle should obtain: edgeID, lane, x, y, angle and optionally keepRouteFlag.", outputStorage);
+                }*/
+                // LFPlugin End
                 // edge ID
                 std::string edgeID;
                 if (!server.readTypeCheckingString(inputStorage, edgeID)) {
@@ -1133,12 +1140,18 @@ TraCIServerAPI_Vehicle::processSet(TraCIServer& server, tcpip::Storage& inputSto
                 }
 
                 int keepRouteFlag = 1;
-                if (numArgs == 6) {
+                // LFPlugin Begin 
+                // (change for TUM, to have it compatible with the TraCI API they use)
+                // original code below
+                if (numArgs >= 6) {
+                //if (numArgs == 6) {
                     if (!server.readTypeCheckingByte(inputStorage, keepRouteFlag)) {
                         return server.writeErrorStatusCmd(libsumo::CMD_SET_VEHICLE_VARIABLE, "The sixth parameter for moveToXY must be the keepRouteFlag given as a byte.", outputStorage);
                     }
                 }
+                // LFPlugin End
                 libsumo::Vehicle::moveToXY(id, edgeID, laneNum, x, y, angle, keepRouteFlag);
+                
             }
             break;
             case libsumo::VAR_SPEED_FACTOR: {
