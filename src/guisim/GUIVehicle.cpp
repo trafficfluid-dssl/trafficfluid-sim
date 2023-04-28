@@ -130,8 +130,14 @@ GUIVehicle::getParameterWindow(GUIMainWindow& app,
                 new FunctionBinding<GUIVehicle, double>(this, &GUIVehicle::getLateralPositionOnLane));
     ret->mkItem("speed [m/s]", true,
                 new FunctionBinding<GUIVehicle, double>(this, &MSVehicle::getSpeed));
-    ret->mkItem("lateral speed [m/s]", true,
-                new FunctionBinding<MSAbstractLaneChangeModel, double>(&getLaneChangeModel(), &MSAbstractLaneChangeModel::getSpeedLat));
+    // LFPlugin Begin
+    ret->mkItem("lateral speed (LF) [m/s]", true,
+                new FunctionBinding<GUIVehicle, double>(this, &MSVehicle::getMySpeedLat));
+
+    // original code below
+    //ret->mkItem("lateral speed [m/s]", true,
+                //new FunctionBinding<MSAbstractLaneChangeModel, double>(&getLaneChangeModel(), &MSAbstractLaneChangeModel::getSpeedLat));
+    // LFPlugin End
     ret->mkItem("acceleration [m/s^2]", true,
                 new FunctionBinding<GUIVehicle, double>(this, &MSVehicle::getAcceleration));
     // LFPlugin Begin

@@ -430,6 +430,14 @@ public:
     void setGlobalCoordinatesControl(bool global_coordinates) {
         this->global_coordinates = global_coordinates;
     }
+    
+    double getMySpeedLat() const {
+        return mySpeedLat;
+    }
+    
+    void setMySpeedLat(double newVal) {
+        mySpeedLat = newVal;
+    }
 
     double getMyAccelerationLat() const{
         return myAccelerationLat;
@@ -2036,6 +2044,7 @@ protected:
     double deltaPos_LF;
     Position cachedGlobalPos;
     bool global_coordinates;
+    double mySpeedLat;
     double myAccelerationLat;
     double myAccelerationBC;
     double myDeltaBC;

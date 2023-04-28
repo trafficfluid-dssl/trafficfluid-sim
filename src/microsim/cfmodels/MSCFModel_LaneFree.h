@@ -253,6 +253,7 @@ public:
         else {
             update_y(accel_y);
             update_x(accel_x);
+            myveh->setMySpeedLat(speed_y);
             myveh->setMyAccelerationLat(accel_y);
         }
         

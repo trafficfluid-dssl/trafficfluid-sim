@@ -940,6 +940,7 @@ MSVehicle::MSVehicle(SUMOVehicleParameter* pars, const MSRoute* route,
     //LFPlugin Begin
     myDesiredSpeed = 0;
     myAngleRelative = 0;
+    mySpeedLat = 0;
     myAccelerationLat = 0;
     myAccelerationBC = 0;
     myDeltaBC = 0;
@@ -3458,7 +3459,7 @@ MSVehicle::updateTimeLoss(double vNext) {
         // LFPlugin Begin
         // original code below
         const double vmax = getDesiredSpeed();
-        // const double vmax = myLane->getVehicleMaxSpeed(this);
+        //const double vmax = myLane->getVehicleMaxSpeed(this);
         // LFPlugin End
         if (vmax > 0) {
             myTimeLoss += TS * (vmax - vNext) / vmax;
