@@ -101,6 +101,7 @@ public:
     
     // LFPlugin Begin
     static double getAvgDelay();
+    static double getAvgDelayNoNeg();
     static double getTotalTimeSpent();
     // LFPlugin End
 
@@ -278,6 +279,7 @@ private:
     // LFPlugin Begin
     static SUMOTime myTotalExpectedTime;
     static SUMOTime myTotalDelayTime;
+    static SUMOTime myTotalDurationNoNeg;
     static long long myTotalVehicleCount;
     // LFPlugin End
 

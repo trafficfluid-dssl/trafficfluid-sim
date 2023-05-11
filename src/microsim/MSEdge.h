@@ -175,6 +175,12 @@ public:
 
     // LFPlugin Begin
     std::vector<const SUMOVehicle*> getVehiclesforType(std::string veh_type) const;
+
+    inline const bool getExcludeFromMetrics() const {
+        return excludeFromMetrics;
+    }
+
+    void setExcludeFromMetrics(bool exclude);
     // LFPlugin End
 
     double getBruttoOccupancy() const;
@@ -966,6 +972,10 @@ protected:
 
     /// @brief List of waiting vehicles
     mutable std::vector<SUMOVehicle*> myWaiting;
+
+    // LFPlugin Begin
+    bool excludeFromMetrics;
+    // LFPlugin End
 
 #ifdef HAVE_FOX
     /// @brief Mutex for accessing waiting vehicles

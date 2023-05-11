@@ -194,6 +194,10 @@ MSFrame::fillOptions() {
     oc.doRegister("video-logfile", new Option_FileName());
     oc.addSynonyme("video-logfile", "videologfile");
     oc.addDescription("video-logfile", "Output", "Video logfile for either record or replay");
+
+    oc.doRegister("exclude-edges-from-metrics", new Option_FileName());
+    oc.addSynonyme("exclude-edges-from-metrics", "excludededges");
+    oc.addDescription("exclude-edges-from-metrics", "Input", "Contains comma separated list of edges to be excluded from delay and totalTimeSpent metrics.");
     // LFPlugin End
 
     oc.doRegister("tripinfo-output.write-unfinished", new Option_Bool(false));

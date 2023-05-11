@@ -82,6 +82,10 @@ MSEdge::MSEdge(const std::string& id, int numericalID,
     myAmRoundabout(false),
     myAmFringe(true),
     myBidiEdge(nullptr)
+    // LFPlugin Begin
+    ,
+    excludeFromMetrics(false)
+    // LFPlugin End
 { }
 
 
@@ -968,6 +972,12 @@ MSEdge::setMaxSpeed(double val) const {
     }
 }
 
+// LFPlugin Begin
+void
+MSEdge::setExcludeFromMetrics(bool exclude) {
+    excludeFromMetrics = exclude;
+}
+// LFPlugin End
 
 void
 MSEdge::addPerson(MSTransportable* p) const {

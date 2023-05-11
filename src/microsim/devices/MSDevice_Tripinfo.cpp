@@ -58,6 +58,7 @@ SUMOTime MSDevice_Tripinfo::myWaitingDepartDelay(-1);
 // LFPlugin Begin
 SUMOTime MSDevice_Tripinfo::myTotalExpectedTime(0);
 SUMOTime MSDevice_Tripinfo::myTotalDelayTime(0);
+SUMOTime MSDevice_Tripinfo::myTotalDurationNoNeg(0);
 long long MSDevice_Tripinfo::myTotalVehicleCount(0);
 // LFPlugin End
 int MSDevice_Tripinfo::myWalkCount(0);
@@ -142,6 +143,7 @@ MSDevice_Tripinfo::cleanup() {
     // LFPlugin Begin
     myTotalExpectedTime = 0;
     myTotalDelayTime = 0;
+    myTotalDurationNoNeg = 0;
     myTotalVehicleCount = 0;
     // LFPlugin End
     myWalkCount = 0;
@@ -298,6 +300,7 @@ MSDevice_Tripinfo::generateOutput(OutputDevice* tripinfoOut) const {
     const SUMOTime myDelay = duration - expectedTime;
 
     myTotalDelayTime = myTotalDelayTime + myDelay;
+    myTotalDurationNoNeg += fmax(duration, expectedTime);
     // LFPlugin End
     myPendingOutput.erase(this);
     if (tripinfoOut == nullptr) {
@@ -518,6 +521,7 @@ MSDevice_Tripinfo::writeStatistics(OutputDevice& od) {
     od.writeAttr("departDelayWaiting", myWaitingDepartDelay);
     // LFPlugin Begin
     od.writeAttr("delayAvg", getAvgDelay());
+    od.writeAttr("delayAvgNoNeg", getAvgDelayNoNeg());
     od.writeAttr("totalTimeSpent_hours", getTotalTimeSpent());
     // od.writeAttr("totalTimeSpent_sec", getTotalTimeSpent() * 3600);
     // od.writeAttr("totalDuration", myTotalDuration);
@@ -651,6 +655,16 @@ double
 MSDevice_Tripinfo::getAvgDelay() {
     if (myVehicleCount > 0) {
         return STEPS2TIME((myTotalDuration - myTotalExpectedTime)/myVehicleCount);
+    }
+    else {
+        return 0;
+    }
+}
+
+double
+MSDevice_Tripinfo::getAvgDelayNoNeg() {
+    if (myVehicleCount > 0) {
+        return STEPS2TIME((myTotalDurationNoNeg - myTotalExpectedTime) / myVehicleCount);
     }
     else {
         return 0;

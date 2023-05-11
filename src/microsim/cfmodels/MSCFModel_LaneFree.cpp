@@ -2659,7 +2659,22 @@ LaneFreeSimulationPlugin::LaneFreeSimulationPlugin(){
 		}
 	}
 
-	
+	if (OptionsCont::getOptions().isSet("exclude-edges-from-metrics")) {
+		std::string edgeListStr = OptionsCont::getOptions().getString("exclude-edges-from-metrics");
+		std::string edgeStr;
+		std::stringstream edgeListStream = std::stringstream(edgeListStr);
+		while (std::getline(edgeListStream, edgeStr, ',')) {
+			MSEdge* edge_ptr = MSEdge::dictionary(edgeStr);
+			if (edge_ptr == nullptr) {
+				std::cout << "Error! Edge with id:" << edgeStr << " not found!\n";
+			}
+			else {
+				edge_ptr->setExcludeFromMetrics(true);
+			}
+
+		}
+
+	}
 
 	
 }
