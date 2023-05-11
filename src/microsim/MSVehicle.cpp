@@ -911,6 +911,11 @@ MSVehicle::MSVehicle(SUMOVehicleParameter* pars, const MSRoute* route,
     myWaitingTime(0),
     myWaitingTimeCollector(),
     myTimeLoss(0),
+    // LFPlugin Begin
+    myTimeLossNoNeg(0),
+    myTimeLossExcludeEdges(0),
+    myTimeLossNoNegExcludeEdges(0),
+    // LFPlugin End
     myState(0, 0, 0, 0),
     myDriverState(nullptr),
     myActionStep(true),
@@ -3460,10 +3465,22 @@ MSVehicle::updateTimeLoss(double vNext) {
         // original code below
         const double vmax = getDesiredSpeed();
         //const double vmax = myLane->getVehicleMaxSpeed(this);
-        // LFPlugin End
+        // original code below
+        // if (vmax > 0) {
+        //     myTimeLoss += TS * (vmax - vNext) / vmax;
+        // }
+        double timeLoss_update {0.};
         if (vmax > 0) {
-            myTimeLoss += TS * (vmax - vNext) / vmax;
+            timeLoss_update = TS * (vmax - vNext) / vmax;
         }
+
+        myTimeLoss += timeLoss_update;
+        myTimeLossNoNeg += timeLoss_update > 0. ? timeLoss_update : 0.;
+
+        myTimeLossExcludeEdges += myLane->getEdge().getExcludeFromMetrics() ? 0. : timeLoss_update;
+        myTimeLossNoNegExcludeEdges += (myLane->getEdge().getExcludeFromMetrics() || timeLoss_update <=0. ) ? 0. : timeLoss_update;
+        // LFPlugin End
+        
     }
 }
 

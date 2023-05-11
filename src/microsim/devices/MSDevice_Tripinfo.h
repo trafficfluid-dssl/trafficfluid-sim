@@ -80,7 +80,7 @@ public:
     // LFPlugin Begin
     static void updateMyTotalVehicleCount(long long count) {
         myTotalVehicleCount += count;
-    } 
+    }
     // LFPlugin End
 
     /// @brief accessors for GUINet-Parameters
@@ -103,6 +103,7 @@ public:
     static double getAvgDelay();
     static double getAvgDelayNoNeg();
     static double getTotalTimeSpent();
+    static double getTotalTimeSpentwithExcluded();
     // LFPlugin End
 
 public:

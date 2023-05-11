@@ -523,6 +523,11 @@ MSDevice_Tripinfo::writeStatistics(OutputDevice& od) {
     od.writeAttr("delayAvg", getAvgDelay());
     od.writeAttr("delayAvgNoNeg", getAvgDelayNoNeg());
     od.writeAttr("totalTimeSpent_hours", getTotalTimeSpent());
+    if(OptionsCont::getOptions().isSet("exclude-edges-from-metrics")){
+        od.writeAttr("delayAvg_ExcludeEdges", getAvgDelay()); // needs update 
+        od.writeAttr("delayAvgNoNeg_ExcludeEdges", getAvgDelayNoNeg()); // needs update 
+        od.writeAttr("totalTimeSpent_hours_ExcludeEdges", getTotalTimeSpentwithExcluded());
+    }
     // od.writeAttr("totalTimeSpent_sec", getTotalTimeSpent() * 3600);
     // od.writeAttr("totalDuration", myTotalDuration);
     // od.writeAttr("total delay", time2string(myTotalDelayTime));
@@ -561,6 +566,11 @@ MSDevice_Tripinfo::writeRideStatistics(OutputDevice& od, const std::string& cate
 double
 MSDevice_Tripinfo::getTotalTimeSpent() {
     return myTotalVehicleCount * TS / 3600;
+}
+
+double
+MSDevice_Tripinfo::getTotalTimeSpentwithExcluded() {
+    return LaneFreeSimulationPlugin::getInstance()->getmyTotalVehicleCountWithExcluded() * TS / 3600;
 }
 // LFPlugin End
 

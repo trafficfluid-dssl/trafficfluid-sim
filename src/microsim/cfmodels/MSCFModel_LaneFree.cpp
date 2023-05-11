@@ -2642,6 +2642,10 @@ LaneFreeSimulationPlugin::LaneFreeSimulationPlugin(){
 	replay_flag = false;
 	video_record_file = NULL;
 	// TODO init this---->   video_replay_file 
+
+	myTotalVehicleCountWithExcluded = 0;
+
+
 	// probably add this in a function such as initialise_video();
 	if (OptionsCont::getOptions().isSet("video-logfile")){
 		video_filename = OptionsCont::getOptions().getString("video-logfile");
@@ -3483,6 +3487,9 @@ LaneFreeSimulationPlugin::free_hashmap(){
 void
 LaneFreeSimulationPlugin::insert_vehicle(MSVehicle* veh){
 	NumericalID edge_id = veh->getLane()->getEdge().getNumericalID();
+	if (!veh->getLane()->getEdge().getExcludeFromMetrics()){
+		myTotalVehicleCountWithExcluded++;
+	}
 	VehicleMapEdges::iterator it = allVehiclesMapEdges.find(edge_id);
 	SortedVehiclesVector* sortedvehicles;
 	if(it==allVehiclesMapEdges.end()){
@@ -3679,6 +3686,21 @@ LaneFreeSimulationPlugin::change_edge(MSVehicle* veh){
 		return;
 	}
 
+	MSEdge* old_edge_ptr = find_edge_ptr(old_edge_id);	
+
+	if(old_edge_ptr!=nullptr){
+		bool old_edge_excluded = old_edge_ptr->getExcludeFromMetrics();
+		bool new_edge_excluded = veh->getLane()->getEdge().getExcludeFromMetrics();
+
+		if(old_edge_excluded){
+			myTotalVehicleCountWithExcluded++;
+		}
+
+		if(new_edge_excluded){
+			myTotalVehicleCountWithExcluded--;
+		}
+	}
+
 	VehicleMap* old_edge_vm = allVehiclesMapEdges[old_edge_id];
 	
 	NumericalID veh_id = veh->getNumericalID();
@@ -3743,6 +3765,10 @@ LaneFreeSimulationPlugin::remove_vehicle(MSVehicle* veh){
 	}
 	NumericalID edge_id = vehlane->getEdge().getNumericalID();
 	VehicleMapEdges::iterator it = allVehiclesMapEdges.find(edge_id);
+
+	if (!vehlane->getEdge().getExcludeFromMetrics()){
+		myTotalVehicleCountWithExcluded--;
+	}
 	
 	if(it==allVehiclesMapEdges.end()){		
 		std::cout << "Edge " << edge_id << " not found!\n";

@@ -783,6 +783,22 @@ public:
         return TIME2STEPS(myTimeLoss);
     }
 
+    // LFPlugin Begin
+    SUMOTime getTimeLossNoNeg() const {
+        return TIME2STEPS(myTimeLossNoNeg);
+    }
+    
+    
+    SUMOTime getTimeLossExcludeEdges() const {
+        return TIME2STEPS(myTimeLossExcludeEdges);
+    }
+
+
+    SUMOTime getTimeLossNoNegExcludeEdges() const {
+        return TIME2STEPS(myTimeLossNoNegExcludeEdges);
+    }
+    // LFPlugin End
+
 
     /** @brief Returns the SUMOTime waited (speed was lesser than 0.1m/s) within the last t millisecs
      *
@@ -1955,6 +1971,15 @@ protected:
 
     /// @brief the time loss in seconds due to driving with less than maximum speed
     double myTimeLoss;
+
+    // LFPlugin Begin
+    double myTimeLossNoNeg;
+
+    double myTimeLossExcludeEdges;
+
+    double myTimeLossNoNegExcludeEdges;
+
+    // LFPlugin End
 
     /// @brief This Vehicles driving state (pos and speed)
     State myState;

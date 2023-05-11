@@ -688,6 +688,9 @@ public:
         return replay_flag;
     }
 
+    long long getmyTotalVehicleCountWithExcluded(){
+        return myTotalVehicleCountWithExcluded;
+    }
 
 protected:
     NumericalID find_stored_edge(MSVehicle* veh);
@@ -746,6 +749,8 @@ protected:
 	FILE *video_record_file;
     std::ifstream video_replay_file;
     std::stringstream video_replay_line;
+
+    long long myTotalVehicleCountWithExcluded;
 };
 
 
