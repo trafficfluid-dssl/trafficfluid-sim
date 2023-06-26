@@ -2663,22 +2663,7 @@ LaneFreeSimulationPlugin::LaneFreeSimulationPlugin(){
 		}
 	}
 
-	if (OptionsCont::getOptions().isSet("exclude-edges-from-metrics")) {
-		std::string edgeListStr = OptionsCont::getOptions().getString("exclude-edges-from-metrics");
-		std::string edgeStr;
-		std::stringstream edgeListStream = std::stringstream(edgeListStr);
-		while (std::getline(edgeListStream, edgeStr, ',')) {
-			MSEdge* edge_ptr = MSEdge::dictionary(edgeStr);
-			if (edge_ptr == nullptr) {
-				std::cout << "Error! Edge with id:" << edgeStr << " not found!\n";
-			}
-			else {
-				edge_ptr->setExcludeFromMetrics(true);
-			}
-
-		}
-
-	}
+	
 
 	
 }
@@ -2722,6 +2707,27 @@ LaneFreeSimulationPlugin::~LaneFreeSimulationPlugin() {
 void
 LaneFreeSimulationPlugin::initialize_lib(){
 	simulation_initialize();
+
+
+	if (OptionsCont::getOptions().isSet("exclude-edges-from-metrics")) {
+		std::string edgeListStr = OptionsCont::getOptions().getString("exclude-edges-from-metrics");
+
+		std::string edgeStr;
+		
+		std::stringstream edgeListStream = std::stringstream(edgeListStr);
+		while (std::getline(edgeListStream, edgeStr, ',')) {
+			//std::cout << edgeStr << "\n";
+			MSEdge* edge_ptr = MSEdge::dictionary(edgeStr);
+			if (edge_ptr == nullptr) {
+				std::cout << "Error! Edge with id:" << edgeStr << " not found!\n";
+			}
+			else {
+				edge_ptr->setExcludeFromMetrics(true);
+			}
+
+		}
+
+	}
 }
 /*
 * Deprecated print
@@ -2746,7 +2752,7 @@ LaneFreeSimulationPlugin::get_message_step(){
 */
 void
 LaneFreeSimulationPlugin::lf_simulation_step(){
-	
+
 	all_ids.updated = false;
 	
 	lane_free_ids.updated = false;
@@ -2772,10 +2778,9 @@ LaneFreeSimulationPlugin::lf_simulation_step(){
 	}
 
 	double epsilon_array[6] = { 1,0.8,1.2,1.4,0.6,0.8 };
-	lf_plugin_set_epsilon_left_boundary("main_highway", epsilon_array, 6);*/
-	lf_simulation_checkCollisions();
+	lf_plugin_set_epsilon_left_boundary("main_highway", epsilon_array, 6);*/	
+	lf_simulation_checkCollisions();	
 	updateBoundariesVisualizer();
-
 	before_step_time = std::chrono::steady_clock::now();
 	
 	if (step_timer_seconds > 0) {
@@ -2959,10 +2964,10 @@ LaneFreeSimulationPlugin::get_all_neighbors_internal(MSLaneFreeVehicle* lfveh, c
 	
 
 	// Get route object of vehicle
-	const MSRoute veh_route = lfveh->get_vehicle()->getRoute();
+	const MSRoute* veh_route = &(lfveh->get_vehicle()->getRoute());
 
 	// This returns the set of edges corresponding to the vehicle's path, including the internal ones (on junctions)
-	const ConstMSEdgeVector veh_edges = veh_route.getEdgeswInternal();
+	const ConstMSEdgeVector veh_edges = veh_route->getEdgeswInternal();
 
 	// local position of vehicle
 	double x_vid = lfveh->get_position_x();
@@ -2970,11 +2975,10 @@ LaneFreeSimulationPlugin::get_all_neighbors_internal(MSLaneFreeVehicle* lfveh, c
 
 	// current edge id
 	NumericalID edge_id = current_edge->getNumericalID();//lfveh->get_vehicle()->getLane()->getEdge().getNumericalID();//this will contain the edge, also accounting for intersection
-
 	
 
 	// find the current edge's index on the route array
-	int my_edge_index{ veh_route.edge_index(current_edge) };
+	int my_edge_index{ veh_route->edge_index(current_edge) };
 
 	// check whether edge was found
 	if (my_edge_index == -1) {
@@ -2982,7 +2986,7 @@ LaneFreeSimulationPlugin::get_all_neighbors_internal(MSLaneFreeVehicle* lfveh, c
 		const MSEdge* last_edge = veh_edges.at(veh_edges.size() - 1);
 		//this is an error only if the vehicle is not in the last edge already
 		if (last_edge->getNumericalID() != edge_id) {
-			std::cout << "Edge " << lfveh->get_vehicle()->getLane()->getEdge().getID() << " not found in route for vehicle " << lfveh->get_vehicle()->getID() << "!\n";
+			//std::cout << "Edge " << lfveh->get_vehicle()->getLane()->getEdge().getID() << " not found in route for vehicle " << lfveh->get_vehicle()->getID() << "!\n";
 
 		}
 
@@ -3024,12 +3028,12 @@ LaneFreeSimulationPlugin::get_all_neighbors_internal(MSLaneFreeVehicle* lfveh, c
 	NumericalID neighbor_id;
 
 	// points to the temp neighbor
-	const SUMOVehicle* neighbor_veh;
+	const SUMOVehicle* neighbor_veh = nullptr;
 
 	double edge_length{ get_edge_length(edge_id) };
 
 	std::vector<MSLane*> internal_lanes;
-
+	
 	double global_pos_x{ 0 }, global_pos_y{ 0 }, global_theta{ 0 }, cos_theta{ 0 }, sin_theta{ 0 };
 	// fill this information only for vehicles that use global coordinates
 	if (lfveh->get_vehicle()->getGlobalCoordinatesControl()) {
@@ -3041,7 +3045,7 @@ LaneFreeSimulationPlugin::get_all_neighbors_internal(MSLaneFreeVehicle* lfveh, c
 		global_pos_x = pos.x() - (veh_length)*cos_theta;
 		global_pos_y = pos.y() - (veh_length)*sin_theta;
 	}
-
+	
 	// do a while iterator, and break when we reach an edge in the path and a vehicle where lognitudinal distance is more than the specified one
 	while (true) {
 
@@ -3051,9 +3055,9 @@ LaneFreeSimulationPlugin::get_all_neighbors_internal(MSLaneFreeVehicle* lfveh, c
 			my_pos = my_pos - front_back * edge_length;
 			
 			if (lfveh->get_vehicle()->getGlobalCoordinatesControl() && veh_edges[my_edge_index]->isInternal()) {
-				// check whether there are other internal lanes in the current edge based on the observed vehicles
+				// check whether there are other internal lanes in the current edge based on the observed vehicles				
 				internal_lanes = veh_edges[my_edge_index]->getFromJunction()->getInternalLanes();
-
+				
 				if (internal_lanes.size() > 1) { // there are other augmented edges with different directions in the same junction that contain vehicles
 					
 					get_vehicles_from_other_direction_edges(lfveh->get_vehicle()->getNumericalID(), global_pos_x, global_pos_y, global_theta, front, internal_lanes, edge_id, neighbors_with_distance);
@@ -3067,7 +3071,7 @@ LaneFreeSimulationPlugin::get_all_neighbors_internal(MSLaneFreeVehicle* lfveh, c
 			else {
 				my_edge_index--;
 			}
-			
+
 			if (!cross_edge || my_pos < -(front_back)*distance || my_edge_index >= veh_edges.size() || my_edge_index < 0) {
 				// terminating condition
 				break;
@@ -3085,7 +3089,7 @@ LaneFreeSimulationPlugin::get_all_neighbors_internal(MSLaneFreeVehicle* lfveh, c
 			edge_length = get_edge_length(edge_id);
 
 			sorted_vehs = LaneFreeSimulationPlugin::getInstance()->get_sorted_vehicles_in_edge(edge_id);
-
+			
 			if (sorted_vehs == nullptr) {//(sorted_vehs==nullptr) edge_id may not be initialized if no vehicles have entered
 				size_edge = 0;
 				vehicle_index = 0;
@@ -3107,7 +3111,7 @@ LaneFreeSimulationPlugin::get_all_neighbors_internal(MSLaneFreeVehicle* lfveh, c
 
 		if (lfveh->get_vehicle()->getGlobalCoordinatesControl()) {
 			// use global coordinates to determine the distance, and check other edges
-			
+
 			transform_neighbor_vehicle_distance_and_add_to_neighbors((MSVehicle*)neighbor_veh, global_pos_x, global_pos_y, cos_theta, sin_theta, front, neighbors_with_distance);
 		}
 		else {
@@ -3321,8 +3325,8 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 			
 			get_all_neighbors_internal(lfv1, edge, vehs_in_edge, (size_t)i, front_distance, true, 1, neighbors_with_distance);
 			
-			for(j = 0;j < neighbors_with_distance.size(); j++){		
-				
+			for(j = 0;j < neighbors_with_distance.size(); j++){
+
 				veh2 = neighbors_with_distance.at(j).second;
 				lv2 = veh2->getVehicleType().getLength();
 				wv2 = veh2->getVehicleType().getWidth();
@@ -3487,7 +3491,7 @@ LaneFreeSimulationPlugin::free_hashmap(){
 void
 LaneFreeSimulationPlugin::insert_vehicle(MSVehicle* veh){
 	NumericalID edge_id = veh->getLane()->getEdge().getNumericalID();
-	if (!veh->getLane()->getEdge().getExcludeFromMetrics()){
+	if (!veh->getLane()->getEdge().getExcludeFromMetrics()){		
 		myTotalVehicleCountWithExcluded++;
 	}
 	VehicleMapEdges::iterator it = allVehiclesMapEdges.find(edge_id);
@@ -3693,10 +3697,12 @@ LaneFreeSimulationPlugin::change_edge(MSVehicle* veh){
 		bool new_edge_excluded = veh->getLane()->getEdge().getExcludeFromMetrics();
 
 		if(old_edge_excluded){
+			//std::cout << "Old edge excluded\n";
 			myTotalVehicleCountWithExcluded++;
 		}
 
 		if(new_edge_excluded){
+			//std::cout << "New edge excluded\n";
 			myTotalVehicleCountWithExcluded--;
 		}
 	}
@@ -3767,6 +3773,7 @@ LaneFreeSimulationPlugin::remove_vehicle(MSVehicle* veh){
 	VehicleMapEdges::iterator it = allVehiclesMapEdges.find(edge_id);
 
 	if (!vehlane->getEdge().getExcludeFromMetrics()){
+		
 		myTotalVehicleCountWithExcluded--;
 	}
 	

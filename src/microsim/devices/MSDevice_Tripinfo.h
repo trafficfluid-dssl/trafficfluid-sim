@@ -81,6 +81,10 @@ public:
     static void updateMyTotalVehicleCount(long long count) {
         myTotalVehicleCount += count;
     }
+
+    static void updateMyTotalVehicleCountExcludeEdges(long long count) {
+        myTotalVehicleCountExcludeEdges += count;
+    }
     // LFPlugin End
 
     /// @brief accessors for GUINet-Parameters
@@ -100,6 +104,9 @@ public:
     static double getAvgRideDuration();
     
     // LFPlugin Begin
+    static double getAvgTimeLossNoNeg();
+    static double getAvgTimeLossExcludeEdges();
+    static double getAvgTimeLossNoNegExcludeEdges();
     static double getAvgDelay();
     static double getAvgDelayNoNeg();
     static double getTotalTimeSpent();
@@ -278,10 +285,14 @@ private:
     static SUMOTime myWaitingDepartDelay;
 
     // LFPlugin Begin
+    static SUMOTime myTotalTimeLossNoNeg;
+    static SUMOTime myTotalTimeLossExcludeEdges;
+    static SUMOTime myTotalTimeLossNoNegExcludeEdges;
     static SUMOTime myTotalExpectedTime;
     static SUMOTime myTotalDelayTime;
     static SUMOTime myTotalDurationNoNeg;
     static long long myTotalVehicleCount;
+    static long long myTotalVehicleCountExcludeEdges;
     // LFPlugin End
 
     static int myWalkCount;

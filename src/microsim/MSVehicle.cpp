@@ -915,6 +915,7 @@ MSVehicle::MSVehicle(SUMOVehicleParameter* pars, const MSRoute* route,
     myTimeLossNoNeg(0),
     myTimeLossExcludeEdges(0),
     myTimeLossNoNegExcludeEdges(0),
+    myRLength(0),
     // LFPlugin End
     myState(0, 0, 0, 0),
     myDriverState(nullptr),
@@ -956,7 +957,7 @@ MSVehicle::MSVehicle(SUMOVehicleParameter* pars, const MSRoute* route,
 
 
 MSVehicle::~MSVehicle() {
-    // LFPlugin Begin
+    // LFPlugin Begin    
     LaneFreeSimulationPlugin::getInstance()->remove_vehicle(this);
     // LFPlugin End
     for (std::vector<MSLane*>::iterator i = myFurtherLanes.begin(); i != myFurtherLanes.end(); ++i) {
@@ -3464,17 +3465,26 @@ MSVehicle::updateTimeLoss(double vNext) {
         // LFPlugin Begin
         // original code below
         const double vmax = getDesiredSpeed();
+        
         //const double vmax = myLane->getVehicleMaxSpeed(this);
         // original code below
         // if (vmax > 0) {
         //     myTimeLoss += TS * (vmax - vNext) / vmax;
         // }
         double timeLoss_update {0.};
+        double accel = getAcceleration();
         if (vmax > 0) {
-            timeLoss_update = TS * (vmax - vNext) / vmax;
-        }
+            
+            //std::cout << "veh:" << vNext << "," << myState.mySpeed << "\n";
+            //timeLoss_update = TS * (vmax - (getDeltaPos(SPEED2ACCEL(vNext - myState.mySpeed)))/TS) / vmax;
+            //timeLoss_update = TS * (vmax - (myState.mySpeed+0.5*accel*TS)) / vmax;
+            timeLoss_update = TS - (myState.mySpeed*TS + 0.5 * accel * TS*TS) / vmax;
+            
 
+        }
+        myRLength += myState.mySpeed * TS + 0.5 * accel * TS * TS;
         myTimeLoss += timeLoss_update;
+        //std::cout << "veh:" << getID() << "," << myTimeLoss << "\n";
         myTimeLossNoNeg += timeLoss_update > 0. ? timeLoss_update : 0.;
 
         myTimeLossExcludeEdges += myLane->getEdge().getExcludeFromMetrics() ? 0. : timeLoss_update;
@@ -3887,6 +3897,7 @@ MSVehicle::executeMove() {
     // LFPlugin Begin
     // original code below in comment
     //updateState(vNext);
+    updateTimeLoss(vNext);
     if (getVehicleType().getParameter().cmdModel == SUMO_TAG_LF_CMD_DOUBLEINTEGRATOR) {
         // double integrator model, lateral position and speed is updated appropriately within the MSLaneFreeVehicle class objects
        
@@ -3914,7 +3925,7 @@ MSVehicle::executeMove() {
     std::string emergencyReason = " for unknown reasons";    
     processLaneAdvances(passedLanes, moved, emergencyReason);    
 
-    updateTimeLoss(vNext);
+    //updateTimeLoss(vNext);
     myCollisionImmunity = MAX2((SUMOTime) - 1, myCollisionImmunity - DELTA_T);
     if (!hasArrived() && !myLane->getEdge().isVaporizing()) {
         if (myState.myPos > myLane->getLength()) {

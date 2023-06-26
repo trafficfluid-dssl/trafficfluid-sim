@@ -674,6 +674,7 @@ MSNet::simulationStep() {
     }
     // LFPlugin Begin
     MSDevice_Tripinfo::updateMyTotalVehicleCount(myVehicleControl->getRunningVehicleNo());
+    MSDevice_Tripinfo::updateMyTotalVehicleCountExcludeEdges(LaneFreeSimulationPlugin::getInstance()->getmyTotalVehicleCountWithExcluded());
     // LFPlugin End
     myStep += DELTA_T;
 }

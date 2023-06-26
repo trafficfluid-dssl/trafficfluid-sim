@@ -56,10 +56,14 @@ SUMOTime MSDevice_Tripinfo::myTotalDepartDelay(0);
 SUMOTime MSDevice_Tripinfo::myWaitingDepartDelay(-1);
 
 // LFPlugin Begin
+SUMOTime MSDevice_Tripinfo::myTotalTimeLossNoNeg(0);
+SUMOTime MSDevice_Tripinfo::myTotalTimeLossExcludeEdges(0);
+SUMOTime MSDevice_Tripinfo::myTotalTimeLossNoNegExcludeEdges(0);
 SUMOTime MSDevice_Tripinfo::myTotalExpectedTime(0);
 SUMOTime MSDevice_Tripinfo::myTotalDelayTime(0);
 SUMOTime MSDevice_Tripinfo::myTotalDurationNoNeg(0);
 long long MSDevice_Tripinfo::myTotalVehicleCount(0);
+long long MSDevice_Tripinfo::myTotalVehicleCountExcludeEdges(0);
 // LFPlugin End
 int MSDevice_Tripinfo::myWalkCount(0);
 double MSDevice_Tripinfo::myTotalWalkRouteLength(0);
@@ -145,6 +149,7 @@ MSDevice_Tripinfo::cleanup() {
     myTotalDelayTime = 0;
     myTotalDurationNoNeg = 0;
     myTotalVehicleCount = 0;
+    myTotalVehicleCountExcludeEdges = 0;
     // LFPlugin End
     myWalkCount = 0;
     myTotalWalkRouteLength = 0;
@@ -280,11 +285,20 @@ MSDevice_Tripinfo::notifyLeave(SUMOTrafficObject& veh, double /*lastPos*/,
 void
 MSDevice_Tripinfo::generateOutput(OutputDevice* tripinfoOut) const {
     const SUMOTime timeLoss = MSGlobals::gUseMesoSim ? myMesoTimeLoss : static_cast<MSVehicle&>(myHolder).getTimeLoss();
+
+    // LFPlugin Begin
+    const SUMOTime timeLossNoNeg = MSGlobals::gUseMesoSim ? myMesoTimeLoss : (static_cast<MSVehicle&>(myHolder)).getTimeLossNoNeg();
+    const SUMOTime timeLossExcludeEdges = MSGlobals::gUseMesoSim ? myMesoTimeLoss : (static_cast<MSVehicle&>(myHolder)).getTimeLossExcludeEdges();
+    const SUMOTime timeLossNoNegExludeEdges = MSGlobals::gUseMesoSim ? myMesoTimeLoss : (static_cast<MSVehicle&>(myHolder)).getTimeLossNoNegExcludeEdges();
+    // LFPlugin End
+
+
     const double routeLength = myRouteLength + (myArrivalTime == NOT_ARRIVED ? myHolder.getPositionOnLane() : myArrivalPos);
     const SUMOTime duration = (myArrivalTime == NOT_ARRIVED ? SIMSTEP : myArrivalTime) - myHolder.getDeparture();
-    
+    //std::cout << "stats, veh:" << (static_cast<MSVehicle&>(myHolder)).getID() <<"," << routeLength << "," << " dur:" << duration << "\n";
     // LFPlugin Begin
-    const SUMOTime expectedTime = (routeLength/static_cast<MSVehicle&>(myHolder).getDesiredSpeed())*1000; // convert From sec to ms
+    const SUMOTime expectedTime = ((static_cast<MSVehicle&>(myHolder)).getvehroutelength()/static_cast<MSVehicle&>(myHolder).getDesiredSpeed())*1000; // convert From sec to ms
+    //const SUMOTime expectedTime = (routeLength / static_cast<MSVehicle&>(myHolder).getDesiredSpeed()) * 1000; // convert From sec to ms
     // LFPlugin End
     
     myVehicleCount++;
@@ -296,6 +310,10 @@ MSDevice_Tripinfo::generateOutput(OutputDevice* tripinfoOut) const {
     myTotalDepartDelay += myHolder.getDepartDelay();
     
     // LFPlugin Begin
+    myTotalTimeLossNoNeg += fmax(timeLoss, 0);// timeLossNoNeg;
+    myTotalTimeLossExcludeEdges += timeLossExcludeEdges;
+    myTotalTimeLossNoNegExcludeEdges += fmax(timeLossExcludeEdges, 0);//timeLossNoNegExludeEdges;
+
     myTotalExpectedTime += expectedTime;
     const SUMOTime myDelay = duration - expectedTime;
 
@@ -331,7 +349,7 @@ MSDevice_Tripinfo::generateOutput(OutputDevice* tripinfoOut) const {
     os.writeAttr("stopTime", time2string(myStoppingTime));
     // LFPlugin Begin
     // removed next line
-    // os.writeAttr("timeLoss", time2string(timeLoss));
+    //os.writeAttr("timeLoss", time2string(timeLoss));
     // LFPlugin End
     os.writeAttr("rerouteNo", myHolder.getNumberReroutes());
     os.writeAttr("devices", toString(myHolder.getDevices()));
@@ -363,9 +381,9 @@ MSDevice_Tripinfo::generateOutput(OutputDevice* tripinfoOut) const {
     }
 
     // LFPlugin Begin
-    os.writeAttr("expectedTime", time2string(expectedTime));
-    os.writeAttr("delay", time2string(myDelay));
+    os.writeAttr("delay", time2string(timeLoss));
     // LFPlugin End
+
     os.writeAttr("vaporized", vaporized);
     // cannot close tag because emission device output might follow
 }
@@ -515,17 +533,18 @@ MSDevice_Tripinfo::writeStatistics(OutputDevice& od) {
     od.writeAttr("waitingTimeAvg", getAvgWaitingTime());
     // LFPlugin Begin
     // removed next line
-    // od.writeAttr("timeLoss", getAvgTimeLoss());
+    //od.writeAttr("delayInitial", getAvgDelay());
+    //od.writeAttr("delayInitialNoNeg", getAvgDelayNoNeg());
     // LFPlugin End
     od.writeAttr("departDelayAvg", getAvgDepartDelay());
     od.writeAttr("departDelayWaiting", myWaitingDepartDelay);
     // LFPlugin Begin
-    od.writeAttr("delayAvg", getAvgDelay());
-    od.writeAttr("delayAvgNoNeg", getAvgDelayNoNeg());
+    od.writeAttr("delayAvg", getAvgTimeLoss());
+    od.writeAttr("delayAvgNoNeg", getAvgTimeLossNoNeg());
     od.writeAttr("totalTimeSpent_hours", getTotalTimeSpent());
     if(OptionsCont::getOptions().isSet("exclude-edges-from-metrics")){
-        od.writeAttr("delayAvg_ExcludeEdges", getAvgDelay()); // needs update 
-        od.writeAttr("delayAvgNoNeg_ExcludeEdges", getAvgDelayNoNeg()); // needs update 
+        od.writeAttr("delayAvg_ExcludeEdges", getAvgTimeLossExcludeEdges());
+        od.writeAttr("delayAvgNoNeg_ExcludeEdges", getAvgTimeLossNoNegExcludeEdges());
         od.writeAttr("totalTimeSpent_hours_ExcludeEdges", getTotalTimeSpentwithExcluded());
     }
     // od.writeAttr("totalTimeSpent_sec", getTotalTimeSpent() * 3600);
@@ -570,7 +589,7 @@ MSDevice_Tripinfo::getTotalTimeSpent() {
 
 double
 MSDevice_Tripinfo::getTotalTimeSpentwithExcluded() {
-    return LaneFreeSimulationPlugin::getInstance()->getmyTotalVehicleCountWithExcluded() * TS / 3600;
+    return myTotalVehicleCountExcludeEdges * TS / 3600;
 }
 // LFPlugin End
 
@@ -661,6 +680,36 @@ MSDevice_Tripinfo::getAvgWalkTimeLoss() {
 }
 
 // LFPlugin Begin
+double
+MSDevice_Tripinfo::getAvgTimeLossNoNeg() {
+    if (myVehicleCount > 0) {
+        return STEPS2TIME(myTotalTimeLossNoNeg / myVehicleCount);
+    }
+    else {
+        return 0;
+    }
+}
+
+double
+MSDevice_Tripinfo::getAvgTimeLossExcludeEdges() {
+    if (myVehicleCount > 0) {
+        return STEPS2TIME(myTotalTimeLossExcludeEdges / myVehicleCount);
+    }
+    else {
+        return 0;
+    }
+}
+
+double
+MSDevice_Tripinfo::getAvgTimeLossNoNegExcludeEdges() {
+    if (myVehicleCount > 0) {
+        return STEPS2TIME(myTotalTimeLossNoNegExcludeEdges / myVehicleCount);
+    }
+    else {
+        return 0;
+    }
+}
+
 double 
 MSDevice_Tripinfo::getAvgDelay() {
     if (myVehicleCount > 0) {

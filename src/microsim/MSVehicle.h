@@ -788,6 +788,9 @@ public:
         return TIME2STEPS(myTimeLossNoNeg);
     }
     
+    double getvehroutelength() const {
+        return myRLength;
+    }
     
     SUMOTime getTimeLossExcludeEdges() const {
         return TIME2STEPS(myTimeLossExcludeEdges);
@@ -1978,6 +1981,8 @@ protected:
     double myTimeLossExcludeEdges;
 
     double myTimeLossNoNegExcludeEdges;
+
+    double myRLength;
 
     // LFPlugin End
 
