@@ -939,8 +939,7 @@ int lf_plugin_am_i_on_acceleration_lane(NumericalID veh_id) {
 
 // returns the ids of front vehicles that may be located beyond the veh_id's road edge, according to the front distance provided, and based on its routing. 
 // you need "cross_edge=1" to look for vehicles beyond the current edge, and pass the address of a variable to "neighbors_size" in order to acquire the size of the resulting array.
-NumericalID* lf_plugin_get_all_neighbor_ids_front(NumericalID veh_id, double front_distance, int cross_edge, size_t* neighbors_size) {	
-	
+NumericalID* lf_plugin_get_all_neighbor_ids_front(NumericalID veh_id, double front_distance, int cross_edge, size_t* neighbors_size) {
 	MSLaneFreeVehicle* lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(veh_id);
 	
 	// Assert that requested vehicle exists
@@ -950,10 +949,10 @@ NumericalID* lf_plugin_get_all_neighbor_ids_front(NumericalID veh_id, double fro
 	}
 
 	// Get route object of vehicle
-	const MSRoute veh_route = lfveh->get_vehicle()->getRoute();
+	const MSRoute* veh_route = &(lfveh->get_vehicle()->getRoute());
 	
 	// This returns the set of edges corresponding to the vehicle's path, including the internal ones (on junctions)
-	const ConstMSEdgeVector veh_edges = veh_route.getEdgeswInternal();
+	const ConstMSEdgeVector veh_edges = veh_route->getEdgeswInternal();
 
 	// local position of vehicle
 	double x_vid = lfveh->get_position_x();
@@ -962,7 +961,7 @@ NumericalID* lf_plugin_get_all_neighbor_ids_front(NumericalID veh_id, double fro
 	NumericalID edge_id = lfveh->get_vehicle()->getLane()->getEdge().getNumericalID();//this will contain the edge, also accounting for intersection
 	
 	// find the current edge's index on the route array
-	int my_edge_index{ veh_route.edge_index(&(lfveh->get_vehicle()->getLane()->getEdge())) };
+	int my_edge_index{ veh_route->edge_index(&(lfveh->get_vehicle()->getLane()->getEdge())) };
 	
 	// check whether edge was found
 	if (my_edge_index == -1) {
@@ -1001,9 +1000,8 @@ NumericalID* lf_plugin_get_all_neighbor_ids_front(NumericalID veh_id, double fro
 	
 	int found = binary_search_find_index(sorted_vehs, 0, (int)(size_edge-1), veh_id, x_vid); // TODO CHECK THIS FOR RING_ROAD SCENARIO
 	
-	if (found == -1) {
-		
-		std::cout << "\nVehicle " << lfveh->get_vehicle()->getID() << " not found in sorted vector of edge " << all_veh_edges[my_edge_index]->getID() << "!\n";
+	if (found == -1) {		
+		std::cout << "\nVehicle " << lfveh->get_vehicle()->getID() << " not found in sorted vector of edge " << veh_edges[my_edge_index]->getID() << "!\n";
 		*neighbors_size = 0;
 		return NULL;
 	}
@@ -1043,6 +1041,7 @@ NumericalID* lf_plugin_get_all_neighbor_ids_front(NumericalID veh_id, double fro
 	all_neighbor_ids_front_ams->usize = n_size;
 
 	*neighbors_size = n_size;
+	
 	return all_neighbor_ids_front_array;
 	
 }
@@ -1061,10 +1060,10 @@ NumericalID* lf_plugin_get_all_neighbor_ids_back(NumericalID veh_id, double back
 	}
 
 	// Get route object of vehicle
-	const MSRoute veh_route = lfveh->get_vehicle()->getRoute();
+	const MSRoute* veh_route = &lfveh->get_vehicle()->getRoute();
 
 	// This returns the set of edges corresponding to the vehicle's path, including the internal ones (on junctions)
-	const ConstMSEdgeVector veh_edges = veh_route.getEdgeswInternal();
+	const ConstMSEdgeVector veh_edges = veh_route->getEdgeswInternal();
 
 	// local position of vehicle
 	double x_vid = lfveh->get_position_x();
@@ -1073,7 +1072,7 @@ NumericalID* lf_plugin_get_all_neighbor_ids_back(NumericalID veh_id, double back
 	NumericalID edge_id = lfveh->get_vehicle()->getLane()->getEdge().getNumericalID();//this will contain the edge, also accounting for intersection
 
 	// find the current edge's index on the route array
-	int my_edge_index{ veh_route.edge_index(&(lfveh->get_vehicle()->getLane()->getEdge())) };
+	int my_edge_index{ veh_route->edge_index(&(lfveh->get_vehicle()->getLane()->getEdge())) };
 
 	// check whether edge was found
 	if (my_edge_index == -1) {
@@ -1111,9 +1110,8 @@ NumericalID* lf_plugin_get_all_neighbor_ids_back(NumericalID veh_id, double back
 
 	int found = binary_search_find_index(sorted_vehs, 0, (int)(size_edge - 1), veh_id, x_vid);
 
-	if (found == -1) {
-
-		std::cout << "\nVehicle " << lfveh->get_vehicle()->getID() << " not found in sorted vector of edge " << all_veh_edges[my_edge_index]->getID() << "!\n";
+	if (found == -1) {		
+		std::cout << "\nVehicle " << lfveh->get_vehicle()->getID() << " not found in sorted vector of edge " << veh_edges[my_edge_index]->getID() << "!\n";
 		*neighbors_size = 0;
 		return NULL;
 	}
@@ -2986,7 +2984,7 @@ LaneFreeSimulationPlugin::get_all_neighbors_internal(MSLaneFreeVehicle* lfveh, c
 		const MSEdge* last_edge = veh_edges.at(veh_edges.size() - 1);
 		//this is an error only if the vehicle is not in the last edge already
 		if (last_edge->getNumericalID() != edge_id) {
-			//std::cout << "Edge " << lfveh->get_vehicle()->getLane()->getEdge().getID() << " not found in route for vehicle " << lfveh->get_vehicle()->getID() << "!\n";
+			std::cout << "Edge " << lfveh->get_vehicle()->getLane()->getEdge().getID() << " not found in route for vehicle " << lfveh->get_vehicle()->getID() << "!\n";
 
 		}
 
@@ -3009,8 +3007,7 @@ LaneFreeSimulationPlugin::get_all_neighbors_internal(MSLaneFreeVehicle* lfveh, c
 
 	size_t found{ veh_index };//binary_search_find_index(sorted_vehs, 0, (int)(size_edge - 1), lfveh->get_vehicle()->getNumericalID(), x_vid);
 
-	if (found == -1) {
-
+	if (found == -1) {		
 		std::cout << "\nVehicle " << lfveh->get_vehicle()->getID() << " not found in sorted vector of edge " << veh_edges[my_edge_index]->getID() << "!\n";
 		return;
 	}
