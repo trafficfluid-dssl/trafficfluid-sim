@@ -79,9 +79,9 @@ MSRoute::MSRoute(const std::string& id,
     for (ConstMSEdgeVector::iterator it = myEdges.begin(); it != myEdges.end(); it++) {
         
         if (tmp_edge_prev != nullptr) {
-            tmp_edge_internal = tmp_edge_prev->getInternalFollowingEdge((*it));
-            if (tmp_edge_internal != nullptr) {
+            while ((tmp_edge_internal = tmp_edge_prev->getInternalFollowingEdge((*it))) != nullptr) { // we need a while loop in case of an intersection (where we have two consecutive internal lanes)
                 myEdgeswInternal.push_back(tmp_edge_internal);
+                tmp_edge_prev = tmp_edge_internal;
             }
         }
         myEdgeswInternal.push_back((*it));
