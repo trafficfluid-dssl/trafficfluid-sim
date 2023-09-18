@@ -87,7 +87,12 @@ GeomHelper::angle2D(const Position& p1, const Position& p2) {
 double
 GeomHelper::nearest_offset_on_line_to_point2D(const Position& lineStart,
         const Position& lineEnd,
-        const Position& p, bool perpendicular) {
+        const Position& p, bool perpendicular
+        // LFPlugin Begin
+        ,
+        bool allow_negetive
+        // LFPlugin End
+        ) {
     const double lineLength2D = lineStart.distanceTo2D(lineEnd);
     if (lineLength2D == 0.0f) {
         return 0.0f;
@@ -107,10 +112,15 @@ GeomHelper::nearest_offset_on_line_to_point2D(const Position& lineStart,
                 //std::cout << "got here ("<<lineStart.x()<<","<<lineStart.y()<<")->("<<lineEnd.x()<<", "<< lineEnd.y()<<"), returns:"<< u*lineLength2D<<"\n";
                 if (u > 1.0f) {
                     return u * lineLength2D;// INVALID_OFFSET;
-                }
+                }                
                 return 0.0f;
             }   // LFPlugin End
             if (u < 0.0f) {
+                // LFPlugin Begin
+                if (allow_negetive) {
+                    return u * lineLength2D;
+                }                
+                // LFPlugin End
                 return 0.0f;
             }
             return lineLength2D;

@@ -381,7 +381,11 @@ Position
 PositionVector::positionAtOffset2D(const Position& p1, const Position& p2, double pos, double lateralOffset) {
     const double dist = p1.distanceTo2D(p2);
     if (pos < 0 || dist < pos) {
-        return Position::INVALID;
+        // LFPlugin Begin
+        if (pos >= 0) {
+            return Position::INVALID;
+        }
+        // LFPlugin End
     }
     if (lateralOffset != 0) {
         const Position offset = sideOffset(p1, p2, -lateralOffset); // move in the same direction as Position::move2side
@@ -841,9 +845,27 @@ PositionVector::nearest_offset_to_point2D(const Position& p, bool perpendicular)
     double minDist = std::numeric_limits<double>::max();
     double nearestPos = GeomHelper::INVALID_OFFSET;
     double seen = 0;
+    // LFPlugin Begin
+    bool first_element = false;
+    // LFPlugin End
     for (const_iterator i = begin(); i != end() - 1; i++) {
+        // LFPlugin Begin
+        if (i == begin()) {
+            first_element = true;
+        }
         const double pos =
-            GeomHelper::nearest_offset_on_line_to_point2D(*i, *(i + 1), p, perpendicular);
+            GeomHelper::nearest_offset_on_line_to_point2D(*i, *(i + 1), p, perpendicular, first_element);
+        if (first_element) {
+            if (pos < 0) {
+                return pos;
+            }
+            first_element = false;
+        }
+
+        // original line below
+        //const double pos =
+            //GeomHelper::nearest_offset_on_line_to_point2D(*i, *(i + 1), p, perpendicular);
+        // LFPlugin End
         const double dist = pos == GeomHelper::INVALID_OFFSET ? minDist : p.distanceTo2D(positionAtOffset2D(*i, *(i + 1), pos));
         if (dist < minDist) {
             nearestPos = pos + seen;
@@ -878,23 +900,39 @@ PositionVector::nearest_offset_to_point25D(const Position& p, bool perpendicular
     double nearestPos = GeomHelper::INVALID_OFFSET;
     double seen = 0;
     bool last_element = false;
+    // LFPlugin Begin
+    bool first_element = false;
+    // LFPlugin End
     for (const_iterator i = begin(); i != end() - 1; i++) {
         // LFPlugin Begin
-        //std::cout<<"line from (" << (*i).x() << "," << (*i).y() << ")->(" << (*(i+1)).x() << ", " << (*(i + 1)).y() << ")\n";
+        //std::cout<<"line from (" << (*i).x() << "," << (*i).y() << ")->(" << (*(i+1)).x() << ", " << (*(i + 1)).y() << ") "<< perpendicular <<"\n";
+        //std::cout << "angle:" << GeomHelper::angle2D(*i, *(i + 1)) << "\n";
         if ((i + 1) == end() - 1) {            
             last_element = true;
         }
+        if (i == begin()) {
+            first_element = true;
+        }
         // original code on line below
         double pos =
-            GeomHelper::nearest_offset_on_line_to_point2D(*i, *(i + 1), p, perpendicular || last_element);
+            GeomHelper::nearest_offset_on_line_to_point2D(*i, *(i + 1), p, perpendicular || last_element, first_element);
+        
+        if (first_element) { // flag is useful only for command above, should be false for the remaining line segments
+            if (pos < 0) {
+                return pos;
+            }            
+            first_element = false;
+        }
+
+        // LFPlugin End
         if (last_element && pos > (*i).distanceTo(*(i + 1))) {
             const double pos25D = pos * (*i).distanceTo(*(i + 1)) / (*i).distanceTo2D(*(i + 1));
             nearestPos = pos25D + seen;
         }
         else {
-            if (last_element && pos < 0.0f) {
+            if (last_element && pos < 0.0f) {                
                 pos = GeomHelper::INVALID_OFFSET;
-            }
+            }            
             // original code within these brackets below            
             const double dist = pos == GeomHelper::INVALID_OFFSET ? minDist : p.distanceTo2D(positionAtOffset2D(*i, *(i + 1), pos));
             if (dist < minDist) {
@@ -908,7 +946,7 @@ PositionVector::nearest_offset_to_point25D(const Position& p, bool perpendicular
         if (perpendicular && i != begin() && pos == GeomHelper::INVALID_OFFSET) {
             // even if perpendicular is set we still need to check the distance to the inner points
             const double cornerDist = p.distanceTo2D(*i);
-            if (cornerDist < minDist) {
+            if (cornerDist < minDist) {                
                 const double pos1 =
                     GeomHelper::nearest_offset_on_line_to_point2D(*(i - 1), *i, p, false);
                 const double pos2 =

@@ -229,25 +229,21 @@ public:
         
         accel_y = uy;
         accel_x = ux;
-
-        
         
     }
 
     void apply_acceleration_bicycle(double F, double delta) {
-
         // no need to define more parameters
         accel_x = F;
         accel_y = delta;
 
-        
     }
 
     // Complies with the CF model, returns the next speed of the vehicle. Lateral position is updated internally here
     double apply_acceleration_internal(){
         if (myveh->getVehicleType().getParameter().cmdModel == SUMO_TAG_LF_CMD_BICYCLE) {
-            apply_acceleration_internal_bicycle();
-            myveh->setMyAccelerationBC(accel_x);
+            apply_acceleration_internal_bicycle();            
+            myveh->setMyAccelerationBC(accel_x);            
             myveh->setMyDeltaBC(accel_y);
         }
         else {
@@ -403,11 +399,17 @@ protected:
         v_next = v_cur + F * TS;
 
         bool global_coordinates = myveh->getGlobalCoordinatesControl();
-        //printf("curr step local:\n x:%f,y:%f\n", get_position_x()+ (sigma / 2) * cos(theta_cur), get_position_y() + (sigma / 2) * sin(theta_cur));
+        
+        //printf("F:%f\tdelta:%f\n", F, delta);
+        //double theta_cur_relative = myveh->getAngleRelative();
+        //printf("curr step local\t:x:%f,y:%f\n", get_position_x()+ (sigma / 2) * cos(theta_cur_relative), get_position_y() + (sigma / 2) * sin(theta_cur_relative));
+                
         if (global_coordinates) {
             get_global_coordinates_bicycle_model(&x_cur_back, &y_cur_back, sigma, theta_cur);
+            
             //Position pos_cur = myveh->getCachedGlobalPos();
-            //printf("cached pos:(%f,%f) vs obtained pos:(%f,%f)", pos_cur.x() - (sigma)*cos(theta_cur), pos_cur.y() - (sigma)*sin(theta_cur), x_cur_back, y_cur_back);
+            //printf("cached pos:\t(%f,%f)\n", pos_cur.x(), pos_cur.y());
+            
             //printf("local (front):(%f,%f)\n",myveh->getPositionOnLane() ,myveh->getLateralPositionOnLane());
             //x_cur_back = pos_cur.x() - (sigma)*cos(theta_cur);
             //y_cur_back = pos_cur.y() - (sigma)*sin(theta_cur);
@@ -452,7 +454,10 @@ protected:
             const MSLane* mylane = myveh->getLane();
             //std::cout << "mylane:" << mylane->getID() << "\n";
             convert_to_local_coordinates(&x_next_front, &y_next_front, cachedGlobalPos, mylane);
-            //std::cout << "next local:(" <<x_next_front<< "," << y_next_front<< ")\n";
+            
+            //printf("next cached pos:\t(%f,%f)\n", cachedGlobalPos.x(), cachedGlobalPos.y());
+            //std::cout << "next local:(" << x_next_front << "," << y_next_front << ")\n";
+            
         }
         //printf("next step local (front):\n x:%f,y:%f\n", x_next_front, y_next_front);
         
@@ -463,6 +468,8 @@ protected:
         deltaPos_x_front = x_next_front - myveh->getPositionOnLane();
         // vehicles are not allowed to move backwards     
         // The following line creates issues for global coordinates control   
+        
+        
         //deltaPos_x_front = (deltaPos_x_front < 0 ) ? 0 : deltaPos_x_front;
         //std::cout << "delta x: (local)" << deltaPos_x_front << "\n";
         

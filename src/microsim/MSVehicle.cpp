@@ -1138,6 +1138,11 @@ MSVehicle::getSlope() const {
 
 Position
 MSVehicle::getPosition(const double offset) const {
+    // LFPlugin Begin
+    if (getVehicleType().getParameter().cmdModel == SUMO_TAG_LF_CMD_BICYCLE && getGlobalCoordinatesControl()) {
+        return cachedGlobalPos;
+    }
+    // LFPlugin End
     if (myLane == nullptr) {
         // when called in the context of GUI-Drawing, the simulation step is already incremented
         if (myInfluencer != nullptr && myInfluencer->isRemoteAffected(MSNet::getInstance()->getCurrentTimeStep())) {
@@ -1893,7 +1898,7 @@ MSVehicle::joinTrainPartFront(MSVehicle* veh) {
         }
         const double newLength = myType->getLength() + veh->getVehicleType().getLength();
         getSingularType().setLength(newLength);
-        assert(myLane == veh->getLane());
+        assert(myLane == veh->getLane());        
         myState.myPos = veh->getPositionOnLane();
         myStops.begin()->joinTriggered = false;
         return true;
@@ -3676,7 +3681,7 @@ MSVehicle::processLaneAdvances(std::vector<MSLane*>& passedLanes, bool& moved, s
                         // avoid skipping stop due to numerical instability
                         // this is a special case for rail vehicles because they
                         // continue myLFLinkLanes past stops
-                        approachedLane = myLane;
+                        approachedLane = myLane;                        
                         myState.myPos = myLane->getLength();
                         break;
                     }
@@ -4645,7 +4650,7 @@ MSVehicle::enterLaneAtMove(MSLane* enteredLane, bool onTeleporting) {
             double new_x, new_y;
             LaneFreeSimulationPlugin::getInstance()->convert_to_local_coordinates(&new_x, &new_y, cachedGlobalPos, myLane);
             myState.myPos = new_x;
-            myState.myPosLat = new_y;
+            myState.myPosLat = new_y;            
             //std::cout << "veh:" << getID() << " proceeds to lane:" << myLane->getID() << " with new pos:" << cachedGlobalPos.x() << "," << cachedGlobalPos.y() << "\n";
         }
         // LFPlugin End
@@ -4653,7 +4658,7 @@ MSVehicle::enterLaneAtMove(MSLane* enteredLane, bool onTeleporting) {
 
     } else {
         // normal move() isn't called so reset position here. must be done
-        // before calling reminders
+        // before calling reminders        
         myState.myPos = 0;
         myCachedPosition = Position::INVALID;
         activateReminders(MSMoveReminder::NOTIFICATION_TELEPORT, enteredLane);
@@ -5558,7 +5563,11 @@ MSVehicle::setBlinkerInformation() {
     } else {
         const MSLane* lane = getLane();
         std::vector<MSLink*>::const_iterator link = MSLane::succLinkSec(*this, 1, *lane, getBestLanesContinuation());
-        if (link != lane->getLinkCont().end() && lane->getLength() - getPositionOnLane() < lane->getVehicleMaxSpeed(this) * (double) 7.) {
+        if (link != lane->getLinkCont().end() && lane->getLength() - getPositionOnLane() < lane->getVehicleMaxSpeed(this) * (double) 7.
+            // LFPlugin Begin
+            && (!getGlobalCoordinatesControl())
+            // LFPlugin End
+            ) {
             switch ((*link)->getDirection()) {
                 case LinkDirection::TURN:
                 case LinkDirection::LEFT:

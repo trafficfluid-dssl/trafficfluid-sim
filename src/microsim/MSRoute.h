@@ -111,7 +111,7 @@ public:
         if (it == myEdgeswInternal.end()) {
             return -1;
         }
-        return it - myEdgeswInternal.begin();
+        return (int)(it - myEdgeswInternal.begin());
     }
 
     int edge_index_normal(const MSEdge* const edge) const {
@@ -119,7 +119,7 @@ public:
         if (it == myEdges.end()) {
             return -1;
         }
-        return it - myEdges.begin();
+        return (int)(it - myEdges.begin());
     }
 
     const ConstMSEdgeVector& getEdgeswInternal() const {

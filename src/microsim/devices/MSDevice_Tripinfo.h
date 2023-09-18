@@ -79,10 +79,16 @@ public:
 
     // LFPlugin Begin
     static void updateMyTotalVehicleCount(long long count) {
+        //Made for ad-hoc log files on time-delay and tts
+        /*fprintf(fp_num_of_vehs, "%lld\n", count);
+        fflush(fp_num_of_vehs);*/
         myTotalVehicleCount += count;
     }
 
     static void updateMyTotalVehicleCountExcludeEdges(long long count) {
+        //Made for ad-hoc log files on time-delay and tts
+        /*fprintf(fp_num_of_vehs_excluded, "%lld\n", count);
+        fflush(fp_num_of_vehs_excluded);*/
         myTotalVehicleCountExcludeEdges += count;
     }
     // LFPlugin End
@@ -293,6 +299,11 @@ private:
     static SUMOTime myTotalDurationNoNeg;
     static long long myTotalVehicleCount;
     static long long myTotalVehicleCountExcludeEdges;
+    //Made for ad-hoc log files on time-delay and tts
+    /*static FILE* fp_time_delay;
+    static FILE* fp_time_delay_excluded;
+    static FILE* fp_num_of_vehs;
+    static FILE* fp_num_of_vehs_excluded;*/
     // LFPlugin End
 
     static int myWalkCount;

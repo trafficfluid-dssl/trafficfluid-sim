@@ -418,12 +418,12 @@ public:
         cachedGlobalPos.setz(getPosition().z());
     }
 
-    Position& getCachedGlobalPos() {
+    Position& getCachedGlobalPos(){
         return cachedGlobalPos;
     }
 
     
-    bool getGlobalCoordinatesControl() {
+    bool getGlobalCoordinatesControl() const{
         return global_coordinates;
     }
 
