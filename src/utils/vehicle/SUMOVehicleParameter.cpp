@@ -54,7 +54,8 @@ SUMOVehicleParameter::SUMOVehicleParameter()
     ,
     lf_attribute_insertion_policy("latExploit"),
     lf_attribute_lat_low(0),
-    lf_attribute_lat_high(1)
+    lf_attribute_lat_high(1),
+    lf_attribute_depart_speed_limit_downstream(true)
     // LFPlugin End
 { }
 
