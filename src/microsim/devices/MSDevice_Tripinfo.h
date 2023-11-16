@@ -111,6 +111,7 @@ public:
     
     // LFPlugin Begin
     static double getAvgTimeLossNoNeg();
+    static double getAvgTimeLossOnlyNeg();
     static double getAvgTimeLossExcludeEdges();
     static double getAvgTimeLossNoNegExcludeEdges();
     static double getAvgDelay();
@@ -291,14 +292,17 @@ private:
     static SUMOTime myWaitingDepartDelay;
 
     // LFPlugin Begin
-    static SUMOTime myTotalTimeLossNoNeg;
+    static SUMOTime myTotalTimeLossNoNeg;    
+    static SUMOTime myTotalTimeLossOnlyNeg;    
     static SUMOTime myTotalTimeLossExcludeEdges;
     static SUMOTime myTotalTimeLossNoNegExcludeEdges;
     static SUMOTime myTotalExpectedTime;
     static SUMOTime myTotalDelayTime;
     static SUMOTime myTotalDurationNoNeg;
-    static long long myTotalVehicleCount;
+    static long long myTotalVehicleCount;    
     static long long myTotalVehicleCountExcludeEdges;
+    static long long myVehicleCountNoNeg;
+    static long long myVehicleCountOnlyNeg;
     //Made for ad-hoc log files on time-delay and tts
     /*static FILE* fp_time_delay;
     static FILE* fp_time_delay_excluded;
