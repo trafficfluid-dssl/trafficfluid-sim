@@ -712,7 +712,7 @@ MSDevice_Tripinfo::getAvgWalkTimeLoss() {
 // LFPlugin Begin
 double
 MSDevice_Tripinfo::getAvgTimeLossNoNeg() {
-    if (myVehicleCount > 0) {
+    if (myVehicleCountNoNeg > 0) {
         return STEPS2TIME(myTotalTimeLossNoNeg / myVehicleCountNoNeg);
     }
     else {
@@ -722,7 +722,7 @@ MSDevice_Tripinfo::getAvgTimeLossNoNeg() {
 
 double
 MSDevice_Tripinfo::getAvgTimeLossOnlyNeg() {
-    if (myVehicleCount > 0) {
+    if (myVehicleCountOnlyNeg > 0) {
         return STEPS2TIME(myTotalTimeLossOnlyNeg / myVehicleCountOnlyNeg);
     }
     else {
