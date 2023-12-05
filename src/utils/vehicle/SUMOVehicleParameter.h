@@ -727,6 +727,7 @@ public:
     std::string lf_attribute_insertion_policy;
     double lf_attribute_lat_low;
     double lf_attribute_lat_high;
+    bool lf_attribute_depart_speed_limit_downstream;
     // LFPlugin End
 
 protected:

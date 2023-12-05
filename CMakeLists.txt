@@ -130,22 +130,12 @@ find_package(PythonInterp REQUIRED)
 message(STATUS "Found Python: " ${PYTHON_EXECUTABLE})
 execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import setuptools" RESULT_VARIABLE SETUPTOOLS_MISSING)
 
+
+# LFPlugin Begin
+# the whole if(APPLE) endif (APPLE) is replaced with one from a subsequent commit that addresses issues for compilation on macos with arm processors
 if (APPLE)
     # we know that openGL is deprecated for newer MacOS
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGL_SILENCE_DEPRECATION")
-    # http://stackoverflow.com/questions/1487752/how-do-i-instruct-cmake-to-look-for-libraries-installed-by-macports
-    link_directories(/opt/X11/lib)
-    include_directories(SYSTEM /opt/X11/include)
-    # Detect if the "port" command is valid on this system; if so, return full path
-    execute_process(COMMAND which port RESULT_VARIABLE DETECT_MACPORTS OUTPUT_VARIABLE MACPORTS_PREFIX ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
-    if (${DETECT_MACPORTS} EQUAL 0)
-        # MACPORTS_PREFIX contains now something like "/opt/local/bin/port", so we get the parent directory
-        get_filename_component(MACPORTS_PREFIX ${MACPORTS_PREFIX} DIRECTORY)
-        # "/opt/local" is where MacPorts lives, add `/lib` suffix and link
-        link_directories(${MACPORTS_PREFIX}/../lib)
-        include_directories(${MACPORTS_PREFIX}/../include)
-        message(STATUS "Macports detected: ${MACPORTS_PREFIX}")
-    endif ()
 
     # Recommendation, also add a "brew --prefix" custom command to detect a homebrew build environment
     execute_process(COMMAND brew --prefix RESULT_VARIABLE DETECT_BREW OUTPUT_VARIABLE BREW_PREFIX ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -154,7 +144,21 @@ if (APPLE)
         include_directories(${BREW_PREFIX}/include)
         message(STATUS "Brew detected: ${BREW_PREFIX}")
     endif ()
+
+    # Detect if the "port" command is valid on this system; if so, return full path
+    execute_process(COMMAND which port RESULT_VARIABLE DETECT_MACPORTS OUTPUT_VARIABLE MACPORTS_PREFIX ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+    if (${DETECT_MACPORTS} EQUAL 0)
+        # MACPORTS_PREFIX contains now something like "/opt/local/bin/port", so we get the parent directory
+        get_filename_component(MACPORTS_PREFIX ${MACPORTS_PREFIX} DIRECTORY)
+        # "/opt/local" is where MacPorts lives, add `/lib` suffix and link
+        # http://stackoverflow.com/questions/1487752/how-do-i-instruct-cmake-to-look-for-libraries-installed-by-macports
+        link_directories(/opt/X11/lib ${MACPORTS_PREFIX}/../lib)
+        include_directories(SYSTEM /opt/X11/include ${MACPORTS_PREFIX}/../include)
+        message(STATUS "Macports detected: ${MACPORTS_PREFIX}")
+    endif ()
 endif (APPLE)
+# LFPlugin End
+
 
 #  Specifically define variable WIN32 for compilations under windows (due an error in Shawn)
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND WIN32)

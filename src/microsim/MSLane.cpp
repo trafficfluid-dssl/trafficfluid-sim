@@ -820,7 +820,7 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
     std::string insertion_policy = aVehicle->getParameter().lf_attribute_insertion_policy;
     double latLow = aVehicle->getParameter().lf_attribute_lat_low;
     double latHigh = aVehicle->getParameter().lf_attribute_lat_high;
-    
+    bool depart_speed_limit_downstream = aVehicle->getParameter().lf_attribute_depart_speed_limit_downstream;
     bool desired_speed_alignment = !(insertion_policy=="latExploit" || insertion_policy=="center");
     //add flow speed
     if (insertion_policy == "API") {
@@ -847,17 +847,21 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
         int num_front_check = 5, veh_counter = 0;
         double desired_space_gap = desired_tau * speed;
         double s;
-        double distance_to_zero=speed*speed/2*2;
+        //double distance_to_zero=speed*speed/(2*2);
         double myfrontpos = aVehicle->getPositionOnLane();
         sort(myVehicles.begin(), myVehicles.end(), vehicle_natural_position_sorter(this));
-        for (VehCont::iterator veh = myVehicles.begin(); veh != myVehicles.end(); ++veh) {
-            sum_speed_front += (*veh)->getSpeed();
-            veh_counter++;
-            if (veh_counter == num_front_check) {
-                break;
+        if (depart_speed_limit_downstream) {
+            for (VehCont::iterator veh = myVehicles.begin(); veh != myVehicles.end(); ++veh) {
+
+                sum_speed_front += (*veh)->getSpeed();
+                veh_counter++;
+                if (veh_counter == num_front_check) {
+                    break;
+                }
+
             }
-            
         }
+        
 
         if (veh_counter > 0) {
             avg_speed_front = sum_speed_front / veh_counter;

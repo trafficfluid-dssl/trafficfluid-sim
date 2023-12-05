@@ -853,9 +853,10 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
 
     // LFPlugin Begin
     // additional attributes for lane-free plugin
-    { "insertionPolicy",    SUMO_ATTR_LF_INSERTION_POLICY },
-    { "latLow",             SUMO_ATTR_LF_LAT_LOW },
-    { "latHigh",            SUMO_ATTR_LF_LAT_HIGH },
+    { "insertionPolicy",            SUMO_ATTR_LF_INSERTION_POLICY },
+    { "latLow",                     SUMO_ATTR_LF_LAT_LOW },
+    { "latHigh",                    SUMO_ATTR_LF_LAT_HIGH },
+    { "departSpeedLimitDownstream", SUMO_ATTR_LF_DEP_SPEED_LIMIT_DOWNSTREAM },
 
 
     // for the boundaries

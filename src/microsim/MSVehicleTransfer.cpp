@@ -135,6 +135,7 @@ MSVehicleTransfer::checkInsertions(SUMOTime time) {
                 desc.myVeh->workOnIdleReminders();
                 if (!desc.myVeh->signalSet(MSVehicle::VEH_SIGNAL_BLINKER_LEFT | MSVehicle::VEH_SIGNAL_BLINKER_RIGHT)) {
                     // signal wish to re-enter the road
+                    // keep temp comment to appear in changes
                     desc.myVeh->switchOnSignal(MSGlobals::gLefthand ? MSVehicle::VEH_SIGNAL_BLINKER_RIGHT : MSVehicle::VEH_SIGNAL_BLINKER_LEFT);
                     if (pa) {
                         // update freePosition so other vehicles can help with insertion

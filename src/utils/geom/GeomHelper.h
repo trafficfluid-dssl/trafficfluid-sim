@@ -70,7 +70,12 @@ public:
 
     static double nearest_offset_on_line_to_point2D(
         const Position& lineStart, const Position& lineEnd,
-        const Position& p, bool perpendicular = true);
+        const Position& p, bool perpendicular = true
+        // LFPlugin Begin
+        ,
+        bool allow_negative = false
+        // LFPlugin End
+        );
 
     static double nearest_offset_on_line_to_point25D(
         const Position& lineStart, const Position& lineEnd,

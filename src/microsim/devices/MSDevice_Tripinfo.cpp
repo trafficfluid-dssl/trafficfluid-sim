@@ -57,6 +57,7 @@ SUMOTime MSDevice_Tripinfo::myWaitingDepartDelay(-1);
 
 // LFPlugin Begin
 SUMOTime MSDevice_Tripinfo::myTotalTimeLossNoNeg(0);
+SUMOTime MSDevice_Tripinfo::myTotalTimeLossOnlyNeg(0);
 SUMOTime MSDevice_Tripinfo::myTotalTimeLossExcludeEdges(0);
 SUMOTime MSDevice_Tripinfo::myTotalTimeLossNoNegExcludeEdges(0);
 SUMOTime MSDevice_Tripinfo::myTotalExpectedTime(0);
@@ -64,6 +65,13 @@ SUMOTime MSDevice_Tripinfo::myTotalDelayTime(0);
 SUMOTime MSDevice_Tripinfo::myTotalDurationNoNeg(0);
 long long MSDevice_Tripinfo::myTotalVehicleCount(0);
 long long MSDevice_Tripinfo::myTotalVehicleCountExcludeEdges(0);
+long long MSDevice_Tripinfo::myVehicleCountNoNeg(0);
+long long MSDevice_Tripinfo::myVehicleCountOnlyNeg(0);
+//Made for ad-hoc log files on time-delay and tts
+//FILE* MSDevice_Tripinfo::fp_time_delay = fopen("time_delay.txt", "w");
+//FILE* MSDevice_Tripinfo::fp_time_delay_excluded = fopen("time_delay_excluded.txt", "w");
+//FILE* MSDevice_Tripinfo::fp_num_of_vehs = fopen("num_of_vehs.txt", "w");
+//FILE* MSDevice_Tripinfo::fp_num_of_vehs_excluded = fopen("num_of_vehs_excluded.txt", "w");
 // LFPlugin End
 int MSDevice_Tripinfo::myWalkCount(0);
 double MSDevice_Tripinfo::myTotalWalkRouteLength(0);
@@ -150,6 +158,16 @@ MSDevice_Tripinfo::cleanup() {
     myTotalDurationNoNeg = 0;
     myTotalVehicleCount = 0;
     myTotalVehicleCountExcludeEdges = 0;
+
+    myVehicleCountNoNeg = 0;
+    myVehicleCountOnlyNeg = 0;
+    myTotalTimeLossNoNeg = 0;
+    myTotalTimeLossOnlyNeg = 0;
+    //Made for ad-hoc log files on time-delay and tts
+    /*fclose(fp_time_delay);
+    fclose(fp_time_delay_excluded);
+    fclose(fp_num_of_vehs);
+    fclose(fp_num_of_vehs_excluded);*/
     // LFPlugin End
     myWalkCount = 0;
     myTotalWalkRouteLength = 0;
@@ -311,9 +329,20 @@ MSDevice_Tripinfo::generateOutput(OutputDevice* tripinfoOut) const {
     
     // LFPlugin Begin
     myTotalTimeLossNoNeg += fmax(timeLoss, 0);// timeLossNoNeg;
+    myVehicleCountNoNeg = (timeLoss >= 0) ? myVehicleCountNoNeg + 1 : myVehicleCountNoNeg;
+    myTotalTimeLossOnlyNeg += fmin(timeLoss, 0);
+    myVehicleCountOnlyNeg = (timeLoss < 0) ? myVehicleCountOnlyNeg + 1 : myVehicleCountOnlyNeg;
     myTotalTimeLossExcludeEdges += timeLossExcludeEdges;
     myTotalTimeLossNoNegExcludeEdges += fmax(timeLossExcludeEdges, 0);//timeLossNoNegExludeEdges;
+    
+    //Made for ad-hoc log files on time-delay and tts
 
+    //fprintf(fp_time_delay, "%f,%f,%s\n", STEPS2TIME(timeLoss), SIMTIME, static_cast<MSVehicle&>(myHolder).getRoute().getID().c_str());
+   
+    
+    //fflush(fp_time_delay);
+    //fprintf(fp_time_delay_excluded, "%f,%f,%s\n", STEPS2TIME(timeLoss), SIMTIME, static_cast<MSVehicle&>(myHolder).getRoute().getID().c_str());
+    //fflush(fp_time_delay_excluded);
     myTotalExpectedTime += expectedTime;
     const SUMOTime myDelay = duration - expectedTime;
 
@@ -541,6 +570,7 @@ MSDevice_Tripinfo::writeStatistics(OutputDevice& od) {
     // LFPlugin Begin
     od.writeAttr("delayAvg", getAvgTimeLoss());
     od.writeAttr("delayAvgNoNeg", getAvgTimeLossNoNeg());
+    od.writeAttr("delayAvgOnlyNeg", getAvgTimeLossOnlyNeg());
     od.writeAttr("totalTimeSpent_hours", getTotalTimeSpent());
     if(OptionsCont::getOptions().isSet("exclude-edges-from-metrics")){
         od.writeAttr("delayAvg_ExcludeEdges", getAvgTimeLossExcludeEdges());
@@ -682,8 +712,18 @@ MSDevice_Tripinfo::getAvgWalkTimeLoss() {
 // LFPlugin Begin
 double
 MSDevice_Tripinfo::getAvgTimeLossNoNeg() {
-    if (myVehicleCount > 0) {
-        return STEPS2TIME(myTotalTimeLossNoNeg / myVehicleCount);
+    if (myVehicleCountNoNeg > 0) {
+        return STEPS2TIME(myTotalTimeLossNoNeg / myVehicleCountNoNeg);
+    }
+    else {
+        return 0;
+    }
+}
+
+double
+MSDevice_Tripinfo::getAvgTimeLossOnlyNeg() {
+    if (myVehicleCountOnlyNeg > 0) {
+        return STEPS2TIME(myTotalTimeLossOnlyNeg / myVehicleCountOnlyNeg);
     }
     else {
         return 0;
