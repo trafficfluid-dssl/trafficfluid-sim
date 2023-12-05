@@ -193,7 +193,7 @@ public:
     double get_position_x(){ 
 
         // consider non-zero orientation only for the bicycle model
-        double cos_angle = (myveh->getVehicleType().getParameter().cmdModel != SUMO_TAG_LF_CMD_BICYCLE)  ? 1 : cos(myveh->getAngleRelative());
+        double cos_angle = (myveh->getVehicleType().getParameter().cmdModel != SUMO_TAG_LF_CMD_BICYCLE)  ? 1 : cos(myveh->getAngleRelativeAlways());
 
         double pos_x = myveh->getPositionOnLane() - (myveh->getLength() / 2)* cos_angle;
 
@@ -220,8 +220,8 @@ public:
         }
 
         // consider non-zero orientation only for the bicycle model
-        double sin_angle = (myveh->getVehicleType().getParameter().cmdModel != SUMO_TAG_LF_CMD_BICYCLE) ? 0 : sin(myveh->getAngleRelative());
-
+        double sin_angle = (myveh->getVehicleType().getParameter().cmdModel != SUMO_TAG_LF_CMD_BICYCLE) ? 0 : sin(myveh->getAngleRelativeAlways());
+        //std::cout << "angle:" << myveh->getAngleRelative() << "\n";
         return myveh->getLateralPositionOnLane() + ((myveh->getLane()->getWidth()) / 2) + latOffset - (myveh->getLength() / 2) * sin_angle;
     }
 
@@ -566,6 +566,8 @@ public:
     // void sim_event_2(arguments);
     // // etc
     void lf_simulation_checkCollisions();
+    bool investigate_two_vehicles_collision(MSVehicle* veh1, MSVehicle* veh2, double xv1_gl, double yv1_gl, double theta1_gl, double theta1, double lv1, double wv1, NumericalID edge_id, const MSEdge* v1_edge, const MSEdge* v2_edge, const MSRoute* v1_route, const ConstMSEdgeVector* v1_route_edges, int j, int v1_edge_index, std::vector<std::pair<double, MSVehicle*>> neighbors_with_distance, bool check_for_opposite_collisions,
+        std::map<SUMOVehicle::NumericalID, std::vector<SUMOVehicle::NumericalID>>& collision_map);
     /** @brief Returns whether the network was already constructed
     * @return whether the network was already constructed
     */
@@ -679,7 +681,7 @@ public:
         return rest_app_timer_seconds;
     }
     void get_all_neighbors_ring_road_internal(MSLaneFreeVehicle* lfveh, const MSEdge* current_edge, SortedVehiclesVector* current_edge_sorted_vehs, size_t veh_index, double distance, bool front, int cross_edge, std::vector<std::pair<double, MSVehicle*>>& neighbors_with_distance);
-    void get_all_neighbors_internal(MSLaneFreeVehicle* lfveh, const  MSEdge* current_edge, SortedVehiclesVector* current_edge_sorted_vehs, size_t veh_index, double distance, bool front, int cross_edge, std::vector<std::pair<double, MSVehicle*>>& neighbors_with_distance);
+    void get_all_neighbors_internal(MSLaneFreeVehicle* lfveh, const  MSEdge* current_edge, SortedVehiclesVector* current_edge_sorted_vehs, size_t veh_index, double distance, bool front, int cross_edge, std::vector<std::pair<double, MSVehicle*>>& neighbors_with_distance, bool opposite_check = false);
     
     void addRouteForBoundariesVisualizer(MSRoute* route);
     void updateBoundariesVisualizer();
@@ -694,9 +696,9 @@ public:
 
 protected:
     NumericalID find_stored_edge(MSVehicle* veh);
-    void get_vehicles_from_other_direction_edges(NumericalID veh_id, double global_pox_x, double global_pos_y, double global_theta, bool front, const std::vector<MSLane*>& internal_lanes, NumericalID current_edge_id, std::vector<std::pair<double, MSVehicle*>>& neighbors_with_distance);
+    void get_vehicles_from_other_direction_edges(NumericalID veh_id, double global_pox_x, double global_pos_y, double global_theta, bool front, const std::vector<MSLane*>& internal_lanes, NumericalID current_edge_id, std::vector<std::pair<double, MSVehicle*>>& neighbors_with_distance, bool opposite_check = false);
     
-    void transform_neighbor_vehicle_distance_and_add_to_neighbors(MSVehicle* veh_ptr, double global_pos_x, double global_pos_y, double cos_theta, double sin_theta, bool front, std::vector<std::pair<double, MSVehicle*>>& neighbors_with_distance);
+    void transform_neighbor_vehicle_distance_and_add_to_neighbors(MSVehicle* veh_ptr, double global_pos_x, double global_pos_y, double cos_theta, double sin_theta, bool front, std::vector<std::pair<double, MSVehicle*>>& neighbors_with_distance, bool opposite_check = false);
     void free_hashmap();
     /// @brief Unique instance of LaneFreeSimulationPlugin
     static LaneFreeSimulationPlugin* myInstance;

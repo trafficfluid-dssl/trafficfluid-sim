@@ -118,6 +118,9 @@ public:
      */
     virtual void addNeigh(const std::string id);
 
+    // LFPlugin Begin
+    void addOppositeEdge(const std::string id);
+    // LFPlugin End
 
     /** @brief Closes the building of an edge;
         The edge is completely described by now and may not be opened again */

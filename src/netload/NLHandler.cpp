@@ -99,10 +99,16 @@ NLHandler::myStartElement(int element,
                 addLane(attrs);
                 break;
             case SUMO_TAG_NEIGH:
-                if (!myCurrentIsInternalToSkip) {
+                // LFPlugin Begin
+                myEdgeControlBuilder.addOppositeEdge(attrs.getString(SUMO_ATTR_LANE));
+                // LFPlugin End
+                
+                // Uncomment next lines of code for original 
+                /*if (!myCurrentIsInternalToSkip) {
                     myEdgeControlBuilder.addNeigh(attrs.getString(SUMO_ATTR_LANE));
                 }
-                myHaveSeenNeighs = true;
+                myHaveSeenNeighs = true;*/
+                // Uncomment end
                 break;
             case SUMO_TAG_JUNCTION:
                 openJunction(attrs);

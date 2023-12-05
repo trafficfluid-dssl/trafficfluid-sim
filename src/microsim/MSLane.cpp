@@ -280,6 +280,14 @@ MSLane::addNeigh(const std::string& id) {
 }
 
 
+// LFPlugin Begin
+void
+MSLane::addOppositeLane(const std::string& id) {
+    oppositeLane = id;
+    //std::cout << "Added opposite lane with ID: " << oppositeLane << "\n";
+}
+// LFPlugin End
+
 // ------ interaction with MSMoveReminder ------
 void
 MSLane::addMoveReminder(MSMoveReminder* rem) {
@@ -4033,6 +4041,15 @@ MSLane::getOpposite() const {
     return nullptr;
 }
 
+// LFPlugin Begin
+MSLane*
+MSLane::getOppositeLane() const {
+    if (oppositeLane.empty()) {
+        return nullptr;
+    }
+    return dictionary(oppositeLane);
+}
+// LFPlugin Begin
 
 double
 MSLane::getOppositePos(double pos) const {

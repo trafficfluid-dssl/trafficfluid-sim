@@ -1022,6 +1022,11 @@ MSLaneChanger::changeOpposite(std::pair<MSVehicle*, double> leader) {
     }
     myCandi = findCandidate();
     MSVehicle* vehicle = veh(myCandi);
+    // LFPlugin Begin
+    if ((vehicle->getCarFollowModel().getModelID() == SUMO_TAG_CF_LANEFREE) && (vehicle->getGlobalCoordinatesControl())) {
+        return false;
+    }
+    // LFPlugin End
     MSLane* source = vehicle->getLane();
     if (vehicle->getLaneChangeModel().getModelID() == LCM_SL2015) {
         // we have warned before but people may still try

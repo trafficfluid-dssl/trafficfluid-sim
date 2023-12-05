@@ -711,6 +711,12 @@ public:
     /// @brief Returns the opposite direction edge if on exists else a nullptr
     const MSEdge* getOppositeEdge() const;
 
+    // LFplugin Begin
+    const MSEdge* lf_getOppositeEdge() const;
+    // LFplugin End
+
+
+
     /// @brief get the mean speed
     double getMeanSpeed() const;
 

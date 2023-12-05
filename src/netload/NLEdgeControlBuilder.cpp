@@ -157,6 +157,13 @@ NLEdgeControlBuilder::addNeigh(const std::string id) {
     myLaneStorage->back()->addNeigh(id);
 }
 
+// LFPlugin Begin
+void
+NLEdgeControlBuilder::addOppositeEdge(const std::string id) {
+    myLaneStorage->back()->addOppositeLane(id);
+}
+// LFPlugin End
+
 
 MSEdge*
 NLEdgeControlBuilder::closeEdge() {

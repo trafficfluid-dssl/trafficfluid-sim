@@ -1100,6 +1100,11 @@ public:
     /// @brief return the opposite direction lane for lane changing or 0
     MSLane* getOpposite() const;
 
+    // LFPlugin Begin
+    MSLane* getOppositeLane() const;
+    void addOppositeLane(const std::string& id);
+    // LFPlugin End
+
     /// @brief return the corresponding position on the opposite lane
     double getOppositePos(double pos) const;
 
@@ -1440,6 +1445,10 @@ protected:
 
     // @brief the ids of neighboring lanes
     std::vector<std::string> myNeighs;
+
+    // LFPlugin Begin
+    std::string oppositeLane;
+    // LFPlugin End
 
     // @brief transient changes in permissions
     std::map<long long, SVCPermissions> myPermissionChanges;

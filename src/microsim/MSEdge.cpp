@@ -1132,6 +1132,15 @@ MSEdge::getOppositeEdge() const {
     }
 }
 
+// LFPlugin Begin
+const MSEdge*
+MSEdge::lf_getOppositeEdge() const {
+    if (!myLanes->empty() && myLanes->back()->getOppositeLane() != nullptr) {
+        return &(myLanes->back()->getOppositeLane()->getEdge());
+    }
+    return nullptr;
+}
+// LFPlugin End
 
 bool
 MSEdge::hasMinorLink() const {
