@@ -2016,7 +2016,7 @@ double lf_plugin_get_global_position_x(NumericalID veh_id) {
 	double global_pos_x;
 
 	if (lfveh->get_vehicle()->getGlobalCoordinatesControl()) {
-		global_pos_x = lfveh->get_vehicle()->getCachedGlobalPos().x() - (lfveh->get_vehicle()->getLength() / 2) * cos(lfveh->get_vehicle()->getAngleRelative());
+		global_pos_x = lfveh->get_vehicle()->getCachedGlobalPos().x();
 	}
 	else {
 		global_pos_x = lfveh->get_vehicle()->getPosition().x();
@@ -2035,9 +2035,9 @@ double lf_plugin_get_global_position_y(NumericalID veh_id) {
 		return -1;
 	}
 
-	double global_pos_y = lfveh->get_vehicle()->getCachedGlobalPos().y() - (lfveh->get_vehicle()->getLength() / 2) * sin(lfveh->get_vehicle()->getAngleRelative());
+	double global_pos_y;
 	if (lfveh->get_vehicle()->getGlobalCoordinatesControl()) {
-		return global_pos_y;
+		global_pos_y = lfveh->get_vehicle()->getCachedGlobalPos().y();
 	}
 	else {
 		global_pos_y = lfveh->get_vehicle()->getPosition().y();
