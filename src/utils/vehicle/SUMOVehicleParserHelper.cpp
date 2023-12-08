@@ -240,8 +240,19 @@ SUMOVehicleParserHelper::parseFlowAttributes(SumoXMLTag tag, const SUMOSAXAttrib
             std::cout << "Error, lower bound latLow:" << ret->lf_attribute_lat_low << " is more than the upper bound latHigh:" << ret->lf_attribute_lat_high << "for demand with ID:" << id << "!\n";
         }
 
-        if (attrs.hasAttribute(SUMO_ATTR_LF_DEP_SPEED_LIMIT_DOWNSTREAM)) {
-            ret->lf_attribute_depart_speed_limit_downstream = attrs.get<bool>(SUMO_ATTR_LF_DEP_SPEED_LIMIT_DOWNSTREAM, id.c_str(), ok);
+        if (attrs.hasAttribute(SUMO_ATTR_LF_DEPARTSPEED_LIMIT_FRONT_DIST)) {
+            
+            ret->lf_attribute_has_depart_speed_limit_front = true;
+            ret->lf_attribute_depart_speed_limit_front = attrs.get<double>(SUMO_ATTR_LF_DEPARTSPEED_LIMIT_FRONT_DIST, id.c_str(), ok);            
+            if(ret->lf_attribute_depart_speed_limit_front<0){
+                std::cout << "Error, departSpeedLimitFrontDist parameter has a negative value!\n";
+                ret->lf_attribute_has_depart_speed_limit_front = false;
+            }
+
+        }
+        else{
+            
+            ret->lf_attribute_has_depart_speed_limit_front = false;
         }
         
         // LFPlugin End
@@ -747,7 +758,7 @@ SUMOVehicleParserHelper::beginVTypeParsing(const SUMOSAXAttributes& attrs, const
                 else {
                     handleError(hardFail, abortCreation, "Unknown car movement dynamics '" + lf_movement_dynamics + "' when parsing vType '" + vtype->id + "'");
                 }
-            }
+            }            
             // LFPlugin End
             if (attrs.hasAttribute(SUMO_ATTR_PERSON_CAPACITY)) {
                 bool ok = true;

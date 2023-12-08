@@ -1139,7 +1139,9 @@ Vehicle::addR(const std::string& vehicleID,
     vehicleParams.line = line;
     //vehicleParams.personCapacity = personCapacity;
     vehicleParams.personNumber = personNumber;
+    // LFPlugin Begin
     vehicleParams.lf_attribute_insertion_policy = "API";
+    // LFPlugin End
     SUMOVehicleParameter* params = new SUMOVehicleParameter(vehicleParams);
     
     try {

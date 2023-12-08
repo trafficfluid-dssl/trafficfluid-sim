@@ -402,7 +402,7 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
     { "laneChangeModel",        SUMO_ATTR_LANE_CHANGE_MODEL },
     { "carFollowModel",         SUMO_ATTR_CAR_FOLLOW_MODEL },
     // LFPlugin Begin
-    { "carMovementDynamics",    SUMO_ATTR_LF_CAR_MOVEMENT_DYNAMICS },
+    { "carMovementDynamics",    SUMO_ATTR_LF_CAR_MOVEMENT_DYNAMICS },    
     // LFPlugin End
     { "minGap",                 SUMO_ATTR_MINGAP },
     { "collisionMinGapFactor",  SUMO_ATTR_COLLISION_MINGAP_FACTOR },
@@ -856,7 +856,7 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
     { "insertionPolicy",            SUMO_ATTR_LF_INSERTION_POLICY },
     { "latLow",                     SUMO_ATTR_LF_LAT_LOW },
     { "latHigh",                    SUMO_ATTR_LF_LAT_HIGH },
-    { "departSpeedLimitDownstream", SUMO_ATTR_LF_DEP_SPEED_LIMIT_DOWNSTREAM },
+    { "departSpeedLimitFrontDist",  SUMO_ATTR_LF_DEPARTSPEED_LIMIT_FRONT_DIST },
 
 
     // for the boundaries
