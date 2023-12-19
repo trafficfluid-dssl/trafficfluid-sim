@@ -2827,7 +2827,7 @@ LaneFreeSimulationPlugin::lf_simulation_step(){
 
 	double epsilon_array[6] = { 1,0.8,1.2,1.4,0.6,0.8 };
 	lf_plugin_set_epsilon_left_boundary("main_highway", epsilon_array, 6);*/	
-	lf_simulation_checkCollisions();	
+	lf_simulation_checkCollisions();
 	updateBoundariesVisualizer();
 	before_step_time = std::chrono::steady_clock::now();
 	
@@ -3301,13 +3301,14 @@ LaneFreeSimulationPlugin::get_vehicles_from_other_direction_edges(NumericalID ve
 
 void
 LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
-	//std::cout << debug_counter << " VISIT NUMBER\n";
+	// std::cout << debug_counter << " VISIT NUMBER\n";
 	debug_counter++;
 	//TODO approximate generalization according to bicycle model. while this is a generalization, i.e., it includes the standard case, since it requires more computational effort, we will have them as separate cases when estimating length and width for any given vehicle!
 	
 	MSEdgeVector edges_v = MSNet::getInstance()->getEdgeControl().getEdges();
 	// NumericalID edges_size = edges_v.size();
-	
+
+			
 	int i,j, n_v;
 	std::vector<const SUMOVehicle*>* vehs_in_edge{nullptr};
 	NumericalID edge_id;
@@ -3328,6 +3329,8 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 	const MSEdge* opposite_edge=nullptr;
 	std::map<SUMOVehicle::NumericalID, std::vector<SUMOVehicle::NumericalID>> collision_map;
 	collision_map.clear();
+
+
 	for (MSEdge* edge : edges_v) {
 		edge_id = edge->getNumericalID();
 		
@@ -3350,7 +3353,8 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 		double veh_diag{ 0 };
 		double front_distance;
 		std::vector<std::pair<double, MSVehicle*>> neighbors_with_distance;
-
+		
+		
 		for(i=0;i<n_v;i++){ //one potential improvement here is to have a memory for all the info requested, because for each vehicle, same info is requested multiple times
 			
 			neighbors_with_distance.clear();
@@ -3412,6 +3416,7 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 				opposite_edge = edge->lf_getOppositeEdge();
 				//if (opposite_edge == nullptr)
 					//std::cout << "probably junction and not edge\n";
+					
 			}
 
 			if (out_of_bounds_flag && opposite_edge != nullptr) {
@@ -3490,13 +3495,11 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 				//std::cout << "end out of bounds \n";
 			}
 			get_all_neighbors_internal(lfv1, edge, vehs_in_edge, (size_t)i, front_distance, true, 1, neighbors_with_distance);
-
 			for(j = 0;j < neighbors_with_distance.size(); j++){
 
 				veh2 = neighbors_with_distance.at(j).second;
 
-
-				if (investigate_two_vehicles_collision(veh1, veh2, xv1_gl, yv1_gl, theta1_gl, theta1, lv1, wv1, edge_id, v1_edge, v2_edge, v1_route, v1_route_edges, v1_edge_index, j, neighbors_with_distance, false, collision_map)) {
+				if (investigate_two_vehicles_collision(veh1, veh2, xv1_gl, yv1_gl, theta1_gl, theta1, lv1, wv1, edge_id, v1_edge, v2_edge, v1_route, v1_route_edges, j, v1_edge_index, neighbors_with_distance, false, collision_map)) {
 					break;
 				}
 				//std::cout << "OUTSIDE first available key is: " << collision_map.begin()->first << ", with value: " /*<< collision_map.begin()->second*/ << "\n";
@@ -3509,7 +3512,6 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 		}		
 		
 	}	
-	
 }
 
 
@@ -3521,7 +3523,6 @@ LaneFreeSimulationPlugin::investigate_two_vehicles_collision(MSVehicle* veh1, MS
 	double xv1, yv1, dx, dy;
 	double xv2, yv2, lv2, wv2, theta2 = 0;
 	
-
 	//lv1 = veh1->getVehicleType().getLength();
 	//wv1 = veh1->getVehicleType().getWidth();
 	lfv1 = find_vehicle_in_edge(veh1->getNumericalID(), edge_id); //we could somehow remove the need for this, maybe have the get_position_x, get_position_y as a function that gets the veh object as attribute
@@ -3540,7 +3541,6 @@ LaneFreeSimulationPlugin::investigate_two_vehicles_collision(MSVehicle* veh1, MS
 	lv2 = veh2->getVehicleType().getLength();
 	wv2 = veh2->getVehicleType().getWidth();
 	theta2 = veh2->getAngleRelative();
-
 
 
 	if (veh1->getVehicleType().getParameter().cmdModel == SUMO_TAG_LF_CMD_BICYCLE || veh2->getVehicleType().getParameter().cmdModel == SUMO_TAG_LF_CMD_BICYCLE) {
@@ -3629,7 +3629,6 @@ LaneFreeSimulationPlugin::investigate_two_vehicles_collision(MSVehicle* veh1, MS
 		return false;
 	}
 
-
 	if (edge_id == ((v2_edge = &veh2->getLane()->getEdge())->getNumericalID())) {
 		// calculate dx with local coordinates, in order to check
 		dx = abs(xv2 - xv1);
@@ -3637,7 +3636,6 @@ LaneFreeSimulationPlugin::investigate_two_vehicles_collision(MSVehicle* veh1, MS
 	}
 	else {
 		// find the lateral shift as well for dy
-
 		dx = abs(neighbors_with_distance.at(j).first);
 		if (v1_route == nullptr || v1_route_edges == nullptr || v1_edge == nullptr || v2_edge == nullptr) {
 			std::cout << "Error, null pointers when trying to obtain lateral shift among vehicles:" << veh1->getID() << "," << veh2->getID() << "\n";
@@ -3652,8 +3650,6 @@ LaneFreeSimulationPlugin::investigate_two_vehicles_collision(MSVehicle* veh1, MS
 
 
 	}
-
-
 	if ((dx < ((lv1 + lv2) / 2)) && (dy < ((wv1 + wv2) / 2))) {
 		//std::cout << "Collision between:" << veh1->getID() << "," << veh2->getID() << "with x1,y1:"<<xv1<<","<<yv1<<" and x2,y2:"<<xv2<<","<<yv2<<", l1,w1:"<< lv1<<","<<wv1<< " and l2,w2:" << lv2 << "," << wv2 << "\n";
 
