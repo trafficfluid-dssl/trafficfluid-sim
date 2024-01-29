@@ -3301,7 +3301,7 @@ LaneFreeSimulationPlugin::get_vehicles_from_other_direction_edges(NumericalID ve
 
 void
 LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
-	// std::cout << debug_counter << " VISIT NUMBER\n";
+	//std::cout << debug_counter << " VISIT NUMBER\n";
 	debug_counter++;
 	//TODO approximate generalization according to bicycle model. while this is a generalization, i.e., it includes the standard case, since it requires more computational effort, we will have them as separate cases when estimating length and width for any given vehicle!
 	
@@ -3310,7 +3310,7 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 
 			
 	int i,j, n_v;
-	std::vector<const SUMOVehicle*>* vehs_in_edge{nullptr};
+	std::vector<const SUMOVehicle*>* vehs_in_edge{ nullptr };
 	NumericalID edge_id;
 	SortedVehiclesVectorEdges::iterator it_sorted_edge;
 	MSVehicle* veh1;
@@ -3394,12 +3394,14 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 				v1_edge_index = -1;
 				v1_edge = edge;
 			}
-
-			//if (veh1->getID() == "normal_flow_3_left.1" && debug_counter >= 126) {
+			/*if (debug_counter == 200) {
+				system("pause");
+			}*/
+			//if (veh1->getID() == "normal_flow_2_left.1" && debug_counter >= 101) {
 			//	//std::cout << "the edge of blue right is: " << veh1->getEdge()->getID() << "\n"; WRONG
-			//	std::cout << "the edge of green is: " << veh1->getLane()->getEdge().getID() << "\n";
+			//	std::cout << "the edge of red is: " << veh1->getLane()->getEdge().getID() << "\n";
 			//}
-			
+			// 
 			// 
 			// std::cout<< "veh:" << veh1->getID() << " updated length:" << lv1<<" and width:" << wv1<< " at angle:"<< veh1->getAngleRelative() << "\n";
 			//std::cout << "veh:" << veh1->getID() << " at posx:" << xv1;
@@ -3409,7 +3411,7 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 			//std::cout << "Current yv1, roadwidth, half: " << yv1 << "\t" << roadwidth << "\t" << half_vwidth << "\n";
 			if (yv1 > (roadwidth - half_vwidth) || yv1 < half_vwidth) { // This needs to be extended
 				event_vehicle_out_of_bounds(veh1->getNumericalID());
-				//std::cout << "Out of bounds, vehicle: " << veh1->getID() << ", declared in edge: " << edge->getID() << "\n";
+				//std::cout << "\tOut of bounds, vehicle: " << veh1->getID() << ", declared in edge: " << edge->getID() << "\n";
 				//std::cout << "Current yv1, roadwidth, half: " << yv1 << "\t" << roadwidth << "\t" << half_vwidth << "\n";
 				out_of_bounds_flag = true; // needed to detect collisions on opposite edges
 				check_for_opposite_collisions = true;
@@ -3420,77 +3422,78 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 			}
 
 			if (out_of_bounds_flag && opposite_edge != nullptr) {
-				//std::cout << "begin out of bounds in edge: " << opposite_edge->getID() <<  "with vehicle: " << veh1->getID() << " at position: " << xv1_gl << "," << yv1_gl << "\n";
+				//std::cout << "\t\tbegin out of bounds in edge: " << opposite_edge->getID() <<  "with vehicle: " << veh1->getID() << " at position: " << xv1_gl << "," << yv1_gl << "\n";
 				// all vehicles in current edge, sorted according to (local) longitudinal position
+				
 				SortedVehiclesVector* sorted_vehs_opposite = LaneFreeSimulationPlugin::getInstance()->get_sorted_vehicles_in_edge(opposite_edge->getNumericalID());
-				std::sort(sorted_vehs_opposite->begin(), sorted_vehs_opposite->end(), less_than_key()); //sorting is essentially performed here only
-				double opposite_roadlength = opposite_edge->getLength();
-				double opposite_roadwidth = opposite_edge->getWidth();
-				// at this point we assume that opposite edges have equal length measurements (we do not care about width)
-				double xv1_opposite = opposite_roadlength - xv1; //local x position of the selected vehicle on the opposite edge, using local coordinates of the original edge
-				double yv1_opposite = opposite_roadwidth - (yv1 - roadwidth); //local y position of the selected vehicle on the opposite edge, using local coordinates of the original edge
-				double minimum_distance = opposite_roadlength;
-				int size_edge_opposite = sorted_vehs_opposite->size();
-				/*if (veh1->getID() == "normal_flow_1_right.0" && debug_counter >= 126) {
-					for (int iii = 0; iii < size_edge_opposite; iii++) {
-						std::cout << "\t The edge contains veh: " << sorted_vehs_opposite->at(iii)->getID() << "\n";
-					}
-				}*/
-				if (size_edge_opposite != 0) { // we must check for collisions with opposite edge vehicles
-					int veh_opposite_idx = find_closest_veh_opposite_edge(xv1_opposite, sorted_vehs_opposite, &opposite_roadlength, 0, size_edge_opposite - 1);
-					//std::cout << "Found opposite closest vehicle with idx: " << veh_opposite_idx << ", and ID: " << sorted_vehs_opposite->at(veh_opposite_idx)->getID() << ", opposite edge size: " << size_edge_opposite << "\n";
-					const SUMOVehicle* opposite_closest_veh = sorted_vehs_opposite->at(veh_opposite_idx);
-					MSLaneFreeVehicle* opposite_closest_lfveh = find_vehicle_in_edge(opposite_closest_veh->getNumericalID(), opposite_edge->getNumericalID());
-					double xvclosest_opposite = opposite_closest_lfveh->get_position_x();
-					double front_distance_opposite;
-					double back_distance_opposite;
-					if (xv1_opposite < xvclosest_opposite) {
-						front_distance_opposite = front_distance; // can be reduced if calculated appropriately
-						back_distance_opposite = xvclosest_opposite - xv1_opposite + front_distance;
-						//std::cout << "in smaller" << "with v1, vopp, front, backdistance: " << xv1_opposite << ", " << xvclosest_opposite << ", " << front_distance_opposite << ", " << back_distance_opposite << "\n";
-					}
-					else {
-						front_distance_opposite = xv1_opposite - xvclosest_opposite + front_distance;
-						back_distance_opposite = front_distance; // can be reduced if calculated appropriately
-						//std::cout << "in larger" << "with v1, vopp, front, backdistance: " << xv1_opposite << ", " << xvclosest_opposite << ", " << front_distance_opposite << ", " << back_distance_opposite << "\n";
-					}
-					std::vector<std::pair<double, MSVehicle*>> neighbors_with_distance_opposite;
-					neighbors_with_distance_opposite.clear();
-					//front_distance_opposite = 5000;
-					//back_distance_opposite = 5000;
-					get_all_neighbors_internal(opposite_closest_lfveh, opposite_edge, sorted_vehs_opposite, (size_t)veh_opposite_idx, front_distance_opposite, true, 1, neighbors_with_distance_opposite, true);
-					get_all_neighbors_internal(opposite_closest_lfveh, opposite_edge, sorted_vehs_opposite, (size_t)veh_opposite_idx, back_distance_opposite, false, 1, neighbors_with_distance_opposite, true);
 
+				if (sorted_vehs_opposite != nullptr) {
+					
+					std::sort(sorted_vehs_opposite->begin(), sorted_vehs_opposite->end(), less_than_key()); //sorting is essentially performed here only
+					double opposite_roadlength = opposite_edge->getLength();
+					double opposite_roadwidth = opposite_edge->getWidth();
+					// at this point we assume that opposite edges have equal length measurements (we do not care about width)
+					double xv1_opposite = opposite_roadlength - xv1; //local x position of the selected vehicle on the opposite edge, using local coordinates of the original edge
+					double yv1_opposite = opposite_roadwidth - (yv1 - roadwidth); //local y position of the selected vehicle on the opposite edge, using local coordinates of the original edge
+					double minimum_distance = opposite_roadlength;
+					int size_edge_opposite = sorted_vehs_opposite->size();
 					/*if (veh1->getID() == "normal_flow_1_right.0" && debug_counter >= 126) {
-
-						std::cout << "opposite closest veh id: " << opposite_closest_lfveh->get_vehicle()->getID() << " at edge: "<< opposite_edge->getID() << "\n";
-						if (debug_counter == 126) {
-							system("pause");
+						for (int iii = 0; iii < size_edge_opposite; iii++) {
+							std::cout << "\t The edge contains veh: " << sorted_vehs_opposite->at(iii)->getID() << "\n";
 						}
 					}*/
-					
-					//std::cout << "opposite closest veh id: " << opposite_closest_lfveh->get_vehicle()->getID() << "\n";
-					
-					neighbors_with_distance_opposite.push_back(std::make_pair(0.0, (MSVehicle*)sorted_vehs_opposite->at(veh_opposite_idx)));
-					//std::cout<<"size of "
-					for (j = 0; j < neighbors_with_distance_opposite.size(); j++) {
-
-						veh2 = neighbors_with_distance_opposite.at(j).second;
-						/*if (veh1->getID() == "normal_flow_1_right.0" && debug_counter >= 126) {
-							std::cout << "\t\tcurrently at id: " << veh2->getID() << "\n";
-						}*/
-						//std::cout << "\t\tcurrently at id: " << veh2->getID() << "\n";
-
-						if (investigate_two_vehicles_collision(veh1, veh2, xv1_gl, yv1_gl, theta1_gl, theta1, lv1, wv1, edge_id, v1_edge, v2_edge, v1_route, v1_route_edges, v1_edge_index, j, neighbors_with_distance_opposite, true, collision_map)) {
-							break;
+					if (size_edge_opposite != 0) { // we must check for collisions with opposite edge vehicles
+						int veh_opposite_idx = find_closest_veh_opposite_edge(xv1_opposite, sorted_vehs_opposite, &opposite_roadlength, 0, size_edge_opposite - 1);
+						//std::cout << "Found opposite closest vehicle with idx: " << veh_opposite_idx << ", and ID: " << sorted_vehs_opposite->at(veh_opposite_idx)->getID() << ", opposite edge size: " << size_edge_opposite << "\n";
+						const SUMOVehicle* opposite_closest_veh = sorted_vehs_opposite->at(veh_opposite_idx);
+						MSLaneFreeVehicle* opposite_closest_lfveh = find_vehicle_in_edge(opposite_closest_veh->getNumericalID(), opposite_edge->getNumericalID());
+						double xvclosest_opposite = opposite_closest_lfveh->get_position_x();
+						double front_distance_opposite;
+						double back_distance_opposite;
+						if (xv1_opposite < xvclosest_opposite) {
+							front_distance_opposite = front_distance; // can be reduced if calculated appropriately
+							back_distance_opposite = xvclosest_opposite - xv1_opposite + front_distance;
+							//std::cout << "in smaller" << "with v1, vopp, front, backdistance: " << xv1_opposite << ", " << xvclosest_opposite << ", " << front_distance_opposite << ", " << back_distance_opposite << "\n";
 						}
+						else {
+							front_distance_opposite = xv1_opposite - xvclosest_opposite + front_distance;
+							back_distance_opposite = front_distance; // can be reduced if calculated appropriately
+							//std::cout << "in larger" << "with v1, vopp, front, backdistance: " << xv1_opposite << ", " << xvclosest_opposite << ", " << front_distance_opposite << ", " << back_distance_opposite << "\n";
+						}
+						std::vector<std::pair<double, MSVehicle*>> neighbors_with_distance_opposite;
+						neighbors_with_distance_opposite.clear();
+						//front_distance_opposite = 5000;
+						//back_distance_opposite = 5000;
+						get_all_neighbors_internal(opposite_closest_lfveh, opposite_edge, sorted_vehs_opposite, (size_t)veh_opposite_idx, front_distance_opposite, true, 1, neighbors_with_distance_opposite, true);
+						get_all_neighbors_internal(opposite_closest_lfveh, opposite_edge, sorted_vehs_opposite, (size_t)veh_opposite_idx, back_distance_opposite, false, 1, neighbors_with_distance_opposite, true);
 
-						//std::cout << "OUTSIDE first available key is: " << collision_map.begin()->first << ", with value: " /*<< collision_map.begin()->second*/ << "\n";
+						/*if (veh1->getID() == "normal_flow_1_right.0" && debug_counter >= 126) {
+
+							std::cout << "opposite closest veh id: " << opposite_closest_lfveh->get_vehicle()->getID() << " at edge: "<< opposite_edge->getID() << "\n";
+							if (debug_counter == 126) {
+								system("pause");
+							}
+						}*/
+					
+						//std::cout << "opposite closest veh id: " << opposite_closest_lfveh->get_vehicle()->getID() << "\n";
+					
+						neighbors_with_distance_opposite.push_back(std::make_pair(0.0, (MSVehicle*)sorted_vehs_opposite->at(veh_opposite_idx)));
+						//std::cout<<"size of "
+						for (j = 0; j < neighbors_with_distance_opposite.size(); j++) {
+
+							veh2 = neighbors_with_distance_opposite.at(j).second;
+							/*if (veh1->getID() == "normal_flow_1_right.0" && debug_counter >= 126) {
+								std::cout << "\t\tcurrently at id: " << veh2->getID() << "\n";
+							}*/
+							//std::cout << "\t\tcurrently at id: " << veh2->getID() << "\n";
+
+							if (investigate_two_vehicles_collision(veh1, veh2, xv1_gl, yv1_gl, theta1_gl, theta1, lv1, wv1, edge_id, v1_edge, v2_edge, v1_route, v1_route_edges, v1_edge_index, j, neighbors_with_distance_opposite, true, collision_map)) {
+								break;
+							}
+
+							//std::cout << "OUTSIDE first available key is: " << collision_map.begin()->first << ", with value: " /*<< collision_map.begin()->second*/ << "\n";
+						}
 					}
-				}
-				else { // no vehicles run inside this opposite edge, we no longer have to check for collisions
-					check_for_opposite_collisions = false;
-					//std::cout << "nevermind\n";
 				}
 				//std::cout << "end out of bounds \n";
 			}
@@ -3598,8 +3601,9 @@ LaneFreeSimulationPlugin::investigate_two_vehicles_collision(MSVehicle* veh1, MS
 			}
 
 			if (register_collision_flag) {
-				//std::cout << "collision to be announced!\n";
+				//std::cout << "collision to be announced!\n\t\t";
 				event_vehicles_collide(veh1->getNumericalID(), veh2->getNumericalID());
+				//std::cout << "\t\tfullnames: " << veh1->getID() << " with:" << veh2->getID() << "\n";
 				//event_vehicles_collide(veh2->getNumericalID(), veh1->getNumericalID());
 				//std::cout << "At edge:"<< edge->getID() << " with idx:"<< edge_idx << ", veh idx:"<< veh_idx<< ", neigh idx:"<<neigh_idx << " Time-step:" << lf_plugin_get_current_time_step() << "\n";
 				//std::cout << veh1->getID() << " at pos (" << xv1 << "," << yv1 << ") with angle " << theta1 << " and dimensions ("<< lv1<<","<<wv1 << ") ;" << veh2->getID() << " at pos (" << xv2 << "," << yv2 << ") with angle " << theta2 << "and dimensions (" << lv2 << "," << wv2 << ") \n";
