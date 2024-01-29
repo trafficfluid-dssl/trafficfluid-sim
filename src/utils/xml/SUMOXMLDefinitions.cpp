@@ -856,6 +856,7 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
     { "insertionPolicy",            SUMO_ATTR_LF_INSERTION_POLICY },
     { "latLow",                     SUMO_ATTR_LF_LAT_LOW },
     { "latHigh",                    SUMO_ATTR_LF_LAT_HIGH },
+    { "departSpeedLimitDownstream", SUMO_ATTR_LF_DEP_SPEED_LIMIT_DOWNSTREAM },
     { "departSpeedLimitFrontDist",  SUMO_ATTR_LF_DEPARTSPEED_LIMIT_FRONT_DIST },
 
 

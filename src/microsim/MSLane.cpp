@@ -820,6 +820,7 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
     std::string insertion_policy = aVehicle->getParameter().lf_attribute_insertion_policy;
     double latLow = aVehicle->getParameter().lf_attribute_lat_low;
     double latHigh = aVehicle->getParameter().lf_attribute_lat_high;
+    bool depart_speed_limit_downstream = aVehicle->getParameter().lf_attribute_depart_speed_limit_downstream;
     bool depart_speed_limit_from_front = aVehicle->getParameter().lf_attribute_has_depart_speed_limit_front;
     double depart_speed_limit_front_dist = aVehicle->getParameter().lf_attribute_depart_speed_limit_front;
     bool desired_speed_alignment = !(insertion_policy=="latExploit" || insertion_policy=="center");
@@ -851,22 +852,24 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
         //double distance_to_zero=speed*speed/(2*2);
         double myfrontpos = aVehicle->getPositionOnLane();
         sort(myVehicles.begin(), myVehicles.end(), vehicle_natural_position_sorter(this));
-        
-        for (VehCont::iterator veh = myVehicles.begin(); veh != myVehicles.end(); ++veh) {
+        if (depart_speed_limit_downstream) {
+            for (VehCont::iterator veh = myVehicles.begin(); veh != myVehicles.end(); ++veh) {
 
-            // we either check base on a distance
-            if(depart_speed_limit_from_front && ((*veh)->getPositionOnLane() - (*veh)->getLength())>depart_speed_limit_front_dist){
-                break;
+                // we either check base on a distance
+                if (depart_speed_limit_from_front && ((*veh)->getPositionOnLane() - (*veh)->getLength()) > depart_speed_limit_front_dist) {
+                    break;
+                }
+                sum_speed_front += (*veh)->getSpeed();
+                veh_counter++;
+
+                // or based on the 5 front vehicles
+                if ((!depart_speed_limit_from_front) && (veh_counter == num_front_check)) {
+                    break;
+                }
+
             }
-            sum_speed_front += (*veh)->getSpeed();
-            veh_counter++;
-
-            // or based on the 5 front vehicles
-            if ((!depart_speed_limit_from_front) && (veh_counter == num_front_check)) {
-                break;
-            }
-
         }
+        
     
         
 

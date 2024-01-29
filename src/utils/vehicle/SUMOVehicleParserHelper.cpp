@@ -240,6 +240,10 @@ SUMOVehicleParserHelper::parseFlowAttributes(SumoXMLTag tag, const SUMOSAXAttrib
             std::cout << "Error, lower bound latLow:" << ret->lf_attribute_lat_low << " is more than the upper bound latHigh:" << ret->lf_attribute_lat_high << "for demand with ID:" << id << "!\n";
         }
 
+        if (attrs.hasAttribute(SUMO_ATTR_LF_DEP_SPEED_LIMIT_DOWNSTREAM)) {
+            ret->lf_attribute_depart_speed_limit_downstream = attrs.get<bool>(SUMO_ATTR_LF_DEP_SPEED_LIMIT_DOWNSTREAM, id.c_str(), ok);
+        }
+
         if (attrs.hasAttribute(SUMO_ATTR_LF_DEPARTSPEED_LIMIT_FRONT_DIST)) {
             
             ret->lf_attribute_has_depart_speed_limit_front = true;
