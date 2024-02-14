@@ -703,7 +703,7 @@ public:
 
 protected:
     NumericalID find_stored_edge(MSVehicle* veh);
-    void get_vehicles_from_other_direction_edges(NumericalID veh_id, double global_pox_x, double global_pos_y, double global_theta, bool front, const std::vector<MSLane*>& internal_lanes, NumericalID current_edge_id, std::vector<std::pair<double, MSVehicle*>>& neighbors_with_distance, bool opposite_check = false);
+    void get_vehicles_from_other_direction_edges(NumericalID veh_id, double global_pox_x, double global_pos_y, double global_theta, bool front, const std::vector<MSLane*>& internal_lanes, NumericalID current_edge_id, std::vector<std::pair<double, MSVehicle*>>& neighbors_with_distance, bool opposite_check = false, bool outgoing_check = false, std::vector<const MSEdge*>& outgoing_edges = std::vector<const MSEdge*>());
     
     void transform_neighbor_vehicle_distance_and_add_to_neighbors(MSVehicle* veh_ptr, double global_pos_x, double global_pos_y, double cos_theta, double sin_theta, bool front, std::vector<std::pair<double, MSVehicle*>>& neighbors_with_distance, bool opposite_check = false);
     void free_hashmap();

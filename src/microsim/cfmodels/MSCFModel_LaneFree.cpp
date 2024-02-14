@@ -3112,6 +3112,22 @@ LaneFreeSimulationPlugin::get_all_neighbors_internal(MSLaneFreeVehicle* lfveh, c
 					
 					get_vehicles_from_other_direction_edges(lfveh->get_vehicle()->getNumericalID(), global_pos_x, global_pos_y, global_theta, front, internal_lanes, edge_id, neighbors_with_distance, opposite_check);
 				}
+				// special case for checking vehicles that just exited junction
+				//std::cout << "Junction middle should be: " << veh_edges[my_edge_index]->getFromJunction()->getID() << "\n";
+				if (!opposite_check) {
+					ConstMSEdgeVector outgoing_edges = veh_edges[my_edge_index]->getFromJunction()->getOutgoing();
+					std::vector<const MSEdge*> outgoing_edges_filtered;
+					for (auto outgoing_edge : outgoing_edges) {
+						if (!outgoing_edge->isInternal()) {
+							//std::cout << "\tin junction with outgoing edge: " << outgoing_edge->getID() << "\n";
+							outgoing_edges_filtered.push_back(outgoing_edge);
+						}
+					}
+					if (outgoing_edges_filtered.size() > 0) {
+
+						get_vehicles_from_other_direction_edges(lfveh->get_vehicle()->getNumericalID(), global_pos_x, global_pos_y, global_theta, front, internal_lanes, edge_id, neighbors_with_distance, opposite_check, true, outgoing_edges_filtered);
+					}
+				}
 				
 			}
 			// increase or decrease edge index
@@ -3158,7 +3174,6 @@ LaneFreeSimulationPlugin::get_all_neighbors_internal(MSLaneFreeVehicle* lfveh, c
 
 		neighbor_veh = sorted_vehs->at(vehicle_index);
 		neighbor_id = neighbor_veh->getNumericalID();
-
 		if (lfveh->get_vehicle()->getGlobalCoordinatesControl()) {
 			// use global coordinates to determine the distance, and check other edges
 			//std::cout << "\t\t\t using global in get internal, with veh ids: " << neighbor_veh->getID() << "\n";
@@ -3249,7 +3264,7 @@ LaneFreeSimulationPlugin::transform_neighbor_vehicle_distance_and_add_to_neighbo
 }
 
 void
-LaneFreeSimulationPlugin::get_vehicles_from_other_direction_edges(NumericalID veh_id, double global_pos_x, double global_pos_y, double global_theta, bool front, const std::vector<MSLane*>& internal_lanes, NumericalID current_edge_id, std::vector<std::pair<double, MSVehicle*>>& neighbors_with_distance, bool opposite_check) {
+LaneFreeSimulationPlugin::get_vehicles_from_other_direction_edges(NumericalID veh_id, double global_pos_x, double global_pos_y, double global_theta, bool front, const std::vector<MSLane*>& internal_lanes, NumericalID current_edge_id, std::vector<std::pair<double, MSVehicle*>>& neighbors_with_distance, bool opposite_check, bool outgoing_check, std::vector<const MSEdge*>& outgoing_edges) {
 
 
 
@@ -3262,47 +3277,87 @@ LaneFreeSimulationPlugin::get_vehicles_from_other_direction_edges(NumericalID ve
 	double sin_theta{ sin(global_theta) }, cos_theta{ cos(global_theta) };
 	
 	int i = -1;
-	for (MSLane* lane_ptr : internal_lanes) {
-		edge_ptr = &(lane_ptr->getEdge());
+	if (!outgoing_check) {
+		for (MSLane* lane_ptr : internal_lanes) {
+			edge_ptr = &(lane_ptr->getEdge());
+			//const MSEdge* edge_next_normal = lane_ptr->getNextNormal();
+			/*std::cout << "Lane is: "<< lane_ptr->getID() << ", Edge next normal : " << edge_next_normal->getID() << "\n";*/
+			edge_id = edge_ptr->getNumericalID();
+			i++;
+			// skip the existing edge of our vehicle ved_id, as this is handled normally
+			if (edge_id == current_edge_id) {
 
-		edge_id = edge_ptr->getNumericalID();
-		i++;
-		// skip the existing edge of our vehicle ved_id, as this is handled normally
-		if (edge_id == current_edge_id) {
-						
-			continue;
-		}
-		
-
-		vehs_in_edge = get_sorted_vehicles_in_edge(edge_id);
-		
-		if (vehs_in_edge == nullptr || (vehs_in_edge->size())==0) {
-			continue;
-		}
-		// first, simply add all vehicles. Then, we can check through the angle the front/back
-		
-		
-		for (const SUMOVehicle* sumo_veh_ptr : *vehs_in_edge) {
-			// needs a casting, it is the same object
-			veh_ptr = (MSVehicle*)sumo_veh_ptr;
-			if (veh_ptr->getNumericalID() == veh_id) {
-				//std::cout << "wtf, vehicle " << veh_ptr->getID() << " in edge: " << lf_plugin_get_edge_name(current_edge_id) << " is also in edge: " << edge_ptr->getID() << "\n";
 				continue;
 			}
-			// call function with Mehdi's transformation
-			//std::cout << "\t\t\t\t Vehicle found: " << veh_ptr->getID() << "\n";
-			
-			transform_neighbor_vehicle_distance_and_add_to_neighbors(veh_ptr, global_pos_x, global_pos_y, cos_theta, sin_theta, front, neighbors_with_distance, opposite_check);
+
+
+			vehs_in_edge = get_sorted_vehicles_in_edge(edge_id);
+
+			if (vehs_in_edge == nullptr || (vehs_in_edge->size()) == 0) {
+				continue;
+			}
+			// first, simply add all vehicles. Then, we can check through the angle the front/back
+
+
+			for (const SUMOVehicle* sumo_veh_ptr : *vehs_in_edge) {
+				// needs a casting, it is the same object
+				veh_ptr = (MSVehicle*)sumo_veh_ptr;
+				if (veh_ptr->getNumericalID() == veh_id) {
+					//std::cout << "wtf, vehicle " << veh_ptr->getID() << " in edge: " << lf_plugin_get_edge_name(current_edge_id) << " is also in edge: " << edge_ptr->getID() << "\n";
+					continue;
+				}
+				// call function with Mehdi's transformation
+				//std::cout << "\t\t\t\t Vehicle found: " << veh_ptr->getID() << "\n";
+
+				transform_neighbor_vehicle_distance_and_add_to_neighbors(veh_ptr, global_pos_x, global_pos_y, cos_theta, sin_theta, front, neighbors_with_distance, opposite_check);
+			}
+
+
 		}
-
-
 	}
+	else {
+		MSLaneFreeVehicle* lfveh;
+		double veh_x_pos;
+		for (auto outgoing_edge : outgoing_edges) {
+
+			vehs_in_edge = get_sorted_vehicles_in_edge(outgoing_edge->getNumericalID());
+			if (vehs_in_edge == nullptr || (vehs_in_edge->size()) == 0) {
+				continue;
+			}
+			// first, simply add all vehicles. Then, we can check through the angle the front/back
+
+
+			for (const SUMOVehicle* sumo_veh_ptr : *vehs_in_edge) {
+				// needs a casting, it is the same object
+				
+				veh_ptr = (MSVehicle*)sumo_veh_ptr;
+
+				lfveh = find_vehicle_in_edge(veh_ptr->getNumericalID(), edge_id); //we could somehow remove the need for this, maybe have the get_position_x, get_position_y as a function that gets the veh object as attribute
+				veh_x_pos = lfveh->get_position_x();
+				if (veh_x_pos >= max_vehicle_diag) {
+					continue;
+				}
+
+				if (veh_ptr->getNumericalID() == veh_id) {
+					//std::cout << "wtf, vehicle " << veh_ptr->getID() << " in edge: " << lf_plugin_get_edge_name(current_edge_id) << " is also in edge: " << edge_ptr->getID() << "\n";
+					continue;
+				}
+				// call function with Mehdi's transformation
+				//std::cout << "\t\t\tVehicle found: " << veh_ptr->getNumericalID() << ", my vehicle is:" << veh_id << "\n";
+
+				transform_neighbor_vehicle_distance_and_add_to_neighbors(veh_ptr, global_pos_x, global_pos_y, cos_theta, sin_theta, front, neighbors_with_distance, opposite_check);
+			}
+
+
+		}
+	}
+
 }
 
 void
 LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
-	//std::cout << debug_counter << " VISIT NUMBER\n";
 	debug_counter++;
+	//std::cout << debug_counter << " VISIT NUMBER\n";
 	//TODO approximate generalization according to bicycle model. while this is a generalization, i.e., it includes the standard case, since it requires more computational effort, we will have them as separate cases when estimating length and width for any given vehicle!
 	
 	MSEdgeVector edges_v = MSNet::getInstance()->getEdgeControl().getEdges();
@@ -3397,10 +3452,15 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 			/*if (debug_counter == 200) {
 				system("pause");
 			}*/
-			//if (veh1->getID() == "normal_flow_2_left.1" && debug_counter >= 101) {
+			//if (veh1->getID() == "normal_flow_1_left.2" && debug_counter >= 180) {
+			//	//std::cout << "the edge of blue right is: " << veh1->getEdge()->getID() << "\n"; WRONG
+			//	std::cout << "the edge of yellow is: " << veh1->getLane()->getEdge().getID() << "\n";
+			//}
+			//if (veh1->getID() == "normal_flow_2_left.2" && debug_counter >= 180) {
 			//	//std::cout << "the edge of blue right is: " << veh1->getEdge()->getID() << "\n"; WRONG
 			//	std::cout << "the edge of red is: " << veh1->getLane()->getEdge().getID() << "\n";
 			//}
+
 			// 
 			// 
 			// std::cout<< "veh:" << veh1->getID() << " updated length:" << lv1<<" and width:" << wv1<< " at angle:"<< veh1->getAngleRelative() << "\n";
@@ -3410,7 +3470,10 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 			half_vwidth = wv1 / 2;
 			//std::cout << "Current yv1, roadwidth, half: " << yv1 << "\t" << roadwidth << "\t" << half_vwidth << "\n";
 			if (yv1 > (roadwidth - half_vwidth) || yv1 < half_vwidth) { // This needs to be extended
-				event_vehicle_out_of_bounds(veh1->getNumericalID());
+				//event_vehicle_out_of_bounds(veh1->getNumericalID());
+				
+				
+				
 				//std::cout << "\tOut of bounds, vehicle: " << veh1->getID() << ", declared in edge: " << edge->getID() << "\n";
 				//std::cout << "Current yv1, roadwidth, half: " << yv1 << "\t" << roadwidth << "\t" << half_vwidth << "\n";
 				out_of_bounds_flag = true; // needed to detect collisions on opposite edges
@@ -3467,7 +3530,7 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 						get_all_neighbors_internal(opposite_closest_lfveh, opposite_edge, sorted_vehs_opposite, (size_t)veh_opposite_idx, front_distance_opposite, true, 1, neighbors_with_distance_opposite, true);
 						get_all_neighbors_internal(opposite_closest_lfveh, opposite_edge, sorted_vehs_opposite, (size_t)veh_opposite_idx, back_distance_opposite, false, 1, neighbors_with_distance_opposite, true);
 
-						/*if (veh1->getID() == "normal_flow_1_right.0" && debug_counter >= 126) {
+						/*if (veh1->getID() == "normal_flow_2_left.1" && debug_counter >= 133) {
 
 							std::cout << "opposite closest veh id: " << opposite_closest_lfveh->get_vehicle()->getID() << " at edge: "<< opposite_edge->getID() << "\n";
 							if (debug_counter == 126) {
@@ -3482,8 +3545,8 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 						for (j = 0; j < neighbors_with_distance_opposite.size(); j++) {
 
 							veh2 = neighbors_with_distance_opposite.at(j).second;
-							/*if (veh1->getID() == "normal_flow_1_right.0" && debug_counter >= 126) {
-								std::cout << "\t\tcurrently at id: " << veh2->getID() << "\n";
+							/*if (veh1->getID() == "normal_flow_1_left.1" && debug_counter >= 133) {
+								std::cout << "\t\tcurrently at yellow opposite id: " << veh2->getID() << "\n";
 							}*/
 							//std::cout << "\t\tcurrently at id: " << veh2->getID() << "\n";
 
@@ -3501,7 +3564,9 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 			for(j = 0;j < neighbors_with_distance.size(); j++){
 
 				veh2 = neighbors_with_distance.at(j).second;
-
+				/*if (veh1->getID() == "normal_flow_2_left.1" && debug_counter >= 133) {
+					std::cout << "\t\tcurrently at red NON-opposite id: " << veh2->getID() << "\n";
+				}*/
 				if (investigate_two_vehicles_collision(veh1, veh2, xv1_gl, yv1_gl, theta1_gl, theta1, lv1, wv1, edge_id, v1_edge, v2_edge, v1_route, v1_route_edges, j, v1_edge_index, neighbors_with_distance, false, collision_map)) {
 					break;
 				}
@@ -3557,9 +3622,15 @@ LaneFreeSimulationPlugin::investigate_two_vehicles_collision(MSVehicle* veh1, MS
 
 
 			//if (check_for_opposite_collisions) {
-				//std::cout << "testing with: " << xv1_gl << ", " << yv1_gl << ", " << theta1_gl << ", " << lv1 << ", " << wv1 << ", " << xv2 << ", " << yv2 << ", " << theta2 << ", " << lv2 << ", " << wv2 << "\n";
+			//	//if (veh1->getID() == "normal_flow_1_left.1" && debug_counter >= 133) {
+			//		std::cout << "\t\t\t\ttesting opposite with: " << xv1_gl << ", " << yv1_gl << ", " << theta1_gl << ", " << lv1 << ", " << wv1 << ", " << xv2 << ", " << yv2 << ", " << theta2 << ", " << lv2 << ", " << wv2 << "\n";
+			//	//}
 			//}
-
+			//else {
+			//	//if (veh1->getID() == "normal_flow_1_left.1" && debug_counter >= 133) {
+			//		std::cout << "\t\t\t\ttesting NON-opposite with: " << xv1_gl << ", " << yv1_gl << ", " << theta1_gl << ", " << lv1 << ", " << wv1 << ", " << xv2 << ", " << yv2 << ", " << theta2 << ", " << lv2 << ", " << wv2 << "\n";
+			//	//}
+			//}
 			collision_true = collision_check_with_orientation(xv1_gl, yv1_gl, theta1_gl, lv1, wv1, xv2, yv2, theta2, lv2, wv2);
 
 		}
