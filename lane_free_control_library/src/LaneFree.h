@@ -278,7 +278,13 @@ EXTERN libLaneFreePlugin_EXPORT void (* set_epsilon_left_boundary)(char* route_n
 
 
 // returns a double array with veh densities (veh/km) associated with the segments formed by the left boundary, providing the associated route_name with a char array
-EXTERN libLaneFreePlugin_EXPORT double* (*get_density_left_boundary_segments)(char* route_name, size_t* number_of_segments);
+// the measurements only examine the main highway and neglect the vehicles located on (on/off-)ramps
+EXTERN libLaneFreePlugin_EXPORT double* (*get_density_left_boundary_segments_only_highway)(char* route_name, size_t* number_of_segments);
+
+
+// returns a double array with veh densities (veh/km) associated with the segments formed by the left boundary, providing the associated route_name with a char array
+// the measurements only examine the (on/off-)ramps at each segment and neglect the vehicles located on the main highway
+EXTERN libLaneFreePlugin_EXPORT double* (*get_density_left_boundary_segments_only_ramps)(char* route_name, size_t* number_of_segments);
 
 
 // calculates the lateral distance from left and right road boundaries for veh_id, at longitudinal_distance_x (vehicle can also observe upstream with negative values) and lateral_distance_y

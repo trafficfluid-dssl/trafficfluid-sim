@@ -1859,7 +1859,7 @@ int lf_plugin_get_number_of_vehicles_on_segment_region_on_edge_only_ramp(Numeric
 		// update the edge in case it is internal
 		edge = &lane->getEdge();
 
-		if (edge->getLanes().size() > 0 && (edge->rightLane(lane) != nullptr)) {
+		if (edge->getLanes().size() <= 1 || (edge->getLanes().size() > 0 && (edge->rightLane(lane) != nullptr))) {
 			continue;
 		}
 
@@ -2256,8 +2256,13 @@ void lf_plugin_set_epsilon_left_boundary(char* route_name, double* epsilon_array
 
 }
 
-// returns a double array with veh densities (veh/km) associated with the segments formed by the left boundary, providing the associated route_name with a char array
-double* lf_plugin_get_density_left_boundary_segments(char* route_name, size_t* number_of_segments) {
+
+
+
+
+// internal function for the calculation of a double array with veh densities (veh/km) associated with the segments formed by the left boundary, providing the associated route_name with a char array
+// additional boolean selects between the highway or ramps for the density measurements
+double* get_density_left_boundary_segments(char* route_name, size_t* number_of_segments, bool only_ramps=false) {
 	
 	std::string route_str{ route_name };
 
@@ -2310,7 +2315,13 @@ double* lf_plugin_get_density_left_boundary_segments(char* route_name, size_t* n
 		while (local_offset.first != edge_id_tmp) {
 			end_point = veh_edges.at(edges_idx)->getLength();
 			//std::cout << "Call getter for edge " << veh_edges.at(edges_idx)->getID() << " from " << start_point << " to " << end_point << "\n";
-			num_of_vehs += get_number_of_vehicles_on_segment_region_on_edge_only_highway(edge_id_tmp, start_point, end_point);
+			if (only_ramps) {
+				num_of_vehs += lf_plugin_get_number_of_vehicles_on_segment_region_on_edge_only_ramp(edge_id_tmp, start_point, end_point);				
+			}
+			else {				
+				num_of_vehs += lf_plugin_get_number_of_vehicles_on_segment_region_on_edge_only_highway(edge_id_tmp, start_point, end_point);
+			}
+			
 			
 			// contains the length of the segment we measured the vehicles
 			segment_length += (end_point - start_point);
@@ -2336,7 +2347,12 @@ double* lf_plugin_get_density_left_boundary_segments(char* route_name, size_t* n
 		end_point = local_offset.second;
 		if (start_point != end_point) {
 			//std::cout << "Call last getter for edge " << veh_edges.at(edges_idx)->getID() << " from " << start_point << " to " << end_point << "\n";
-			num_of_vehs += get_number_of_vehicles_on_segment_region_on_edge(edge_id_tmp, start_point, end_point);
+			if (only_ramps) {
+				num_of_vehs += lf_plugin_get_number_of_vehicles_on_segment_region_on_edge_only_ramp(edge_id_tmp, start_point, end_point);				
+			}
+			else {				
+				num_of_vehs += lf_plugin_get_number_of_vehicles_on_segment_region_on_edge_only_highway(edge_id_tmp, start_point, end_point);
+			}
 			segment_length += (end_point - start_point);
 			if (segment_length == 0) {
 				std::cout << "Error! Segment length is calcaulated zero!\n";
@@ -2345,8 +2361,6 @@ double* lf_plugin_get_density_left_boundary_segments(char* route_name, size_t* n
 			start_point = end_point;
 
 		}
-			
-
 		
 
 		density_left_boundary_array[densities_idx] = ((double)num_of_vehs) * 1000. / segment_length;
@@ -2366,6 +2380,24 @@ double* lf_plugin_get_density_left_boundary_segments(char* route_name, size_t* n
 	return density_left_boundary_array;
 
 }
+
+
+
+// returns a double array with veh densities (veh/km) associated with the segments formed by the left boundary, providing the associated route_name with a char array
+// the measurements only examine the main highway and neglect the vehicles located on (on/off-)ramps
+double* lf_plugin_get_density_left_boundary_segments_only_highway(char* route_name, size_t* number_of_segments) {
+
+	return get_density_left_boundary_segments(route_name, number_of_segments);
+}
+
+// returns a double array with veh densities (veh/km) associated with the segments formed by the left boundary, providing the associated route_name with a char array
+// the measurements only examine the (on/off-)ramps at each segment and neglect the vehicles located on the main highway
+double* lf_plugin_get_density_left_boundary_segments_only_ramps(char* route_name, size_t* number_of_segments) {
+
+	return get_density_left_boundary_segments(route_name, number_of_segments,true);
+}
+
+
 
 // calculates the lateral distance from left and right road boundaries for veh_id, at longitudinal_distance_x (vehicle can also observe upstream with negative values) and lateral_distance_y
 // regarding the boundaries, it calculates the boundaries's distances (with left_boundary_distance, right_boundary_distance variables) and first derivative (with left_boundary_speed, right_boundary_speed variables)
@@ -2646,7 +2678,8 @@ LaneFreeSimulationPlugin::LaneFreeSimulationPlugin(){
 
 
 	set_epsilon_left_boundary = &lf_plugin_set_epsilon_left_boundary;
-	get_density_left_boundary_segments = &lf_plugin_get_density_left_boundary_segments;
+	get_density_left_boundary_segments_only_highway = &lf_plugin_get_density_left_boundary_segments_only_highway;
+	get_density_left_boundary_segments_only_ramps = &lf_plugin_get_density_left_boundary_segments_only_ramps;
 	get_distance_to_road_boundaries_at = &lf_plugin_get_distance_to_road_boundaries_at;
 
 	 
