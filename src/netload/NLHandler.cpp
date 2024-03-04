@@ -98,17 +98,17 @@ NLHandler::myStartElement(int element,
             case SUMO_TAG_LANE:
                 addLane(attrs);
                 break;
-            case SUMO_TAG_NEIGH:
-                // LFPlugin Begin
+            // LFPlugin Begin
+            case SUMO_TAG_NEIGH_LANE:
                 myEdgeControlBuilder.addOppositeEdge(attrs.getString(SUMO_ATTR_LANE));
-                // LFPlugin End
-                
-                // Uncomment next lines of code for original 
-                /*if (!myCurrentIsInternalToSkip) {
+                //std::cout << "Opposite entering...\n";
+                break;
+            // LFPlugin End
+            case SUMO_TAG_NEIGH:
+                if (!myCurrentIsInternalToSkip) {
                     myEdgeControlBuilder.addNeigh(attrs.getString(SUMO_ATTR_LANE));
                 }
-                myHaveSeenNeighs = true;*/
-                // Uncomment end
+                myHaveSeenNeighs = true;
                 break;
             case SUMO_TAG_JUNCTION:
                 openJunction(attrs);
