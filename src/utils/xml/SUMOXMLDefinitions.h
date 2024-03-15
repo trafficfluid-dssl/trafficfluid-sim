@@ -47,6 +47,9 @@ enum SumoXMLTag {
     SUMO_TAG_LANE,
     /// @brief begin/end of the description of a neighboring lane
     SUMO_TAG_NEIGH,
+    // LFPlugin Begin
+    SUMO_TAG_NEIGH_LANE,
+    // LFPlugin End
     /// @brief begin/end of the description of a Point of interest
     SUMO_TAG_POI,
     /// @brief begin/end of the description of a Point of interest over Lane (used by Netedit)
