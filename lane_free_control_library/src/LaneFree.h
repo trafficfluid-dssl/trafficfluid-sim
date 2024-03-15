@@ -216,6 +216,14 @@ EXTERN libLaneFreePlugin_EXPORT double (* get_density_on_segment_region_on_edge_
 EXTERN libLaneFreePlugin_EXPORT double (* get_average_speed_on_segment_region_on_edge)(NumericalID edge_id, double segment_start, double segment_end);
 
 
+// returns the average speed of vehicles (m/s) only on the ramp (either on-ramp or off-ramp) for a given segment region for a given edge id
+EXTERN libLaneFreePlugin_EXPORT double (*get_average_speed_on_segment_region_on_edge_only_highway)(NumericalID edge_id, double segment_start, double segment_end);
+
+
+// returns the average speed of vehicles (m/s) only on the ramp (either on-ramp or off-ramp) for a given segment region for a given edge id
+EXTERN libLaneFreePlugin_EXPORT double (*get_average_speed_on_segment_region_on_edge_only_ramp)(NumericalID edge_id, double segment_start, double segment_end);
+
+
 // returns the average speed of vehicles for a given segment region for a given edge id and for a given type of vehicles
 EXTERN libLaneFreePlugin_EXPORT double (* get_average_speed_on_segment_region_on_edge_for_type)(NumericalID edge_id, double segment_start, double segment_end, char* veh_type);
 

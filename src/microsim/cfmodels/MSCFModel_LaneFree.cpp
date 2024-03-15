@@ -1631,6 +1631,98 @@ int lf_plugin_get_density_per_segment_per_edge_size(NumericalID edge_id, double 
 	
 }
 
+// internal function that unifies the different calls
+// either for whole edge (ramp_only=false, highway_only=false) or specifically measure on the ramp (ramp_only=true) (rightmost lane in a 2(or more)-lane highway) or only on the highway (highway_only=true)
+double get_average_speed_on_segment_region_on_edge_internal(NumericalID edge_id, double segment_start, double segment_end, bool ramp_only=false, bool highway_only=false) {
+
+	if (segment_start >= segment_end) {
+		std::cout << "Segment start point should always be before the segment end point!\n";
+		return -1.;
+	}
+
+	if (segment_start < 0.) {
+		std::cout << "Segment start point cannot be negative!\n";
+		return -1.;
+	}
+
+	// if both are true, then revert to whole edge and print warning
+	if (ramp_only && highway_only) {
+		std::cout << "Average speed measurement is called for both ramp and highway! It will revert to whole segment measurement instead.\n";
+		ramp_only = false;
+		highway_only = false;
+	}
+
+	int i, n_v;
+	std::vector<const SUMOVehicle*>* vehs_in_edge;
+	MSVehicle* veh;
+
+
+	int num_of_vehs = 0;
+	double sum_speed = 0.;
+
+	double x_v;
+	double edge_length;
+
+	MSEdge* edge = find_edge_ptr(edge_id);
+
+	edge_length = edge->getLength();
+	if (segment_end > edge_length) {
+		printf("Segment values from %f to %f are not within the selected road!\n", segment_start, segment_end);
+		return -1.;
+	}
+
+	vehs_in_edge = LaneFreeSimulationPlugin::getInstance()->get_sorted_vehicles_in_edge(edge_id);
+
+
+	if (vehs_in_edge == nullptr || ((n_v = vehs_in_edge->size()) == 0)) {
+
+		//std::cout<<"Edge with id "<< edge_id << " is empty!\n";
+		return 0.;
+	}
+	MSLane* lane;
+
+	//std::cout << "Avg Speed measurement ramp:"<<ramp_only<<", highway:"<<highway_only<<"\n";
+	for (i = 0; i < n_v; i++) {
+		veh = (MSVehicle*)vehs_in_edge->at(i);
+
+		if (ramp_only || highway_only) {
+			// works for scenarios with only a mainstream or one containing a single acceleration/deceleration lane
+			// This means that vehicles only on mainstream are either in a road with a single lane, or on the left lane in roads with two lanes
+			// we measure vehicles on the top left lane always
+			// If the road contains more than two lanes, print a warning 
+
+			lane = veh->getLane();
+
+			// update the edge in case it is internal
+			edge = &lane->getEdge();
+
+			if (ramp_only) {
+				if (edge->getLanes().size() <= 1 || (edge->getLanes().size() > 0 && (edge->rightLane(lane) != nullptr))) {
+					continue;
+				}
+			}
+			if (highway_only) {
+				if (edge->getLanes().size() > 0 && (edge->leftLane(lane) != nullptr)) {
+					continue;
+				}
+			}
+		}
+
+		x_v = veh->getPositionOnLane();
+		if (x_v >= segment_start && x_v < segment_end) {
+			num_of_vehs++;
+			sum_speed += get_speed_x(veh->getNumericalID());
+			//std::cout << "Veh:"<<veh->getID() << ", speed:" << get_speed_x(veh->getNumericalID()) << "\n";
+		}
+	}
+
+	if (num_of_vehs > 0) {
+		return sum_speed / (double)num_of_vehs;
+	}
+	else {
+		return 0.;
+	}
+}
 
 double lf_plugin_get_average_speed_on_segment_region_on_edge(NumericalID edge_id, double segment_start, double segment_end) {
 
@@ -1691,11 +1783,20 @@ double lf_plugin_get_average_speed_on_segment_region_on_edge(NumericalID edge_id
 }
 
 
+// returns the average speed of vehicles (m/s) only on the main highway for a given segment region for a given edge id
+double lf_plugin_get_average_speed_on_segment_region_on_edge_only_highway(NumericalID edge_id, double segment_start, double segment_end) {
+
+		
+	return get_average_speed_on_segment_region_on_edge_internal(edge_id, segment_start, segment_end, false, true); // call internal function with proper flags
+
+
+}
+
 // returns the density of vehicles (veh/km) only on the main highway for a given segment region for a given edge id
 double lf_plugin_get_density_on_segment_region_on_edge_only_highway(NumericalID edge_id, double segment_start, double segment_end) {
 
 
-	int num_of_vehs = get_number_of_vehicles_on_segment_region_on_edge_only_highway(edge_id, segment_start, segment_end); // TODO this should be changed to the function pointer of the api header file
+	int num_of_vehs = get_number_of_vehicles_on_segment_region_on_edge_only_highway(edge_id, segment_start, segment_end); 
 	if (num_of_vehs == -1) {
 		return -1.0;
 	}
@@ -1783,12 +1884,21 @@ int lf_plugin_get_number_of_vehicles_on_segment_region_on_edge_only_highway(Nume
 
 }
 
+// returns the average speed of vehicles (m/s) only on the ramp (either on-ramp or off-ramp) for a given segment region for a given edge id
+double lf_plugin_get_average_speed_on_segment_region_on_edge_only_ramp(NumericalID edge_id, double segment_start, double segment_end) {
+
+
+	return get_average_speed_on_segment_region_on_edge_internal(edge_id, segment_start, segment_end, true, false); // Call internal function with proper flags
+
+
+}
+
 
 // returns the density of vehicles (veh/km) only on the ramp (either on-ramp or off-ramp) for a given segment region for a given edge id
 double lf_plugin_get_density_on_segment_region_on_edge_only_ramp(NumericalID edge_id, double segment_start, double segment_end) {
 
 
-	int num_of_vehs = get_number_of_vehicles_on_segment_region_on_edge_only_ramp(edge_id, segment_start, segment_end); // TODO this should be changed to the function pointer of the api header file
+	int num_of_vehs = get_number_of_vehicles_on_segment_region_on_edge_only_ramp(edge_id, segment_start, segment_end);
 	if (num_of_vehs == -1) {
 		return -1.0;
 	}
@@ -2644,6 +2754,9 @@ LaneFreeSimulationPlugin::LaneFreeSimulationPlugin(){
 	get_detector_value = &lf_plugin_get_detector_value;
 	get_detector_value_for_type = &lf_plugin_get_detector_value_for_type;
 	get_average_speed_on_segment_region_on_edge = &lf_plugin_get_average_speed_on_segment_region_on_edge;
+
+	get_average_speed_on_segment_region_on_edge_only_highway = &lf_plugin_get_average_speed_on_segment_region_on_edge_only_highway;
+	get_average_speed_on_segment_region_on_edge_only_ramp = &lf_plugin_get_average_speed_on_segment_region_on_edge_only_ramp;
 
 	get_density_on_segment_region_on_edge = &lf_plugin_get_density_on_segment_region_on_edge;
 	get_number_of_vehicles_on_segment_region_on_edge = &lf_plugin_get_number_of_vehicles_on_segment_region_on_edge;

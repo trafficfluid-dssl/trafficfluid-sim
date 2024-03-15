@@ -10,11 +10,7 @@
 #define MAX_DESIRED_SPEED 35
 
 #include <stdio.h>
-#ifdef __unix__
-#include "LaneFree_linux.h"
-#elif defined(WIN32)
-#include "LaneFree_win.h"
-#endif
+
 void simulation_initialize(){
 
 	//initialize srand with the same seed as sumo
@@ -39,7 +35,7 @@ void simulation_initialize(){
 		sprintf(type_id, "%d", i%8+1);
 		sprintf(veh_name, "%s_plugin_%d", type_id,(i+1));
 		
-		v_id = insert_new_vehicle(veh_name, route_id, type_id, x_val, y_val, vx_val,0);
+		v_id = insert_new_vehicle(veh_name, route_id, type_id, x_val, y_val, vx_val,0,0,0);
 		printf("%s inserted\n", veh_name);
 		y_val = y_val + y_incr;
 		if(i%virtual_lanes==(virtual_lanes-1)){
@@ -107,7 +103,7 @@ void simulation_step() {
 	//Check the density per road per segment
 	NumericalID* myedges = get_all_edges();
 	NumericalID n_myedges = get_all_edges_size();
-	int* density_per_edge;
+	double* density_per_edge;
 	int size;
 	double segment_length = 100; //in meters
 	for (i = 0; i < n_myedges; i++) {
