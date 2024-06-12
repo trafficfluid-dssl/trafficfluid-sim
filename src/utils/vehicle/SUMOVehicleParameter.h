@@ -725,6 +725,8 @@ public:
     // LFPlugin Begin
     // additional variables needed
     std::string lf_attribute_insertion_policy;
+    double lf_attribute_platoon_size;
+    double lf_attribute_platoon_timestep_distance;
     double lf_attribute_lat_low;
     double lf_attribute_lat_high;
     bool lf_attribute_depart_speed_limit_downstream;

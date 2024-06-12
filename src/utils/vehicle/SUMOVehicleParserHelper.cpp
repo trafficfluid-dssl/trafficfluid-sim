@@ -221,6 +221,19 @@ SUMOVehicleParserHelper::parseFlowAttributes(SumoXMLTag tag, const SUMOSAXAttrib
             
             ret->lf_attribute_insertion_policy = attrs.get<std::string>(SUMO_ATTR_LF_INSERTION_POLICY, id.c_str(), ok);
         }
+        if (attrs.hasAttribute(SUMO_ATTR_LF_PLATOON_SIZE)) {
+            ret->lf_attribute_platoon_size = attrs.get<double>(SUMO_ATTR_LF_PLATOON_SIZE, id.c_str(), ok);
+            if (ret->lf_attribute_platoon_size < 0) {
+                std::cout << "Error, platoon size platoonSize:" << ret->lf_attribute_platoon_size << " is out of bounds (<0)!\n";
+            }
+        }
+        if (attrs.hasAttribute(SUMO_ATTR_LF_PLATOON_TIMESTEP_DISTANCE)) {
+            ret->lf_attribute_platoon_timestep_distance = attrs.get<double>(SUMO_ATTR_LF_PLATOON_TIMESTEP_DISTANCE, id.c_str(), ok);
+            if (ret->lf_attribute_platoon_timestep_distance < 0) {
+                std::cout << "Error, platoon longitudinal distance platoonLongDistance:" << ret->lf_attribute_platoon_timestep_distance << " is out of bounds (<0)!\n";
+            }
+        }
+        
         //std::cout << "insertion policy:" << ret->lf_attribute_insertion_policy << "\n";
         if (attrs.hasAttribute(SUMO_ATTR_LF_LAT_LOW)) {
             ret->lf_attribute_lat_low = attrs.get<double>(SUMO_ATTR_LF_LAT_LOW, id.c_str(), ok);

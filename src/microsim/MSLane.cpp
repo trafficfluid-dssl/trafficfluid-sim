@@ -93,6 +93,7 @@
 
 // LFPlugin Begin
 #include <microsim/cfmodels/MSCFModel_LaneFree.h>
+//#include <microsim/cfmodels/MSCFModel_LaneFree.cpp>
 // LFPlugin End
 
 // ===========================================================================
@@ -650,6 +651,7 @@ MSLane::insertVehicle(MSVehicle& veh) {
     }
     // try to insert
     const bool success = isInsertionSuccess(&veh, speed, pos, posLat, patchSpeed, MSMoveReminder::NOTIFICATION_DEPARTED);
+
     //std::cout << SIMTIME << " veh=" << veh.getID() << " success=" << success << " extrapolate=" << myExtrapolateSubstepDepart << " delay=" << veh.getDepartDelay() << "\n";
     if (success && myExtrapolateSubstepDepart && veh.getDepartDelay() > 0) {
         SUMOTime relevantDelay = MIN2(DELTA_T, veh.getDepartDelay());
@@ -812,35 +814,40 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
     // LFPlugin Begin
     
 
-    //Here we can control how many vehicles enter in the same timestep, for now, we allow 1 vehicle per timestep
+    //Here we can control how many vehicles enter in the same timestep, for now, we allow 1 vehicle per timestep per flow
     //for (VehCont::iterator veh = myVehicles.begin(); veh != myVehicles.end(); ++veh) {
     //    std::cout<<(*veh)->getID()<<" with pos:("<< (*veh)->getPositionOnLane() <<","<< (*veh)->getLateralPositionOnLane()<<"),";
     //}
     //std::cout << "\n";
     std::string insertion_policy = aVehicle->getParameter().lf_attribute_insertion_policy;
+    double platoon_size = aVehicle->getParameter().lf_attribute_platoon_size;
+    double platoon_long_dist = aVehicle->getParameter().lf_attribute_platoon_timestep_distance;
     double latLow = aVehicle->getParameter().lf_attribute_lat_low;
     double latHigh = aVehicle->getParameter().lf_attribute_lat_high;
     bool depart_speed_limit_downstream = aVehicle->getParameter().lf_attribute_depart_speed_limit_downstream;
     bool depart_speed_limit_from_front = aVehicle->getParameter().lf_attribute_has_depart_speed_limit_front;
     double depart_speed_limit_front_dist = aVehicle->getParameter().lf_attribute_depart_speed_limit_front;
-    bool desired_speed_alignment = !(insertion_policy=="latExploit" || insertion_policy=="center");
-    //add flow speed
-    if (insertion_policy == "API") {
-        
-        incorporateVehicle(aVehicle, pos, speed, posLat, find_if(myVehicles.begin(), myVehicles.end(), [&](MSVehicle* const v) {return v->getPositionOnLane() >= pos; }), notification);
+    bool desired_speed_alignment = !(insertion_policy=="latExploit" || insertion_policy=="center" || insertion_policy=="platoon");
 
+    //if (insertion_policy == "platoon" && platoon_size > 0) {
+    //    std::cout << "entering platoon leader, with platoon size:" << platoon_size << ", and following longitudinal distance: " << platoon_long_dist << "\n";
+    //    //LaneFreeSimulationPlugin::getInstance()->
+    //}
+    //add flow speed
+    if (insertion_policy == "API") { //default
+        incorporateVehicle(aVehicle, pos, speed, posLat, find_if(myVehicles.begin(), myVehicles.end(), [&](MSVehicle* const v) {return v->getPositionOnLane() >= pos; }), notification);
         return true;
     }
-    if(aVehicle->getCarFollowModel().getModelID()==SUMO_TAG_CF_LANEFREE && !desired_speed_alignment){
+    if(aVehicle->getCarFollowModel().getModelID()==SUMO_TAG_CF_LANEFREE && !desired_speed_alignment){ // normal lane free insertion
         std::vector<std::pair<double, double>> available_lat_space;
         std::vector<std::pair<double, double>> available_lat_space_tmp;
         double vwidth = aVehicle->getWidth();
-        double road_low = vwidth / 2, road_high = getWidth() - vwidth / 2; //TODO, here we shall change the values in order to have what milad needs
+        double road_low = vwidth / 2, road_high = getWidth() - vwidth / 2;
         double latRange = road_high - road_low;
         if (latRange < 0) {
             std::cout << "Error, vehicle to be inserted has more width than the road!";
         }
-        available_lat_space.push_back(std::make_pair(road_low+latLow*(latRange), road_low+latHigh*(latRange)));
+        available_lat_space.push_back(std::make_pair(road_low+latLow*(latRange), road_low+latHigh*(latRange))); // this represents where the vehicle fits in the road, based on its width
 
         double lat_distance = aVehicle->getVehicleType().getMinGapLat();
         double desired_tau = aVehicle->getCarFollowModel().getHeadwayTime(); //Our Lane-Free controller acts as a car follow model
@@ -852,7 +859,7 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
         //double distance_to_zero=speed*speed/(2*2);
         double myfrontpos = aVehicle->getPositionOnLane();
         sort(myVehicles.begin(), myVehicles.end(), vehicle_natural_position_sorter(this));
-        if (depart_speed_limit_downstream) {
+        if (depart_speed_limit_downstream) { // calculate speed of inserted vehicle to not collide with slower already existed vehicles in the lane. this is based on average speed of front vehicles
             for (VehCont::iterator veh = myVehicles.begin(); veh != myVehicles.end(); ++veh) {
 
                 // we either check base on a distance
@@ -876,7 +883,7 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
         if (veh_counter > 0) {            
             avg_speed_front = sum_speed_front / veh_counter;
         }
-        else {
+        else { // no restriction on speed, the vehicles can manage 
             avg_speed_front = speed;
         }
 
@@ -885,12 +892,10 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
         double v = std::min(speed, avg_speed_front);
         double y, other_vwidth;
        
-        if (insertion_policy == "center") {
+        if (insertion_policy == "center") { // all vehicles insert at fixed lateral position, this is made for really narrow road/ramps that do not fit multiple parallel vehicles
             //limit initial speed only based on the one vehicle downstream
             if (veh_counter > 0) {
                 speed = std::min(speed, myVehicles.at(0)->getSpeed());
-            }
-            if (veh_counter > 0) {
                 MSVehicle* front_veh = myVehicles.at(0);
                 s = front_veh->getPositionOnLane() - front_veh->getLength() - myfrontpos;
                 if (s < desired_space_gap) {                    
@@ -920,10 +925,8 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
         double front_veh_pos = 0, front_veh_length, dx;
         double sum_speed = 0;
         double num_vehs = 0;        
-                
-        for (VehCont::iterator veh = myVehicles.begin(); veh != myVehicles.end(); ++veh) {        
+        for (auto veh = myVehicles.begin(); veh != myVehicles.end(); ++veh) {
             //getPositionOnLane returns the position of the front point
-            
             s = (*veh)->getPositionOnLane() - (*veh)->getLength() - myfrontpos;
             if (s <= 0 || speed == 0) {
                 check_tau = false;
@@ -975,6 +978,7 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
                     update_available_space(&available_lat_space, space_restriction);
                 }
 
+
                 if (available_lat_space.empty()) {
 
                     //this means that there is no available space to enter
@@ -986,7 +990,31 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
 
             }
         }
-        
+
+            //we have extra reserved space for platoon vehicles to get inserted
+        //std::cout << "\t\tIn restrictions with ego veh edge: " << aVehicle->getEdge()->getID() << "\n";
+        std::string edge_id_platoon;
+        edge_id_platoon.assign(aVehicle->getEdge()->getID());
+        std::vector<std::pair<double, double>> platoon_reserved = LaneFreeSimulationPlugin::getInstance()->lf_plugin_get_edge_vehicles_in_platoon(edge_id_platoon);
+        for (int i = 0; i < platoon_reserved.size(); i++) {
+            double platoon_veh_width = platoon_reserved[i].first;
+            double platoon_lateral_position_on_lane = platoon_reserved[i].second;
+            y = getWidth() / 2 + platoon_lateral_position_on_lane;
+            space_restriction.first = std::max(y - platoon_veh_width / 2 - vwidth / 2 - lat_distance, road_low);
+            space_restriction.second = std::min(y + platoon_veh_width / 2 + vwidth / 2 + lat_distance, road_high);
+            if (space_restriction.second <= road_low || space_restriction.first >= road_high) {
+                printf("this will be excluded!\n");
+            }
+            else {
+                update_available_space(&available_lat_space, space_restriction);
+            }
+
+            if (available_lat_space.empty()) {
+                //this means that there is no available space to enter
+                //std::cout << "Not avail space for veh " << aVehicle->getID() << "\n";                    
+                return false;
+            }
+        }
 
         //if we have not yet spawned, but have available space
         //spawn randomly within the available space
@@ -1004,7 +1032,36 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
         */
         
         incorporateVehicle(aVehicle, pos, speed, posLat, find_if(myVehicles.begin(), myVehicles.end(), [&](MSVehicle* const v) {return v->getPositionOnLane() >= pos;}), notification);
-        //std::cout << "Found avail space for veh " << aVehicle->getID() << "\n";
+        if (insertion_policy == "platoon") { // if the policy is platoon, then we need to insert the rest of the vehicles and restrict the space for them
+            double angle = aVehicle->computeAngle();
+            Position pos = aVehicle->getPosition();
+            aVehicle->getEdge()->getID();
+            LaneFreeSimulationPlugin::platoonVehicle platVeh;
+            platVeh.veh_id = aVehicle->getNumericalID();
+            platVeh.veh_name = (char*)aVehicle->getID().c_str();
+            platVeh.route_id = (char*)aVehicle->getRoute().getID().c_str();
+            platVeh.type_id = (char*)aVehicle->getVehicleType().getID().c_str();
+            
+            //platVeh.pos_x = aVehicle->getPosition().x();
+            //platVeh.pos_y = aVehicle->getPosition().y();
+            platVeh.pos_x = lf_plugin_get_global_position_x(aVehicle->getNumericalID());;
+            platVeh.pos_y = lf_plugin_get_global_position_y(aVehicle->getNumericalID());;
+            platVeh.speed_x = aVehicle->getSpeed(); ;
+            platVeh.speed_y = 0;
+            platVeh.theta = aVehicle->computeAngle();;
+            platVeh.use_global_coordinates = 1;
+            platVeh.timestep_current = platoon_long_dist;
+            platVeh.timesteps_between_inserts = platoon_long_dist;
+            platVeh.edge_id.assign(aVehicle->getEdge()->getID());
+            platVeh.veh_width = aVehicle->getVehicleType().getWidth();
+            platVeh.veh_lateral_position_on_lane = aVehicle->getLateralPositionOnLane();
+            std::pair<int, LaneFreeSimulationPlugin::platoonVehicle> platVeh_pair;
+            platVeh_pair.first = platoon_size - 1;
+            platVeh_pair.second = platVeh;
+            //std::cout << "\t\t with angle: " << angle << ", and position: " << pos << ", and speedx:" << aVehicle->getSpeed() << ", with vehId: " << aVehicle->getID() << ", with routeID: " << platVeh.route_id << ", with type:" << platVeh.type_id << "\n";
+            LaneFreeSimulationPlugin::getInstance()->add_to_platoonQueue(platVeh_pair); // the insertions of the rest of the platoon happens in lf simulation step
+            LaneFreeSimulationPlugin::getInstance()->add_to_platoon_list(aVehicle->getNumericalID(), aVehicle->getNumericalID());
+        }
         
         return true;
     }

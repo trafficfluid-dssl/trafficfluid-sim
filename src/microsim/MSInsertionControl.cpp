@@ -39,6 +39,10 @@
 #include "MSRouteHandler.h"
 #include "MSInsertionControl.h"
 
+// LFPlugin Begin
+#include <microsim/cfmodels/MSCFModel_LaneFree.h>
+// LFPlugin End
+
 
 // ===========================================================================
 // member method definitions
@@ -129,6 +133,11 @@ MSInsertionControl::emitVehicles(SUMOTime time) {
     }
     myEmitCandidates.clear();
     myPendingEmits = refusedEmits;
+    // LFPlugin Begin
+    LaneFreeSimulationPlugin::getInstance()->apply_platoon_remove_indexes();
+    // this ensures that the platoons that have entried on their entirety are deleted from future spawn mechanisms
+    // we do this step here to ensure this step will be applied after ALL inserts and will not interfere mid-step
+    // LFPlugin End
     return numEmitted;
 }
 
@@ -141,8 +150,12 @@ MSInsertionControl::tryInsert(SUMOTime time, SUMOVehicle* veh,
     if (veh->isOnRoad()) {
         return 1;
     }
-    if ((myMaxVehicleNumber < 0 || (int)MSNet::getInstance()->getVehicleControl().getRunningVehicleNo() < myMaxVehicleNumber)
-            && edge.insertVehicle(*veh, time, false, myEagerInsertionCheck)) {
+    bool check1, check2,check3;
+    check1 = myMaxVehicleNumber < 0;
+    check2 = (int)MSNet::getInstance()->getVehicleControl().getRunningVehicleNo() < myMaxVehicleNumber;
+    check3 = edge.insertVehicle(*veh, time, false, myEagerInsertionCheck);
+    if ((check1 || check2)
+            && check3) {
         // Successful insertion
         return 1;
     }

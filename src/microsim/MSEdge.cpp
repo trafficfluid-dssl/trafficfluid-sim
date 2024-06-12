@@ -47,6 +47,10 @@
 #include "MSEdgeWeightsStorage.h"
 #include "MSEdge.h"
 
+// LFPlugin Begin
+#include <microsim/cfmodels/MSCFModel_LaneFree.h>
+// LFPlugin End
+
 #define BEST_LANE_LOOKAHEAD 3000.0
 
 // ===========================================================================
@@ -561,9 +565,18 @@ MSEdge::validateDepartSpeed(SUMOVehicle& v) const {
 
 bool
 MSEdge::insertVehicle(SUMOVehicle& v, SUMOTime time, const bool checkOnly, const bool forceCheck) const {
+    // LFPlugin Begin
+    bool platoon_check = false; //since platoon vehicles overide spawn rules, we have to overlook some flags. here we investigate whether or not a vehicle is platoon follower
+    if (v.getVehicleType().getCarFollowModel().getModelID() == SUMO_TAG_CF_LANEFREE) {
+        if (LaneFreeSimulationPlugin::getInstance()->is_platoon_follower(v.getNumericalID())) {
+            platoon_check = true;
+            LaneFreeSimulationPlugin::getInstance()->remove_from_platoonFollowers(v.getNumericalID()); // remove from the vector since we no longer need the information
+        }
+    }
+    // LFPlugin End
     // when vaporizing, no vehicles are inserted, but checking needs to be successful to trigger removal
     if (isVaporizing() || isTazConnector()
-            || v.getRouteValidity(true, checkOnly) != MSBaseVehicle::ROUTE_VALID) {
+        || v.getRouteValidity(true, checkOnly) != MSBaseVehicle::ROUTE_VALID) {
         return checkOnly;
     }
     const SUMOVehicleParameter& pars = v.getParameter();
@@ -571,34 +584,37 @@ MSEdge::insertVehicle(SUMOVehicle& v, SUMOTime time, const bool checkOnly, const
         const std::string errorMsg = "Departure speed for vehicle '" + pars.id + "' is too high for the departure edge '" + getID() + "'.";
         if (MSGlobals::gCheckRoutes) {
             throw ProcessError(errorMsg);
-        } else {
+        }
+        else {
             WRITE_WARNING(errorMsg);
         }
     }
     if (MSGlobals::gUseMesoSim) {
         if (!forceCheck && myLastFailedInsertionTime == time) {
+            std::cout << "\t\t\t\twhat even?3\n";
             return false;
         }
         double pos = 0.0;
         switch (pars.departPosProcedure) {
-            case DepartPosDefinition::GIVEN:
-                if (pars.departPos >= 0.) {
-                    pos = pars.departPos;
-                } else {
-                    pos = pars.departPos + getLength();
-                }
-                if (pos < 0 || pos > getLength()) {
-                    WRITE_WARNING("Invalid departPos " + toString(pos) + " given for vehicle '" +
-                                  v.getID() + "'. Inserting at lane end instead.");
-                    pos = getLength();
-                }
-                break;
-            case DepartPosDefinition::RANDOM:
-            case DepartPosDefinition::RANDOM_FREE:
-                pos = RandHelper::rand(getLength());
-                break;
-            default:
-                break;
+        case DepartPosDefinition::GIVEN:
+            if (pars.departPos >= 0.) {
+                pos = pars.departPos;
+            }
+            else {
+                pos = pars.departPos + getLength();
+            }
+            if (pos < 0 || pos > getLength()) {
+                WRITE_WARNING("Invalid departPos " + toString(pos) + " given for vehicle '" +
+                    v.getID() + "'. Inserting at lane end instead.");
+                pos = getLength();
+            }
+            break;
+        case DepartPosDefinition::RANDOM:
+        case DepartPosDefinition::RANDOM_FREE:
+            pos = RandHelper::rand(getLength());
+            break;
+        default:
+            break;
         }
         bool result = false;
         MESegment* segment = MSGlobals::gMesoNet->getSegmentForEdge(*this, pos);
@@ -608,15 +624,18 @@ MSEdge::insertVehicle(SUMOVehicle& v, SUMOTime time, const bool checkOnly, const
             while (segment != nullptr && !result) {
                 if (checkOnly) {
                     result = segment->hasSpaceFor(veh, time, qIdx, true) == time;
-                } else {
+                }
+                else {
                     result = segment->initialise(veh, time);
                 }
                 segment = segment->getNextSegment();
             }
-        } else {
+        }
+        else {
             if (checkOnly) {
                 result = segment->hasSpaceFor(veh, time, qIdx, true) == time;
-            } else {
+            }
+            else {
                 result = segment->initialise(veh, time);
             }
         }
@@ -624,24 +643,24 @@ MSEdge::insertVehicle(SUMOVehicle& v, SUMOTime time, const bool checkOnly, const
     }
     if (checkOnly) {
         switch (v.getParameter().departLaneProcedure) {
-            case DepartLaneDefinition::GIVEN:
-            case DepartLaneDefinition::DEFAULT:
-            case DepartLaneDefinition::FIRST_ALLOWED: {
-                MSLane* insertionLane = getDepartLane(static_cast<MSVehicle&>(v));
-                if (insertionLane == nullptr) {
-                    WRITE_WARNING("could not insert vehicle '" + v.getID() + "' on any lane of edge '" + getID() + "', time=" + time2string(MSNet::getInstance()->getCurrentTimeStep()));
-                    return false;
-                }
-                const double occupancy = insertionLane->getBruttoOccupancy();
-                return occupancy == 0 || occupancy * myLength + v.getVehicleType().getLengthWithGap() <= myLength;
+        case DepartLaneDefinition::GIVEN:
+        case DepartLaneDefinition::DEFAULT:
+        case DepartLaneDefinition::FIRST_ALLOWED: {
+            MSLane* insertionLane = getDepartLane(static_cast<MSVehicle&>(v));
+            if (insertionLane == nullptr) {
+                WRITE_WARNING("could not insert vehicle '" + v.getID() + "' on any lane of edge '" + getID() + "', time=" + time2string(MSNet::getInstance()->getCurrentTimeStep()));
+                return false;
             }
-            default:
-                for (std::vector<MSLane*>::const_iterator i = myLanes->begin(); i != myLanes->end(); ++i) {
-                    const double occupancy = (*i)->getBruttoOccupancy();
-                    if (occupancy == 0 || occupancy * myLength + v.getVehicleType().getLengthWithGap() <= myLength) {
-                        return true;
-                    }
+            const double occupancy = insertionLane->getBruttoOccupancy();
+            return occupancy == 0 || occupancy * myLength + v.getVehicleType().getLengthWithGap() <= myLength;
+        }
+        default:
+            for (std::vector<MSLane*>::const_iterator i = myLanes->begin(); i != myLanes->end(); ++i) {
+                const double occupancy = (*i)->getBruttoOccupancy();
+                if (occupancy == 0 || occupancy * myLength + v.getVehicleType().getLengthWithGap() <= myLength) {
+                    return true;
                 }
+            }
         }
         return false;
     }
@@ -649,8 +668,9 @@ MSEdge::insertVehicle(SUMOVehicle& v, SUMOTime time, const bool checkOnly, const
     if (insertionLane == nullptr) {
         return false;
     }
+    
 
-    if (!forceCheck) {
+    if (!forceCheck && !platoon_check) { // LFPlugin begin and end, added platoon_check flag
         if (myLastFailedInsertionTime == time) {
             if (myFailedInsertionMemory.count(insertionLane->getIndex())) {
                 // A vehicle was already rejected for the proposed insertionLane in this timestep
@@ -661,7 +681,6 @@ MSEdge::insertVehicle(SUMOVehicle& v, SUMOTime time, const bool checkOnly, const
             myFailedInsertionMemory.clear();
         }
     }
-
     bool success = insertionLane->insertVehicle(static_cast<MSVehicle&>(v));
 
     if (!success) {

@@ -496,6 +496,80 @@ NumericalID lf_plugin_get_all_ids_in_edge_size(NumericalID edge_id) {
 
 }
 
+NumericalID* lf_plugin_get_all_platoon_ids() {
+
+	arrayMemStruct* all_platoon_ids_ams = LaneFreeSimulationPlugin::getInstance()->get_all_platoon_ids_mem();
+	//// edges will not change dynamically over time, therefore we do not need to calculate it again if they are requested already
+	//if (all_edges_ams->updated) {
+	//	return (NumericalID*)all_edges_ams->ptr;
+	//}
+
+	// get all edges vector
+	std::vector<NumericalID> platoons_v = LaneFreeSimulationPlugin::getInstance()->get_platoon_list_keys();
+	NumericalID platoons_size = platoons_v.size();
+
+	// update the resulting memory accordingly
+	update_arraymemory_size(all_platoon_ids_ams, (size_t)platoons_size);
+
+
+	NumericalID* platoon_ids_array = (NumericalID*)all_platoon_ids_ams->ptr;
+	int i = 0;
+	if (platoon_ids_array != NULL) {
+		for (NumericalID platoon : platoons_v) {
+			platoon_ids_array[i] = platoon;
+			i++;
+		}
+	}
+	//all_edges_ams->updated = true;
+	all_platoon_ids_ams->usize = (size_t)platoons_size;
+	return platoon_ids_array;
+}
+
+NumericalID lf_plugin_get_all_platoon_ids_size() {
+	arrayMemStruct* all_platoon_ids_ams = LaneFreeSimulationPlugin::getInstance()->get_all_platoon_ids_mem();
+	if (all_platoon_ids_ams->updated) {
+		return all_platoon_ids_ams->usize;
+	}
+	std::vector<NumericalID> platoons_v = LaneFreeSimulationPlugin::getInstance()->get_platoon_list_keys();
+	return platoons_v.size();
+}
+NumericalID* lf_plugin_get_platoon_vehicles_ids(NumericalID key) {
+
+	arrayMemStruct* platoon_vehicle_ids_ams = LaneFreeSimulationPlugin::getInstance()->get_platoon_vehicles_ids_mem();
+	//// edges will not change dynamically over time, therefore we do not need to calculate it again if they are requested already
+	//if (all_edges_ams->updated) {
+	//	return (NumericalID*)all_edges_ams->ptr;
+	//}
+
+	// get all edges vector
+	std::vector<NumericalID> vehicles_v = LaneFreeSimulationPlugin::getInstance()->get_platoon_vehicles_ids_from_key(key);
+	NumericalID vehicles_size = vehicles_v.size();
+
+	// update the resulting memory accordingly
+	update_arraymemory_size(platoon_vehicle_ids_ams, (size_t)vehicles_size);
+
+
+	NumericalID* platoon_vehicles_ids_array = (NumericalID*)platoon_vehicle_ids_ams->ptr;
+	int i = 0;
+	if (platoon_vehicles_ids_array != NULL) {
+		for (NumericalID vehicle : vehicles_v) {
+			platoon_vehicles_ids_array[i] = vehicle;
+			i++;
+		}
+	}
+	//all_edges_ams->updated = true;
+	platoon_vehicle_ids_ams->usize = (size_t)vehicles_size;
+	return platoon_vehicles_ids_array;
+}
+
+NumericalID lf_plugin_get_platoon_vehicles_ids_size(NumericalID key) {
+	arrayMemStruct* platoon_vehicle_ids_ams = LaneFreeSimulationPlugin::getInstance()->get_platoon_vehicles_ids_mem();
+	if (platoon_vehicle_ids_ams->updated) {
+		return platoon_vehicle_ids_ams->usize;
+	}
+	std::vector<NumericalID> vehicles_v = LaneFreeSimulationPlugin::getInstance()->get_platoon_vehicles_ids_from_key(key);
+	return vehicles_v.size();
+}
 
 // apply longitudinal acceleration accel_x m/s^2 and lateral acceleration accel_y m/s^2 to the vehicle with id veh_id
 void lf_plugin_apply_acceleration(NumericalID veh_id, double accel_x, double accel_y) {
@@ -1224,7 +1298,6 @@ int lf_plugin_get_seed(){
 	return oc.getInt("seed");
 }
 
-
 // insert a new vehicle (route_id and type_id need to be defined in the scenario tested), use_global_coordinates is only relevant to the bicycle model, and will be disregarded otherwise
 NumericalID lf_plugin_insert_new_vehicle(char* veh_name, char* route_id, char* type_id, double pos_x, double pos_y, double speed_x, double speed_y, double theta, int use_global_coordinates){
 	
@@ -1247,9 +1320,8 @@ NumericalID lf_plugin_insert_new_vehicle(char* veh_name, char* route_id, char* t
 	
 	std::string departPos = std::to_string(depart_pos_front);
 	std::string departSpeed = std::to_string(speed_x);	
-	
 	NumericalID new_vid = libsumo::Vehicle::addR(id, routeID, vTypeID, depart, departLane, departPos, departSpeed);
-	
+
 	LaneFreeSimulationPlugin::getInstance()->add_new_veh_additional_stats(new_vid, pos_x, pos_y, speed_y, theta, !use_local_coordinates);
 
 	
@@ -2714,6 +2786,11 @@ LaneFreeSimulationPlugin::LaneFreeSimulationPlugin(){
 	get_all_edges_size = &lf_plugin_get_all_edges_size;
 	get_all_ids_in_edge = &lf_plugin_get_all_ids_in_edge;
 	get_all_ids_in_edge_size = &lf_plugin_get_all_ids_in_edge_size;
+	get_all_platoon_ids = &lf_plugin_get_all_platoon_ids;
+	get_all_platoon_ids_size = &lf_plugin_get_all_platoon_ids_size;
+	get_platoon_vehicles_ids = &lf_plugin_get_platoon_vehicles_ids;
+	get_platoon_vehicles_ids_size = &lf_plugin_get_platoon_vehicles_ids_size;
+
 	apply_acceleration = &lf_plugin_apply_acceleration;
 	get_position_x = &lf_plugin_get_position_x;
 	get_position_y = &lf_plugin_get_position_y;
@@ -2823,6 +2900,9 @@ LaneFreeSimulationPlugin::LaneFreeSimulationPlugin(){
 	initialise_arraymemory(&all_neighbor_ids_front, NUMID_M);
 	initialise_arraymemory(&all_neighbor_ids_back, NUMID_M);
 
+	initialise_arraymemory(&all_platoon_ids, NUMID_M);
+	initialise_arraymemory(&platoon_vehicles_ids, NUMID_M);
+
 	random_engine.seed(lf_plugin_get_seed());
 	uniform_real_dis = std::uniform_real_distribution<double>(0, 1);
 
@@ -2857,7 +2937,7 @@ LaneFreeSimulationPlugin::LaneFreeSimulationPlugin(){
 		}
 	}
 
-	
+	// platoon related variables	
 
 	
 }
@@ -2895,6 +2975,9 @@ LaneFreeSimulationPlugin::~LaneFreeSimulationPlugin() {
 	free_mem(density_array_left_boundary.ptr);
 	free_mem(all_neighbor_ids_front.ptr);
 	free_mem(all_neighbor_ids_back.ptr);
+	free_mem(all_platoon_ids.ptr);
+	free_mem(platoon_vehicles_ids.ptr);
+
 	myInstance = nullptr;
 }
 
@@ -2946,7 +3029,6 @@ LaneFreeSimulationPlugin::get_message_step(){
 */
 void
 LaneFreeSimulationPlugin::lf_simulation_step(){
-
 	all_ids.updated = false;
 	
 	lane_free_ids.updated = false;
@@ -2964,6 +3046,30 @@ LaneFreeSimulationPlugin::lf_simulation_step(){
 	density_per_segment_per_edge.updated = false;
 
 	density_array_left_boundary.updated = false;
+
+	// platoon insert vehicles
+	platoon_remove_indexes.clear();
+	if (!platoonQueue.empty()) {
+		for (int i = 0; i < platoonQueue.size(); i++) {
+			platoonQueue[i].second.timestep_current--;
+			if (platoonQueue[i].second.timestep_current == 0) { // it's time to insert the next vehicle
+				std::string created_vehicle_id_str = std::to_string(platoonQueue[i].first);
+				created_vehicle_id_str = std::string(platoonQueue[i].second.veh_name) + "_" + created_vehicle_id_str;
+				char const* created_vehicle_id_char = created_vehicle_id_str.c_str();
+				//strcat(platoonQueue[i].second.veh_name, created_vehicle_id_char);
+				NumericalID new_vID = lf_plugin_insert_new_vehicle((char*)created_vehicle_id_char, platoonQueue[i].second.route_id, platoonQueue[i].second.type_id, platoonQueue[i].second.pos_x, platoonQueue[i].second.pos_y, platoonQueue[i].second.speed_x, platoonQueue[i].second.speed_y, platoonQueue[i].second.theta, platoonQueue[i].second.use_global_coordinates);
+				add_to_platoonFollowers(new_vID); // list to be used in MSEdge::insertVehicle to bypass certain checks
+				platoonQueue[i].first--;
+				if (platoonQueue[i].first == 0) { // we have inserted all vehicles for this platoon, we need to remove this platoon
+					platoon_remove_indexes.push_back(i);
+				}
+				platoonQueue[i].second.timestep_current = platoonQueue[i].second.timesteps_between_inserts; // reset the timegap for the next vehicle of the platoon to be inserted
+				add_to_platoon_list(platoonQueue[i].second.veh_id, new_vID);
+			}
+		}
+		// at this point we would remove the depleted platoons, but this have implications with other non-platoon vehicles, so this is made at the end of all insertions at MSInsertionControl::emitVehicles
+	}
+
 	/*
 	size_t segments_num = 0;
 	double* res_dens = lf_plugin_get_density_left_boundary_segments("main_highway",&segments_num);
@@ -2995,9 +3101,23 @@ LaneFreeSimulationPlugin::lf_simulation_step(){
 	step_timer_seconds = dur_step.count();
 	//printf("step time: %f s\n", step_timer_seconds);
 	//printf("rest time: %f s\n", rest_app_timer_seconds);
+	//print_platoon_list();
 }
 
 
+std::vector<std::pair<double, double>>
+LaneFreeSimulationPlugin::lf_plugin_get_edge_vehicles_in_platoon(std::string edge_id) {
+	std::pair<double, double> metrics_to_send;
+	std::vector<std::pair<double, double>> vector_of_metrics_to_send;
+	for (int i = 0; i < platoonQueue.size(); i++) {
+		if (platoonQueue[i].second.edge_id == edge_id) {
+			metrics_to_send.first = platoonQueue[i].second.veh_width;
+			metrics_to_send.second = platoonQueue[i].second.veh_lateral_position_on_lane;
+			vector_of_metrics_to_send.push_back(metrics_to_send);
+		}
+	}
+	return vector_of_metrics_to_send;
+}
 void
 LaneFreeSimulationPlugin::add_new_veh_additional_stats(NumericalID veh_id, double pos_x, double pos_y, double speed_y, double theta, bool use_global_coordinates){
 	std::vector<double> additionals_array = {pos_y,speed_y,theta, pos_x, (double) use_global_coordinates};
@@ -4119,7 +4239,6 @@ LaneFreeSimulationPlugin::find_vehicle_in_edge(NumericalID veh_id, NumericalID e
 }
 
 
-
 NumericalID
 LaneFreeSimulationPlugin::find_stored_edge(MSVehicle* veh){
 	
@@ -4246,6 +4365,7 @@ LaneFreeSimulationPlugin::remove_vehicle(MSVehicle* veh){
 	//std::cout << "Veh " << veh->getID()<< " has arrived:" << veh->hasArrived() << "\n";
 	
 	event_vehicle_exit(veh_id, (int) veh->hasArrived());
+	remove_from_platoon_list(veh_id); // if it's in a platoon, remove it from the corresponding lists
 	MSLaneFreeVehicle* ch_veh = (*vm)[veh_id];
 	delete ch_veh;
 	vm->erase(veh_id);

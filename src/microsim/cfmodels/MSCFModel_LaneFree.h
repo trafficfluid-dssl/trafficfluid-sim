@@ -98,7 +98,8 @@ public:
         ring_road = false;
         accel_y = 0;
         accel_x = 0;
-        myveh->initializeCachedGlobalPos();        
+        myveh->initializeCachedGlobalPos();
+        //platoon_follower = false;
     }
 
     
@@ -171,6 +172,9 @@ public:
         myveh->setDesiredSpeed(new_desired_speed);
     }
 
+    //void set_platoon_follower(bool flag) {
+    //    platoon_follower = flag;
+    //}
     
     double get_speed_x(){
         return myveh->getSpeed();
@@ -260,7 +264,10 @@ public:
         return speed_x;
     }
 
-    
+    /*
+    bool get_platoon_follower() {
+        return platoon_follower;
+    }*/
 
     bool is_lanefree(){
         return ((myveh->getCarFollowModel().getModelID())==SUMO_TAG_CF_LANEFREE);
@@ -523,6 +530,7 @@ protected:
     double accel_x;
     double accel_y;
     bool ring_road;
+    //bool platoon_follower;
 
 
     std::set<NumericalID> collided_with_prev;
@@ -655,6 +663,13 @@ public:
         return &all_neighbor_ids_back;
     }
 
+    arrayMemStruct* get_all_platoon_ids_mem() {
+        return &all_platoon_ids;
+    }
+    arrayMemStruct* get_platoon_vehicles_ids_mem() {
+        return &platoon_vehicles_ids;
+    }
+
     //Deprecated print
     //bool is_message_empty() {
     //    return msgBufferVector.empty();
@@ -701,6 +716,107 @@ public:
         return myTotalVehicleCountWithExcluded;
     }
 
+    struct platoonVehicle {
+        NumericalID veh_id;
+        char* veh_name;
+        char* route_id;
+        char* type_id;
+        double pos_x;
+        double pos_y;
+        double speed_x;
+        double speed_y;
+        double theta;
+        int use_global_coordinates;
+        int timesteps_between_inserts;
+        int timestep_current;
+        std::string edge_id;
+        double veh_width;
+        double veh_lateral_position_on_lane;
+    };
+
+    void add_to_platoonQueue(std::pair<int, platoonVehicle> platoon) {
+        platoonQueue.push_back(platoon);
+    }
+    void add_to_platoonFollowers(NumericalID platoonFollower) {
+        platoonFollowers.push_back(platoonFollower);
+    }
+    void add_to_platoon_list(NumericalID key, NumericalID value) {
+        if (platoon_list.count(key) > 0) {
+            platoon_list[key].push_back(value);
+        }
+        else {
+            platoon_list[key] = std::vector<NumericalID>();
+            platoon_list[key].push_back(value);
+        }
+    }
+    void print_platoon_list() {
+        std::map<NumericalID, std::vector<NumericalID>>::iterator it = platoon_list.begin();
+        while (it != platoon_list.end()) {
+            std::cout << "Key: " << it->first;
+            for (int i = 0; i < platoon_list[it->first].size(); i++) {
+                std::cout << "\t-> " << platoon_list[it->first][i] << "\n";
+            }
+            ++it;
+        }
+    }
+    std::vector<NumericalID> get_platoon_list_keys() {
+        std::vector<NumericalID> keys;
+        std::map<NumericalID, std::vector<NumericalID>>::iterator it = platoon_list.begin();
+        while (it != platoon_list.end()) {
+            keys.push_back(it->first);
+            ++it;
+        }
+        return keys;
+    }
+
+    std::vector<NumericalID> get_platoon_vehicles_ids_from_key(NumericalID key) {
+        return platoon_list[key];
+    }
+
+    void remove_from_platoon_list(NumericalID veh_id) {
+        std::map<NumericalID, std::vector<NumericalID>>::iterator it = platoon_list.begin();
+        while (it != platoon_list.end()) {
+            for (int i = 0; i < platoon_list[it->first].size(); i++) {
+                if (platoon_list[it->first][i] == veh_id) {
+                    platoon_list[it->first].erase(platoon_list[it->first].begin() + i);
+                    if (platoon_list[it->first].empty()) {
+                        platoon_list.erase(it->first);
+                    }
+                    return;
+                }
+            }
+            ++it;
+        }
+    }
+
+    void apply_platoon_remove_indexes() {
+        std::sort(platoon_remove_indexes.begin(), platoon_remove_indexes.end(), std::greater<int>());
+        //std::cout << "remove index size: " << platoon_remove_indexes.size() << ", and platoonqueue: "<< platoonQueue.size() << "\n";
+        for (int i = 0; i < platoon_remove_indexes.size(); i++) { // delete all platoons that have already inserted all vehicles
+            platoonQueue.erase(platoonQueue.begin() + platoon_remove_indexes[i]);
+        }
+    }
+
+    void remove_from_platoonFollowers(NumericalID platoonFollower) {
+        auto it = std::find(platoonFollowers.begin(), platoonFollowers.end(),
+            platoonFollower);
+
+        // If element is found found, erase it 
+        if (it != platoonFollowers.end()) {
+            platoonFollowers.erase(it);
+        }
+    }
+    bool is_platoon_follower(NumericalID target) {
+        int cnt = std::count(platoonFollowers.begin(), platoonFollowers.end(), target);
+        if (cnt > 0) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    std::vector<std::pair<double, double>> lf_plugin_get_edge_vehicles_in_platoon(std::string edge_id);
+
 protected:
     NumericalID find_stored_edge(MSVehicle* veh);
     void get_vehicles_from_other_direction_edges(NumericalID veh_id, double global_pox_x, double global_pos_y, double global_theta, bool front, const std::vector<MSLane*>& internal_lanes, NumericalID current_edge_id, std::vector<std::pair<double, MSVehicle*>>& neighbors_with_distance, bool opposite_check = false, bool outgoing_check = false, std::vector<const MSEdge*>& outgoing_edges = std::vector<const MSEdge*>());
@@ -735,6 +851,9 @@ protected:
     arrayMemStruct all_neighbor_ids_front;
     arrayMemStruct all_neighbor_ids_back;
 
+    arrayMemStruct all_platoon_ids;
+    arrayMemStruct platoon_vehicles_ids;
+
     std::default_random_engine random_engine;
     std::uniform_real_distribution<double> uniform_real_dis;
     //Deprecated print
@@ -760,6 +879,13 @@ protected:
     std::stringstream video_replay_line;
 
     long long myTotalVehicleCountWithExcluded;
+
+    //bool platoon_flag;
+    
+    std::vector<std::pair<int, platoonVehicle>> platoonQueue;
+    std::map<NumericalID, std::vector<NumericalID>> platoon_list;
+    std::vector<int> platoon_remove_indexes;
+    std::vector<NumericalID> platoonFollowers;
 };
 
 
@@ -948,5 +1074,11 @@ private:
 private:
     /// @brief Invalidated assignment operator
     MSCFModel_LaneFree& operator=(const MSCFModel_LaneFree& s);
+
+
+
 };
+
+double lf_plugin_get_global_position_x(NumericalID veh_id);
+double lf_plugin_get_global_position_y(NumericalID veh_id);
 
