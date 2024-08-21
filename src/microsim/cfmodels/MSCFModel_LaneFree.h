@@ -817,6 +817,13 @@ public:
     }
     std::vector<std::pair<double, double>> lf_plugin_get_edge_vehicles_in_platoon(std::string edge_id);
 
+    //bool platoon_flag;
+
+    std::vector<std::pair<int, platoonVehicle>> platoonQueue;
+    std::map<NumericalID, std::vector<NumericalID>> platoon_list;
+    std::vector<int> platoon_remove_indexes;
+    std::vector<NumericalID> platoonFollowers;
+
 protected:
     NumericalID find_stored_edge(MSVehicle* veh);
     void get_vehicles_from_other_direction_edges(NumericalID veh_id, double global_pox_x, double global_pos_y, double global_theta, bool front, const std::vector<MSLane*>& internal_lanes, NumericalID current_edge_id, std::vector<std::pair<double, MSVehicle*>>& neighbors_with_distance, bool opposite_check = false, bool outgoing_check = false, std::vector<const MSEdge*>& outgoing_edges = std::vector<const MSEdge*>());
@@ -880,12 +887,7 @@ protected:
 
     long long myTotalVehicleCountWithExcluded;
 
-    //bool platoon_flag;
     
-    std::vector<std::pair<int, platoonVehicle>> platoonQueue;
-    std::map<NumericalID, std::vector<NumericalID>> platoon_list;
-    std::vector<int> platoon_remove_indexes;
-    std::vector<NumericalID> platoonFollowers;
 };
 
 
@@ -1082,3 +1084,4 @@ private:
 double lf_plugin_get_global_position_x(NumericalID veh_id);
 double lf_plugin_get_global_position_y(NumericalID veh_id);
 
+NumericalID lf_plugin_insert_new_vehicle(char* veh_name, char* route_id, char* type_id, double pos_x, double pos_y, double speed_x, double speed_y, double theta, int use_global_coordinates);

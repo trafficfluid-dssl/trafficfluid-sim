@@ -534,6 +534,28 @@ MSNet::simulationStep() {
         LaneFreeSimulationPlugin::getInstance()->initialize_lib();
     }
     LaneFreeSimulationPlugin::getInstance()->lf_simulation_step();
+    // platoon insert vehicles
+    LaneFreeSimulationPlugin::getInstance()->platoon_remove_indexes.clear();
+    if (!LaneFreeSimulationPlugin::getInstance()->platoonQueue.empty()) {
+        for (int i = 0; i < LaneFreeSimulationPlugin::getInstance()->platoonQueue.size(); i++) {
+            LaneFreeSimulationPlugin::getInstance()->platoonQueue[i].second.timestep_current--;
+            if (LaneFreeSimulationPlugin::getInstance()->platoonQueue[i].second.timestep_current == 0) { // it's time to insert the next vehicle
+                std::string created_vehicle_id_str = std::to_string(LaneFreeSimulationPlugin::getInstance()->platoonQueue[i].first);
+                created_vehicle_id_str = std::string(LaneFreeSimulationPlugin::getInstance()->platoonQueue[i].second.veh_name) + "_" + created_vehicle_id_str;
+                char const* created_vehicle_id_char = created_vehicle_id_str.c_str();
+                //strcat(platoonQueue[i].second.veh_name, created_vehicle_id_char);
+                NumericalID new_vID = lf_plugin_insert_new_vehicle((char*)created_vehicle_id_char, LaneFreeSimulationPlugin::getInstance()->platoonQueue[i].second.route_id, LaneFreeSimulationPlugin::getInstance()->platoonQueue[i].second.type_id, LaneFreeSimulationPlugin::getInstance()->platoonQueue[i].second.pos_x, LaneFreeSimulationPlugin::getInstance()->platoonQueue[i].second.pos_y, LaneFreeSimulationPlugin::getInstance()->platoonQueue[i].second.speed_x, LaneFreeSimulationPlugin::getInstance()->platoonQueue[i].second.speed_y, LaneFreeSimulationPlugin::getInstance()->platoonQueue[i].second.theta, LaneFreeSimulationPlugin::getInstance()->platoonQueue[i].second.use_global_coordinates);
+                LaneFreeSimulationPlugin::getInstance()->add_to_platoonFollowers(new_vID); // list to be used in MSEdge::insertVehicle to bypass certain checks
+                LaneFreeSimulationPlugin::getInstance()->platoonQueue[i].first--;
+                if (LaneFreeSimulationPlugin::getInstance()->platoonQueue[i].first == 0) { // we have inserted all vehicles for this platoon, we need to remove this platoon
+                    LaneFreeSimulationPlugin::getInstance()->platoon_remove_indexes.push_back(i);
+                }
+                LaneFreeSimulationPlugin::getInstance()->platoonQueue[i].second.timestep_current = LaneFreeSimulationPlugin::getInstance()->platoonQueue[i].second.timesteps_between_inserts; // reset the timegap for the next vehicle of the platoon to be inserted
+                LaneFreeSimulationPlugin::getInstance()->add_to_platoon_list(LaneFreeSimulationPlugin::getInstance()->platoonQueue[i].second.veh_id, new_vID);
+            }
+}
+        // at this point we would remove the depleted platoons, but this have implications with other non-platoon vehicles, so this is made at the end of all insertions at MSInsertionControl::emitVehicles
+    }
     // LFPlugin End
 #ifdef DEBUG_SIMSTEP
     std::cout << SIMTIME << ": MSNet::simulationStep() called"

@@ -1325,11 +1325,11 @@ NumericalID lf_plugin_insert_new_vehicle(char* veh_name, char* route_id, char* t
 	LaneFreeSimulationPlugin::getInstance()->add_new_veh_additional_stats(new_vid, pos_x, pos_y, speed_y, theta, !use_local_coordinates);
 
 	
-	// MSLaneFreeVehicle* lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(new_vid);
-	// if(lfveh==nullptr){
-	// 	std::cout<< "Vehicle with id:" << new_vid << " not found!\n";
-	// 	return NULL;
-	// }
+	 // MSLaneFreeVehicle* lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(new_vid);
+	 // if(lfveh==nullptr){
+	 // 	std::cout<< "Vehicle with id:" << new_vid << " not found!\n";
+	 // 	return NULL;
+	 // }
 
 	// lfveh->set_position_x(pos_x);
 	// lfveh->set_position_y(pos_y);
@@ -2278,7 +2278,7 @@ NumericalID lf_plugin_get_origin_edge_id(NumericalID veh_id) {
 NumericalID lf_plugin_get_next_edge_id(NumericalID veh_id) {
 	MSLaneFreeVehicle* lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(veh_id);
 	if (lfveh == nullptr) {
-		std::cout << "Vehicle not found!\n";
+		std::cout << "Vehicle not found9!\n";
 		return -1;
 	}
 
@@ -3047,28 +3047,7 @@ LaneFreeSimulationPlugin::lf_simulation_step(){
 
 	density_array_left_boundary.updated = false;
 
-	// platoon insert vehicles
-	platoon_remove_indexes.clear();
-	if (!platoonQueue.empty()) {
-		for (int i = 0; i < platoonQueue.size(); i++) {
-			platoonQueue[i].second.timestep_current--;
-			if (platoonQueue[i].second.timestep_current == 0) { // it's time to insert the next vehicle
-				std::string created_vehicle_id_str = std::to_string(platoonQueue[i].first);
-				created_vehicle_id_str = std::string(platoonQueue[i].second.veh_name) + "_" + created_vehicle_id_str;
-				char const* created_vehicle_id_char = created_vehicle_id_str.c_str();
-				//strcat(platoonQueue[i].second.veh_name, created_vehicle_id_char);
-				NumericalID new_vID = lf_plugin_insert_new_vehicle((char*)created_vehicle_id_char, platoonQueue[i].second.route_id, platoonQueue[i].second.type_id, platoonQueue[i].second.pos_x, platoonQueue[i].second.pos_y, platoonQueue[i].second.speed_x, platoonQueue[i].second.speed_y, platoonQueue[i].second.theta, platoonQueue[i].second.use_global_coordinates);
-				add_to_platoonFollowers(new_vID); // list to be used in MSEdge::insertVehicle to bypass certain checks
-				platoonQueue[i].first--;
-				if (platoonQueue[i].first == 0) { // we have inserted all vehicles for this platoon, we need to remove this platoon
-					platoon_remove_indexes.push_back(i);
-				}
-				platoonQueue[i].second.timestep_current = platoonQueue[i].second.timesteps_between_inserts; // reset the timegap for the next vehicle of the platoon to be inserted
-				add_to_platoon_list(platoonQueue[i].second.veh_id, new_vID);
-			}
-		}
-		// at this point we would remove the depleted platoons, but this have implications with other non-platoon vehicles, so this is made at the end of all insertions at MSInsertionControl::emitVehicles
-	}
+	
 
 	/*
 	size_t segments_num = 0;
@@ -4164,8 +4143,6 @@ LaneFreeSimulationPlugin::insert_vehicle(MSVehicle* veh){
 	// new_veh->set_position_y(init_pos_y);
 	// new_veh->set_speed_x(init_speed_x);
 	//std::cout << "Vehicle "<< veh->getNumericalID() <<" inserted!\n";
-	
-
 }
 
 MSLaneFreeVehicle*
