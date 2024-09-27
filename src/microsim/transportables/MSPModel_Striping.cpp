@@ -1167,6 +1167,10 @@ MSPModel_Striping::moveInDirectionOnLane(Pedestrians& pedestrians, const MSLane*
 
 bool
 MSPModel_Striping::addCrossingVehs(const MSLane* crossing, int stripes, double lateral_offset, int dir, Obstacles& obs, bool prio) {
+    // LFPluin begin 
+    // removes check for pedestrians to check before crossing
+    return false;
+    // LFPluin end
     bool hasCrossingVehObs = false;
     const MSLink* crossingExitLink = crossing->getLinkCont().front();
     gDebugFlag1 = DEBUGCOND2(crossing);

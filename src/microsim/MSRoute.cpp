@@ -76,20 +76,38 @@ MSRoute::MSRoute(const std::string& id,
     // initialize myEdgeswInternal
     const MSEdge* tmp_edge_prev = nullptr;
     const MSEdge* tmp_edge_internal;
+    std::cout << "checking...: " << id << "\n";
     for (ConstMSEdgeVector::iterator it = myEdges.begin(); it != myEdges.end(); it++) {
-        
+
         if (tmp_edge_prev != nullptr) {
-            while ((tmp_edge_internal = tmp_edge_prev->getInternalFollowingEdge((*it))) != nullptr) { // we need a while loop in case of an intersection (where we have two consecutive internal lanes)
+            while ((tmp_edge_internal = tmp_edge_prev->getInternalFollowingEdgeVehicleOnly((*it))) != nullptr) { // we need a while loop in case of an intersection (where we have two consecutive internal lanes)
+                //std::cout << "\t\t: " << tmp_edge_internal->getID() << "\n";
                 myEdgeswInternal.push_back(tmp_edge_internal);
                 tmp_edge_prev = tmp_edge_internal;
             }
         }
         myEdgeswInternal.push_back((*it));
-        
-        
+
+
 
         tmp_edge_prev = (*it);
-    }    
+    }
+
+    for (ConstMSEdgeVector::iterator it = myEdges.begin(); it != myEdges.end(); it++) { // now for bike lanes
+
+        if (tmp_edge_prev != nullptr) {
+            while ((tmp_edge_internal = tmp_edge_prev->getInternalFollowingEdgeBikeOnly((*it))) != nullptr) { // we need a while loop in case of an intersection (where we have two consecutive internal lanes)
+                //std::cout << "\t\t: " << tmp_edge_internal->getID() << "\n";
+                myEdgeswInternalBike.push_back(tmp_edge_internal);
+                tmp_edge_prev = tmp_edge_internal;
+            }
+        }
+        myEdgeswInternalBike.push_back((*it));
+
+
+
+        tmp_edge_prev = (*it);
+    }
     // LFPlugin End
     }
 
