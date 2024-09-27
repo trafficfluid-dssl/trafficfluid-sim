@@ -2051,7 +2051,9 @@ MSVehicle::planMoveInternal(const SUMOTime t, MSLeaderInfo ahead, DriveItemVecto
     const bool opposite = myLaneChangeModel->isOpposite();
     double laneMaxV = myLane->getVehicleMaxSpeed(this);
     const double vMinComfortable = cfModel.minNextSpeed(getSpeed(), this);
-    double lateralShift = 0;
+    // LFplugin begin
+    double lateralShift = 0;;
+    // LFplugin end
     if (isRailway((SVCPermissions)getVehicleType().getVehicleClass())) {
         // speed limits must hold for the whole length of the train
         for (MSLane* l : myFurtherLanes) {
@@ -4528,28 +4530,34 @@ MSVehicle::setApproachingForAllLinks(const SUMOTime t) {
         return;
     }
     removeApproachingInformation(myLFLinkLanesPrev);
-    for (DriveProcessItem& dpi : myLFLinkLanes) {
-        if (dpi.myLink != nullptr) {
-            if (dpi.myLink->getState() == LINKSTATE_ALLWAY_STOP) {
-                dpi.myArrivalTime += (SUMOTime)RandHelper::rand((int)2, getRNG()); // tie braker
-            }
-            dpi.myLink->setApproaching(this, dpi.myArrivalTime, dpi.myArrivalSpeed, dpi.getLeaveSpeed(),
-                                       dpi.mySetRequest, dpi.myArrivalTimeBraking, dpi.myArrivalSpeedBraking, getWaitingTime(), dpi.myDistance);
-        }
-    }
-    if (myLaneChangeModel->getShadowLane() != nullptr) {
-        // register on all shadow links
-        for (const DriveProcessItem& dpi : myLFLinkLanes) {
+    // LFPlugin begin
+    // removes check for bikes to check before crossing
+    if (getVClass() == SVC_PEDESTRIAN) {
+    // LFPlugin end
+        for (DriveProcessItem& dpi : myLFLinkLanes) {
             if (dpi.myLink != nullptr) {
-                MSLink* const parallelLink = dpi.myLink->getParallelLink(myLaneChangeModel->getShadowDirection());
-                if (parallelLink != nullptr) {
-                    parallelLink->setApproaching(this, dpi.myArrivalTime, dpi.myArrivalSpeed, dpi.getLeaveSpeed(),
-                                                 dpi.mySetRequest, dpi.myArrivalTimeBraking, dpi.myArrivalSpeedBraking, getWaitingTime(), dpi.myDistance);
-                    myLaneChangeModel->setShadowApproachingInformation(parallelLink);
+                if (dpi.myLink->getState() == LINKSTATE_ALLWAY_STOP) {
+                    dpi.myArrivalTime += (SUMOTime)RandHelper::rand((int)2, getRNG()); // tie braker
+                }
+                dpi.myLink->setApproaching(this, dpi.myArrivalTime, dpi.myArrivalSpeed, dpi.getLeaveSpeed(),
+                    dpi.mySetRequest, dpi.myArrivalTimeBraking, dpi.myArrivalSpeedBraking, getWaitingTime(), dpi.myDistance);
+            }
+        }
+        if (myLaneChangeModel->getShadowLane() != nullptr) {
+            // register on all shadow links
+            for (const DriveProcessItem& dpi : myLFLinkLanes) {
+                if (dpi.myLink != nullptr) {
+                    MSLink* const parallelLink = dpi.myLink->getParallelLink(myLaneChangeModel->getShadowDirection());
+                    if (parallelLink != nullptr) {
+                        parallelLink->setApproaching(this, dpi.myArrivalTime, dpi.myArrivalSpeed, dpi.getLeaveSpeed(),
+                            dpi.mySetRequest, dpi.myArrivalTimeBraking, dpi.myArrivalSpeedBraking, getWaitingTime(), dpi.myDistance);
+                        myLaneChangeModel->setShadowApproachingInformation(parallelLink);
+                    }
                 }
             }
         }
     }
+    
 #ifdef DEBUG_PLAN_MOVE
     if (DEBUG_COND) {
         std::cout << SIMTIME

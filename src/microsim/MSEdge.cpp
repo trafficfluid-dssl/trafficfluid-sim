@@ -702,11 +702,12 @@ const MSEdge*
 MSEdge::getInternalFollowingEdge(const MSEdge* followerAfterInternal) const {
     //@todo to be optimized
     for (const MSLane* const l : *myLanes) {
-        for (const MSLink* const link : l->getLinkCont()) {            
+        for (const MSLink* const link : l->getLinkCont()) {
             if (&link->getLane()->getEdge() == followerAfterInternal) {
                 if (link->getViaLane() != nullptr) {
                     return &link->getViaLane()->getEdge();
-                } else {
+                }
+                else {
                     return nullptr; // network without internal links
                 }
             }
@@ -715,7 +716,48 @@ MSEdge::getInternalFollowingEdge(const MSEdge* followerAfterInternal) const {
     return nullptr;
 }
 
+
 // LFPlugin Begin
+
+const MSEdge*
+MSEdge::getInternalFollowingEdgeVehicleOnly(const MSEdge* followerAfterInternal) const {
+    //@todo to be optimized
+    for (const MSLane* const l : *myLanes) {
+        if (l->allowsVehicleClass(SVC_PASSENGER)) {
+            for (const MSLink* const link : l->getLinkCont()) {
+                if (&link->getLane()->getEdge() == followerAfterInternal) {
+                    if (link->getViaLane() != nullptr) {
+                        return &link->getViaLane()->getEdge();
+                    }
+                    else {
+                        return nullptr; // network without internal links
+                    }
+                }
+            }
+        }
+    }
+    return nullptr;
+}
+
+const MSEdge*
+MSEdge::getInternalFollowingEdgeBikeOnly(const MSEdge* followerAfterInternal) const {
+    //@todo to be optimized
+    for (const MSLane* const l : *myLanes) {
+        if (!l->allowsVehicleClass(SVC_PASSENGER) && !l->allowsVehicleClass(SVC_PEDESTRIAN)) {
+            for (const MSLink* const link : l->getLinkCont()) {
+                if (&link->getLane()->getEdge() == followerAfterInternal) {
+                    if (link->getViaLane() != nullptr) {
+                        return &link->getViaLane()->getEdge();
+                    }
+                    else {
+                        return nullptr; // network without internal links
+                    }
+                }
+            }
+        }
+    }
+    return nullptr;
+}
 
 const MSEdge*
 MSEdge::getInternalFollowingEdgefromLane(const MSLane* l, const MSEdge* followerAfterInternal) const {

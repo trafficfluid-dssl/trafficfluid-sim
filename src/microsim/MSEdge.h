@@ -573,6 +573,10 @@ public:
     const MSEdge* getInternalFollowingEdge(const MSEdge* followerAfterInternal) const;
 
     // LFPlugin Begin
+    const MSEdge* getInternalFollowingEdgeVehicleOnly(const MSEdge* followerAfterInternal) const;
+
+    const MSEdge* getInternalFollowingEdgeBikeOnly(const MSEdge* followerAfterInternal) const;
+
     const MSEdge* getInternalFollowingEdgefromLane(const MSLane* l, const MSEdge* followerAfterInternal) const;
 
     

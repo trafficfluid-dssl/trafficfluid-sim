@@ -114,6 +114,14 @@ public:
         return (int)(it - myEdgeswInternal.begin());
     }
 
+    int edge_index_bike(const MSEdge* const edge) const {
+        ConstMSEdgeVector::const_iterator it = std::find(myEdgeswInternalBike.begin(), myEdgeswInternalBike.end(), edge);
+        if (it == myEdgeswInternalBike.end()) {
+            return -1;
+        }
+        return (int)(it - myEdgeswInternalBike.begin());
+    }
+
     int edge_index_normal(const MSEdge* const edge) const {
         ConstMSEdgeVector::const_iterator it = std::find(myEdges.begin(), myEdges.end(), edge);
         if (it == myEdges.end()) {
@@ -124,6 +132,10 @@ public:
 
     const ConstMSEdgeVector& getEdgeswInternal() const {
         return myEdgeswInternal;
+    }
+
+    const ConstMSEdgeVector& getEdgeswInternalBike() const {
+        return myEdgeswInternalBike;
     }
 
     void getBoundaryShape(std::vector<double>& boundaryLevelPoints, std::vector<double>& boundaryOffsets, std::vector<double>& boundarySlopes, double step, PositionVector& boundaryShape);
@@ -355,6 +367,7 @@ private:
     // LFPlugin Begin
     // additional vector that contains all edges along with the internal ones
     ConstMSEdgeVector myEdgeswInternal;
+    ConstMSEdgeVector myEdgeswInternalBike;
     bool hasLeftBoundary;
     std::vector<double> leftBoundaryLevelPoints;
     std::vector<double> leftBoundarySlopes;

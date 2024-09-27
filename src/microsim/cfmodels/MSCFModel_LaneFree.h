@@ -620,6 +620,10 @@ public:
         return &lane_free_ids;
     }
 
+    arrayMemStruct* get_all_bike_ids_mem() {
+        return &all_bike_ids;
+    }
+
     arrayMemStruct* get_vehicle_name_mem() {
         return &vehicle_name;
     }
@@ -844,6 +848,7 @@ protected:
     double max_vehicle_diag;
     arrayMemStruct all_ids;
     arrayMemStruct lane_free_ids;
+    arrayMemStruct all_bike_ids;
     arrayMemStruct vehicle_name;
     arrayMemStruct all_edges;
     arrayMemStruct edge_name;
