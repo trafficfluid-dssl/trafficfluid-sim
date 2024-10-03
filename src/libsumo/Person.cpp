@@ -121,6 +121,11 @@ Person::getLaneID(const std::string& personID) {
     return Named::getIDSecure(getPerson(personID)->getLane(), "");
 }
 
+const MSLane*
+Person::getLane(const std::string& personID) {
+    return getPerson(personID)->getLane();
+}
+
 
 double
 Person::getLanePosition(const std::string& personID) {

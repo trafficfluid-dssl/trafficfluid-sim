@@ -10,7 +10,8 @@
 #include "libLaneFreePlugin_EXPORT.h"
 #endif
 
-
+#include <string>
+#include <vector>
 typedef long long int NumericalID;
 
 
@@ -21,6 +22,15 @@ EXTERN libLaneFreePlugin_EXPORT NumericalID* (*get_all_ids)();
 // returns the size of all ids in the network
 EXTERN libLaneFreePlugin_EXPORT NumericalID(*get_all_ids_size)();
 
+// returns all bike ids in the network
+EXTERN libLaneFreePlugin_EXPORT NumericalID* (*get_all_bike_ids)();
+// returns the size of all bike ids in the network
+EXTERN libLaneFreePlugin_EXPORT NumericalID(*get_all_bike_ids_size)();
+
+// returns all person ids in the network
+EXTERN libLaneFreePlugin_EXPORT std::vector<std::string>(*get_all_person_ids)();
+// returns the size of all person ids in the network
+EXTERN libLaneFreePlugin_EXPORT NumericalID(*get_all_person_ids_size)();
 
 // returns all lane free ids in the network
 EXTERN libLaneFreePlugin_EXPORT NumericalID* (*get_lane_free_ids)();
@@ -244,6 +254,20 @@ EXTERN libLaneFreePlugin_EXPORT double (*get_global_position_x)(NumericalID veh_
 
 // returns the global y position of the vehicle (w.r.t. its center point)
 EXTERN libLaneFreePlugin_EXPORT double (*get_global_position_y)(NumericalID veh_id);
+
+
+// returns the global x position of the person (w.r.t. its center point)
+EXTERN libLaneFreePlugin_EXPORT double (*get_person_global_position_x)(const std::string& personID);
+
+
+// returns the global y position of the person (w.r.t. its center point)
+EXTERN libLaneFreePlugin_EXPORT double (*get_person_global_position_y)(const std::string& personID);
+
+// returns the speed of the person
+EXTERN libLaneFreePlugin_EXPORT double (*get_person_speed)(const std::string& personID);
+
+// returns the global angle of the person
+EXTERN libLaneFreePlugin_EXPORT double (*get_person_angle)(const std::string& personID);
 
 
 // returns the destination edge of the specific vehicle id

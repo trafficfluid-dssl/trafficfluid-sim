@@ -303,6 +303,19 @@ lf_plugin_get_person_global_position_y(const std::string& personID) {
 	return person_position.y;
 }
 
+double
+lf_plugin_get_person_speed(const std::string& personID) {
+	return libsumo::Person::getSpeed(personID);
+}
+
+double
+lf_plugin_get_person_angle(const std::string& personID) {
+	const MSLane * person_lane = libsumo::Person::getLane(personID);
+	double theta = person_lane->getShape().rotationAtOffset(person_lane->interpolateLanePosToGeometryPos(libsumo::Person::getLanePosition(personID)));
+	return theta;
+}
+
+
 // returns all bike ids in the network
 NumericalID* lf_plugin_get_all_bike_ids() {
 
@@ -2914,6 +2927,8 @@ LaneFreeSimulationPlugin::LaneFreeSimulationPlugin(){
 
 	get_person_global_position_x = &lf_plugin_get_person_global_position_x;
 	get_person_global_position_y = &lf_plugin_get_person_global_position_y;
+	get_person_speed = &lf_plugin_get_person_speed;
+	get_person_angle = &lf_plugin_get_person_angle;
 
 	apply_acceleration = &lf_plugin_apply_acceleration;
 	get_position_x = &lf_plugin_get_position_x;
@@ -3401,6 +3416,7 @@ LaneFreeSimulationPlugin::get_all_neighbors_internal(MSLaneFreeVehicle* lfveh, c
 
 	// current edge id
 	NumericalID edge_id = current_edge->getNumericalID();//lfveh->get_vehicle()->getLane()->getEdge().getNumericalID();//this will contain the edge, also accounting for intersection
+	// FOR FUTURE REFERENCE allowsVehicleClass checks if it is included, while getPermissions CHECKS IF THEY HAVE EXACTLY THEM!
 	//if(lfveh->get_vehicle()->getID() == "normal_flow_0_straight.0"){
 		//std::cout << "\tInvestingating vehicle: " << lfveh->get_vehicle()->getID() << ", and edge: " << current_edge->getID() << "\n";
 		//for (int ii = 0; ii < veh_edges.size(); ii++) {

@@ -98,6 +98,10 @@ public:
     static std::shared_ptr<VariableWrapper> makeWrapper();
 
     static bool handleVariable(const std::string& objID, const int variable, VariableWrapper* wrapper);
+    
+    // LFplugin begin
+    static const MSLane* Person::getLane(const std::string& personID);
+    // LFplugin end
 
 private:
     static MSPerson* getPerson(const std::string& id);
