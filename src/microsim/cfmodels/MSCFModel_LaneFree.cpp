@@ -2463,6 +2463,12 @@ double lf_plugin_get_veh_orientation(NumericalID veh_id) {
 		return -1;
 	}
 
+	if (lfveh->get_vehicle()->getVClass() == SVC_BICYCLE) {
+		const MSLane* lane = lfveh->get_vehicle()->getLane();
+		double theta = lane->getShape().rotationAtOffset(lane->interpolateLanePosToGeometryPos(lfveh->get_vehicle()->getPositionOnLane()));
+		return theta;
+	}
+
 	return lfveh->get_vehicle()->getAngleRelative();
 }
 
