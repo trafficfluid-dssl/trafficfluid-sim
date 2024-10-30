@@ -2375,6 +2375,17 @@ NumericalID lf_plugin_get_destination_edge_id(NumericalID veh_id) {
 	return res;
 }
 
+// returns the destination edge of the specific person id
+NumericalID lf_plugin_get_person_destination_edge_id(const std::string& personID) {
+	const MSEdge* edge = libsumo::Person::getDestinationEdge(personID);
+	if (edge == nullptr) {
+		std::cout << "Empty destination edge for person\n";
+		return -1;
+	}
+	//std::cout << "Person: " << personID << ", has destination edge: " << edge->getID() << "\n";
+	return edge->getNumericalID();
+}
+
 // returns the origin edge of the specific vehicle id
 NumericalID lf_plugin_get_origin_edge_id(NumericalID veh_id) {
 	MSLaneFreeVehicle* lfveh = LaneFreeSimulationPlugin::getInstance()->find_vehicle(veh_id);
@@ -2394,6 +2405,17 @@ NumericalID lf_plugin_get_origin_edge_id(NumericalID veh_id) {
 	}
 
 	return veh_edges.front()->getNumericalID();
+}
+
+// returns the origin edge of the specific person id
+NumericalID lf_plugin_get_person_origin_edge_id(const std::string& personID) {
+	const MSEdge* edge = libsumo::Person::getOriginEdge(personID);
+	if (edge == nullptr) {
+		std::cout << "Empty destination edge for person\n";
+		return -1;
+	}
+	//std::cout << "Person: " << personID << ", has origin edge: " << edge->getID() << "\n";
+	return edge->getNumericalID();
 }
 
 // returns the subsequent edge id of the vehicle. In case of error (also displays error message), or if the vehicle is already at the destination edge, it returns -1.
@@ -2999,6 +3021,8 @@ LaneFreeSimulationPlugin::LaneFreeSimulationPlugin(){
 	get_edge_name = &lf_plugin_get_edge_name;
 	get_destination_edge_id = &lf_plugin_get_destination_edge_id;
 	get_origin_edge_id = &lf_plugin_get_origin_edge_id;
+	get_person_destination_edge_id = &lf_plugin_get_person_destination_edge_id;
+	get_person_origin_edge_id = &lf_plugin_get_person_origin_edge_id;
 	get_previous_edge_id = &lf_plugin_get_previous_edge_id;
 	get_next_edge_id = &lf_plugin_get_next_edge_id;
 
@@ -3978,7 +4002,7 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 			}
 
 			//std::cout << "\tCheck2\n";
-			/*if (debug_counter == 200) {
+			/*if (debug_counter == 356) {
 				system("pause");
 			}*/
 			//if (veh1->getID() == "normal_flow_1_left.2" && debug_counter >= 180) {
@@ -4105,9 +4129,12 @@ LaneFreeSimulationPlugin::lf_simulation_checkCollisions(){
 			get_all_neighbors_internal(lfv1, edge, vehs_in_edge, (size_t)i, front_distance, true, 1, neighbors_with_distance);
 			for(j = 0;j < neighbors_with_distance.size(); j++){
 				veh2 = neighbors_with_distance.at(j).second;
-				/*std::cout << "\t\tchecking neighbour: " << veh2->getID() << "\n";
-				if (veh1->getID() == "normal_flow_2_left.1" && debug_counter >= 133) {
-					std::cout << "\t\tcurrently at red NON-opposite id: " << veh2->getID() << "\n";
+				//std::cout << "\t\tchecking neighbour: " << veh2->getID() << "\n";
+				/*if (veh1->getID() == "normal_flow_0_straight.6" && debug_counter >= 356) {
+					std::cout << "\t\tcurrently at green with neighbour id: " << veh2->getID() << "extra ids:" << veh1->getNumericalID() << ", " << veh2->getNumericalID() << "\n";
+				}
+				if (veh1->getID() == "bike_flow_1.3" && debug_counter >= 356) {
+					std::cout << "\t\tcurrently at bike with neighbour id: " << veh2->getID() << " | extra ids:" << veh1->getNumericalID() << ", " << veh2->getNumericalID() << "\n";
 				}*/
 				/*if (lfv1->get_vehicle()->getID() == "normal_flow_0_straight.0") {
 					std::cout << "\t\t with neighbor: " << veh2->getID() << "\n";
@@ -4193,6 +4220,12 @@ LaneFreeSimulationPlugin::investigate_two_vehicles_collision(MSVehicle* veh1, MS
 			//if (veh2->getID() == "normal_flow_1_left.8" && veh1->getID() == "normal_flow_0_straight.0") { //19.2
 			//	std::cout << "\t\t\tbefore coll check: " << xv1_gl << ", " << yv1_gl << ", " << theta1_gl << ", " << lv1 << ", " << wv1 << ", " << xv2 << ", " << yv2 << ", " << theta2 << ", " << lv2 << ", " << wv2 << "\n";//20.6
 			//}
+
+			/*if (veh1->getID() == "bike_flow_1.3" && veh2->getID() == "normal_flow_0_straight.6" && debug_counter >= 356) {
+				std::cout << "\t\t im in kind of check\n";
+				std::cout << "\t\t\tbefore coll check global: veh1 then veh2\n\t\t\t\t   x,   y, theta,   l,   w\n\t\t\t\t" << xv1_gl << ", " << yv1_gl << ", " << theta1_gl << ", " << lv1 << ", " << wv1 << ",\n\t\t\t\t" << xv2_gl << ", " << yv2 << ", " << theta2 << ", " << lv2 << ", " << wv2 << "\n";
+				std::cout << "\t\t\tbefore coll check mixed: veh1 then veh2\n\t\t\t\t   x,   y, theta,   l,   w\n\t\t\t\t" << xv1_gl << ", " << yv1_gl << ", " << theta1_gl << ", " << lv1 << ", " << wv1 << ",\n\t\t\t\t" << xv2 << ", " << yv2 << ", " << theta2 << ", " << lv2 << ", " << wv2 << "\n";
+			}*/
 			collision_true = collision_check_with_orientation(xv1_gl, yv1_gl, theta1_gl, lv1, wv1, xv2, yv2, theta2, lv2, wv2);
 
 		}
@@ -4202,6 +4235,10 @@ LaneFreeSimulationPlugin::investigate_two_vehicles_collision(MSVehicle* veh1, MS
 		}
 		bool register_collision_flag = true;
 		if (collision_true) {
+
+			/*if (veh1->getID() == "bike_flow_1.3" && veh2->getID() == "normal_flow_0_straight.6" && debug_counter >= 356) {
+				std::cout << "\t\t im in kind of check2\n";
+			}*/
 			/*std::map<SUMOVehicle::NumericalID, std::vector<SUMOVehicle::NumericalID>>::iterator itr1;
 			std::cout << "\t\tCurrent keys are:";
 			for (itr1 = collision_map.begin(); itr1 != collision_map.end(); ++itr1) {

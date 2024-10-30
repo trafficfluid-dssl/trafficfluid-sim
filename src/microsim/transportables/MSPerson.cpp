@@ -415,7 +415,15 @@ MSPerson::MSPersonStage_Access::ProceedCmd::execute(SUMOTime currentTime) {
 MSPerson::MSPerson(const SUMOVehicleParameter* pars, MSVehicleType* vtype, MSTransportable::MSTransportablePlan* plan, const double speedFactor) :
     MSTransportable(pars, vtype, plan, true),
     myInfluencer(nullptr), myChosenSpeedFactor(speedFactor) {
+    origin_edge = this->getEdge();
 }
+
+// LFPlugin begin
+const MSEdge*
+MSPerson::getOriginEdge() {
+    return origin_edge;
+}
+// LFPlugin end
 
 
 MSPerson::~MSPerson() {

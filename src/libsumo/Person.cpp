@@ -127,6 +127,67 @@ Person::getLane(const std::string& personID) {
 }
 
 
+const MSRoute*
+Person::getRoutePerson(const std::string& personID) {
+    // this only works when a person is inside a vehicle!
+    const SUMOVehicle* veh = getPerson(personID)->getVehicle();
+    if (veh == nullptr) {
+        std::cout << "Empty vehicle for person\n";
+        return nullptr;
+    }
+    const MSRoute* route = &(getPerson(personID)->getVehicle()->getRoute());
+    return route;
+}
+
+const MSEdge*
+Person::getOriginEdge(const std::string& personID) {
+    return getPerson(personID)->getOriginEdge();
+}
+
+const MSEdge*
+Person::getDestinationEdge(const std::string& personID) {
+    const MSEdge* destinationEdge;
+
+    MSTransportable* p = getPerson(personID);
+    int nextStageIndex = 0;
+    if (nextStageIndex >= p->getNumRemainingStages()) {
+        throw TraCIException("The stage index must be lower than the number of remaining stages.");
+    }
+    for (auto& e : p->getEdges(nextStageIndex)) {
+        if (e != nullptr) {
+            destinationEdge = e;
+        }
+    }
+
+    return destinationEdge;
+}
+
+//void
+//Person::print_edges(const std::string& personID) {
+//    //std::vector<std::string> getEdges();
+//    const MSEdge* destinationEdge;
+//
+//    MSTransportable* p = getPerson(personID);
+//    int nextStageIndex = 0;
+//    if (nextStageIndex >= p->getNumRemainingStages()) {
+//        throw TraCIException("The stage index must be lower than the number of remaining stages.");
+//    }
+//    if (nextStageIndex < (p->getNumRemainingStages() - p->getNumStages())) {
+//        throw TraCIException("The negative stage index must refer to a valid previous stage.");
+//    }
+//    std::vector<std::string> edgeIDs;
+//    for (auto& e : p->getEdges(nextStageIndex)) {
+//        if (e != nullptr) {
+//            edgeIDs.push_back(e->getID());
+//            destinationEdge = e;
+//            std::cout << e->getID();
+//        }
+//    }
+//
+//    std::cout << "Test print has origin: " << getPerson(personID)->getOriginEdge()->getID() << ", and destination: " << destinationEdge->getID() << "\n";
+//    
+//}
+
 double
 Person::getLanePosition(const std::string& personID) {
     return getPerson(personID)->getEdgePos();

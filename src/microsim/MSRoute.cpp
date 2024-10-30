@@ -76,7 +76,7 @@ MSRoute::MSRoute(const std::string& id,
     // initialize myEdgeswInternal
     const MSEdge* tmp_edge_prev = nullptr;
     const MSEdge* tmp_edge_internal;
-    std::cout << "checking...: " << id << "\n";
+    //std::cout << "checking...: " << id << "\n";
     for (ConstMSEdgeVector::iterator it = myEdges.begin(); it != myEdges.end(); it++) {
 
         if (tmp_edge_prev != nullptr) {

@@ -246,6 +246,10 @@ public:
     /// constructor
     MSPerson(const SUMOVehicleParameter* pars, MSVehicleType* vtype, MSTransportable::MSTransportablePlan* plan, const double speedFactor);
 
+    // LFPlugin begin
+    const MSEdge* MSPerson::getOriginEdge();
+    // LFPlugin end
+
     /// destructor
     virtual ~MSPerson();
 
@@ -332,6 +336,11 @@ private:
     const double myChosenSpeedFactor;
 
 private:
+
+    // LFPlugin begin
+    const MSEdge* origin_edge;
+    // LFPlugin end
+
     /// @brief Invalidated copy constructor.
     MSPerson(const MSPerson&);
 

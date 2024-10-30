@@ -277,6 +277,13 @@ EXTERN libLaneFreePlugin_EXPORT NumericalID(*get_destination_edge_id)(NumericalI
 // returns the origin edge of the specific vehicle id
 EXTERN libLaneFreePlugin_EXPORT NumericalID(*get_origin_edge_id)(NumericalID veh_id);
 
+// returns the destination edge of the specific person id
+EXTERN libLaneFreePlugin_EXPORT NumericalID(*get_person_destination_edge_id)(const std::string& personID);
+
+
+// returns the origin edge of the specific person id
+EXTERN libLaneFreePlugin_EXPORT NumericalID(*get_person_origin_edge_id)(const std::string& personID);
+
 
 // returns the subsequent edge id of the vehicle. In case of error (also displays error message), or if the vehicle is already at the destination edge, it returns -1.
 EXTERN libLaneFreePlugin_EXPORT NumericalID(*get_next_edge_id)(NumericalID veh_id);
