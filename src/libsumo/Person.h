@@ -103,11 +103,11 @@ public:
     static bool handleVariable(const std::string& objID, const int variable, VariableWrapper* wrapper);
     
     // LFplugin begin
-    static const MSLane* Person::getLane(const std::string& personID);
-    static const MSRoute* Person::getRoutePerson(const std::string& personID); 
+    static const MSLane* getLane(const std::string& personID);
+    static const MSRoute* getRoutePerson(const std::string& personID); 
     //static void Person::print_edges(const std::string& personID);
-    static const MSEdge* Person::getOriginEdge(const std::string& personID);
-    static const MSEdge* Person::getDestinationEdge(const std::string& personID);
+    static const MSEdge* getOriginEdge(const std::string& personID);
+    static const MSEdge* getDestinationEdge(const std::string& personID);
     // LFplugin end
 
 private:

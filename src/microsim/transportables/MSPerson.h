@@ -247,7 +247,7 @@ public:
     MSPerson(const SUMOVehicleParameter* pars, MSVehicleType* vtype, MSTransportable::MSTransportablePlan* plan, const double speedFactor);
 
     // LFPlugin begin
-    const MSEdge* MSPerson::getOriginEdge();
+    const MSEdge* getOriginEdge();
     // LFPlugin end
 
     /// destructor
