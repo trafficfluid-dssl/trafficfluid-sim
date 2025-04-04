@@ -1,94 +1,68 @@
-<a href="https://sumo.dlr.de/docs"><p align="center"><img width=50% src="https://github.com/eclipse/sumo/blob/master/docs/web/docs/images/sumo-logo.svg"></p></a>
+<a href="https://www.trafficfluid.tuc.gr/en/home"><p align="center"><img width=30% src="https://www.tuc.gr/fileadmin/users_data/all_tuc_site/_uploads/TrafficFluid_logo_RGB_High-300x221.png"></p></a>
 
-Eclipse SUMO - Simulation of Urban MObility 
-===========================================
-![Windows](https://github.com/eclipse/sumo/workflows/windows/badge.svg)
-![Linux](https://github.com/eclipse/sumo/workflows/linux/badge.svg)
-![macOS](https://github.com/eclipse/sumo/workflows/macos/badge.svg)
-![Repo Size](https://img.shields.io/github/repo-size/eclipse/sumo.svg)
+TrafficFluid-Sim
+================
 
-<!-- [![Windows Build status](https://ci.appveyor.com/api/projects/status/github/eclipse/sumo?svg=true)](https://ci.appveyor.com/project/eclipsewebmaster/sumo) -->
+[TrafficFluid-Sim](https://www.trafficfluid.tuc.gr/en/home) is an open source, microscopic simulation tool for lane-free traffic environments in the era of Connected and Automated Vehicles.
+The project is a fork of [Eclipse SUMO - Simulation of Urban MObility](https://github.com/eclipse-sumo/sumo) that explicitly targets the lane-free traffic paradigm.
 
-What is SUMO
-------------
+Highlighted Features:
+* Design from scratch and test lane-free vehicle movement strategies in C/C++, with an API that provides information about the traffic environment, 
+effectively emulating vehicle-to-vehicle and vehicle-to-infrastructure communication.
 
-["Simulation of Urban MObility" (SUMO)](https://sumo.dlr.de/) is an open source,
-highly portable, microscopic traffic simulation package designed to handle
-large road networks and different modes of transport.
+<p align="center"><img width=85% src="README_images/tsim_overview.png"></p>
 
-It is mainly developed by employees of the [Institute of Transportation Systems
-at the German Aerospace Center](https://www.dlr.de/ts).
+* Each API function call in the code is accompanied with a concise description of its usage and functionality.
+<p align="center"><img width=95% src="README_images/tsim_overview_gui.png"></p>
 
-
-Where to get it
----------------
-
-You can download SUMO via our [downloads site](https://sumo.dlr.de/docs/Downloads.html).
-
-As the program is still under development and is extended continuously, we advice you to
-use the latest sources from our GitHub repository. Using a command line client
-the following command should work:
-
-        git clone --recursive https://github.com/eclipse/sumo
+* The underlying movement dynamics of vehicles can be either the double integrator model for both the longitudinal (x) and lateral (y) axis, 
+or a bicycle model that better captures the orientation of the vehicles as well.
+* A variety of common traffic environments can be designed and simulated, such as: highways, custom on-ramp and off-ramp scenarios, 
+bidirectional scenarios that can be also tied with emergent infrastructure-based applications such as Internal Boundary Control, roundabouts, intersections, and ring-roads.
 
 
-Contact
--------
+<p float="left">
+  <img src="README_images/intersection_example.png" width="49%" />
+  <img src="README_images/roundabout_sim.png" width="49%" /> 
+  
+</p>
 
-To stay informed, we have a mailing list for SUMO
-[you can subscribe](https://dev.eclipse.org/mailman/listinfo/sumo-user) to.
-Messages to the list can be sent to sumo-user@eclipse.org.
-SUMO announcements will be made through the sumo-announce@eclipse.org list;
-[you can subscribe](https://dev.eclipse.org/mailman/listinfo/sumo-announce) to as well.
-For further contact information have a look at the [this page](https://sumo.dlr.de/docs/Contact.html).
+<p float="left">
+  <img src="README_images/ibc_snap.png" width="49%" /> 
+  <img src="README_images/flow_platoon.png" width="49%" />
+  
+  
+</p>
 
+
+TrafficFluid-Sim was developed within the frame of the
+research project [TrafficFluid](https://www.trafficfluid.tuc.gr/en/home), an ERC
+Advanced Grant hosted at the [Technical University of Crete](https://www.tuc.gr).
 
 Build and Installation
 ----------------------
 
-For Windows we provide pre-compiled binaries and CMake files to generate Visual Studio projects.
-If you want to develop under Windows, please also clone the dependent libraries using
+You can download pre-compiled versions of TrafficFluid-Sim for both Windows 10/11 and Ubuntu 22.04 LTS 
+via our [downloads site](https://www.trafficfluid.tuc.gr/en/home).
 
-        git clone --recursive https://github.com/DLR-TS/SUMOLibraries
-
-Using Linux you should have a look whether your distribution already contains sumo.
-There is also a [ppa for ubuntu users](https://launchpad.net/~sumo) and an
-[open build service instance](https://build.opensuse.org/project/show/home:behrisch).
-If you want to build yourself, the steps for ubuntu are:
-
-        sudo apt-get install cmake python g++ libxerces-c-dev libfox-1.6-dev libgdal-dev libproj-dev libgl2ps-dev swig
-        cd <SUMO_DIR> # please insert the correct directory name here
-        export SUMO_HOME="$PWD"
-        mkdir build/cmake-build && cd build/cmake-build
-        cmake ../..
-        make -j$(nproc)
-
-For [detailed build instructions have a look at our Documentation](https://sumo.dlr.de/docs/Developer/Main.html#build_instructions).
-
+If you want to work with the source code for custom enhancements under Windows environments, as prerequisite for SUMO, please 
+consult our [user manual](https://www.trafficfluid.tuc.gr/en/home) (Section 1.3) and make sure all suggested libraries are installed under the correct versions.
 
 Getting started
 ---------------
 
-To get started with SUMO, take a look at the docs/tutorial and examples directories,
-which contain some example networks with routing data and configuration files.
-There is also user documentation provided in the docs/ directory and on the
-homepage.
+To get started with TrafficFluid-Sim, we provide a complete [user manual](https://www.trafficfluid.tuc.gr/en/home), including technical information, 
+installation and setup instructions, design guidelines for lane-free traffic scenarios and vehicle movement strategies and more.
 
-
-Bugs
-----
-
-Please use for bugs and requests the [GitHub bug tracking tool](https://github.com/eclipse/sumo/issues)
-or file them to the list sumo-user@eclipse.org. Before
-filing a bug, please consider to check with a current repository checkout
-whether the problem has already been fixed.
-
-We welcome patches, pull requests and other contributions! For details see [our contribution guidelines](CONTRIBUTING.md).
-
+Additionally, since this work is an extension of SUMO, we encourage consulting the official [SUMO documentation](https://sumo.dlr.de/docs) for basic features of the simulator.
 
 License
 -------
+TrafficFluid-Sim can be used for research purposes. 
+This codebase is a fork of SUMO, which is licensed under the [Eclipse Public License Version 2](https://eclipse.org/legal/epl-v20.html).
+The licenses of the different libraries and supplementary code information are in the
+subdirectories and in the [Documentation](https://sumo.dlr.de/docs/Libraries_Licenses.html).
 
-SUMO is licensed under the [Eclipse Public License Version 2](https://eclipse.org/legal/epl-v20.html).
-For the licenses of the different libraries and supplementary code information is in the
-subdirectories and the [Documentation](https://sumo.dlr.de/docs/Libraries_Licenses.html).
+Citation
+--------
+If TrafficFluid-Sim is used for 
