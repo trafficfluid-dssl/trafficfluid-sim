@@ -10,10 +10,10 @@ Highlighted Features:
 * Design from scratch and test lane-free vehicle movement strategies in C/C++, with an API that provides information about the traffic environment, 
 effectively emulating vehicle-to-vehicle and vehicle-to-infrastructure communication.
 
-<p align="center"><img width=85% src="README_images/tsim_overview.png"></p>
+<p align="center"><img width=55% src="README_images/tsim_overview.png"></p>
 
 * Each API function call in the code is accompanied with a concise description of its usage and functionality.
-<p align="center"><img width=95% src="README_images/tsim_overview_gui.png"></p>
+<p align="center"><img width=90% src="README_images/tsim_overview_gui.png"></p>
 
 * The underlying movement dynamics of vehicles can be either the double integrator model for both the longitudinal (x) and lateral (y) axis, 
 or a bicycle model that better captures the orientation of the vehicles as well.
