@@ -4,7 +4,7 @@ TrafficFluid-Sim
 ================
 
 [TrafficFluid-Sim](https://www.trafficfluid.tuc.gr/en/home) is an open source, microscopic simulation tool for lane-free traffic environments in the era of Connected and Automated Vehicles.
-The project is a fork of [Eclipse SUMO - Simulation of Urban MObility](https://github.com/eclipse-sumo/sumo) that explicitly targets the lane-free traffic paradigm.
+This project is a fork of [Eclipse SUMO - Simulation of Urban MObility](https://github.com/eclipse-sumo/sumo) and serves as an extension of SUMO that explicitly targets the lane-free traffic paradigm.
 
 Highlighted Features:
 * Design from scratch and test lane-free vehicle movement strategies in C/C++, with an API that provides information about the traffic environment, 
@@ -61,8 +61,23 @@ License
 TrafficFluid-Sim can be used for research purposes. 
 This codebase is a fork of SUMO, which is licensed under the [Eclipse Public License Version 2](https://eclipse.org/legal/epl-v20.html).
 The licenses of the different libraries and supplementary code information are in the
-subdirectories and in the [Documentation](https://sumo.dlr.de/docs/Libraries_Licenses.html).
+subdirectories and in the [Documentation](https://sumo.dlr.de/docs/Libraries_Licenses.html) of SUMO.
 
 Citation
 --------
-If TrafficFluid-Sim is used for 
+TrafficFluid-Sim can be cited as: 
+
+	D. Troullinos, I. Chrysomallis, I. Papamichail, and M. Papageorgiou. Trafficfluid-Sim: Extending SUMO for Microscopic Simulation in Lane-Free Traffic. Dynamic Systems and Simulation Laboratory, Technical University of Crete, User manual, 2025.
+
+
+For convenience, the following BIB format can be used:
+```
+@manual{trafficfluidsim,
+author={Troullinos, Dimitrios and Chrysomallis, Iason and Papamichail, Ioannis and Papageorgiou, Markos},
+title={TrafficFluid-Sim: Extending SUMO for Microscopic Simulation in Lane-Free Traffic},
+organization={Dynamic Systems and Simulation Laboratory, Technical University of Crete},
+edition={User manual},
+year={2025},
+location = {Chania, Greece}
+}
+```
