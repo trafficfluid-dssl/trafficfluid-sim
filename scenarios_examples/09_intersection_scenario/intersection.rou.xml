@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<routes>
+    <vTypeDistribution id="typedist1">
+        <vType id="lane_free_car1" vClass="passenger" maxSpeed="25" carFollowModel="LaneFree" carMovementDynamics="Bicycle" length="4.50" width="1.70" minGap="2.5" tau="0.5" minGapLat="2.5"  probability="0.95"/>
+        <vType id="lane_free_car2" vClass="passenger" maxSpeed="25" carFollowModel="LaneFree" carMovementDynamics="Bicycle" length="4.50" width="1.70" minGap="2.5" tau="0.5" minGapLat="2.5"  probability="0.95"/>
+        <vType id="lane_free_car3" vClass="passenger" maxSpeed="25" carFollowModel="LaneFree" carMovementDynamics="Bicycle" length="4.50" width="1.70" minGap="2.5" tau="0.5" minGapLat="2.5"  probability="0.95"/>
+        <vType id="lane_free_car4" vClass="passenger" maxSpeed="25" carFollowModel="LaneFree" carMovementDynamics="Bicycle" length="4.50" width="1.70" minGap="2.5" tau="0.5" minGapLat="2.5"  probability="0.95"/>
+        <vType id="lane_free_car5" vClass="passenger" maxSpeed="25" carFollowModel="LaneFree" carMovementDynamics="Bicycle" length="4.50" width="1.70" minGap="2.5" tau="0.5" minGapLat="2.5"  probability="0.95"/>
+        <vType id="lane_free_car6" vClass="passenger" maxSpeed="25" carFollowModel="LaneFree" carMovementDynamics="Bicycle" length="4.50" width="1.70" minGap="2.5" tau="0.5" minGapLat="2.5"  probability="0.95"/>
+        <vType id="lane_free_car7" vClass="passenger" maxSpeed="25" carFollowModel="LaneFree" carMovementDynamics="Bicycle" length="4.50" width="1.70" minGap="2.5" tau="0.5" minGapLat="2.5"  probability="0.95"/>
+        <vType id="lane_free_car8" vClass="passenger" maxSpeed="25" carFollowModel="LaneFree" carMovementDynamics="Bicycle" length="4.50" width="1.70" minGap="2.5" tau="0.5" minGapLat="2.5"  probability="0.95"/>
+        <vType id="lane_free_car9" vClass="passenger" maxSpeed="25" carFollowModel="LaneFree" carMovementDynamics="Bicycle" length="4.50" width="1.70" minGap="2.5" tau="0.5" minGapLat="2.5"  probability="0.95"/>
+        <vType id="lane_free_car10" vClass="passenger" maxSpeed="25" carFollowModel="LaneFree" carMovementDynamics="Bicycle" length="4.50" width="1.70" minGap="2.5" tau="0.5" minGapLat="2.5"  probability="0.95"/>
+        <vType id="lane_free_car11" vClass="passenger" maxSpeed="25" carFollowModel="LaneFree" carMovementDynamics="Bicycle" length="4.50" width="1.70" minGap="2.5" tau="0.5" minGapLat="2.5"  probability="0.95"/>
+        <vType id="lane_free_car12" vClass="passenger" maxSpeed="25" carFollowModel="LaneFree" carMovementDynamics="Bicycle" length="4.50" width="1.70" minGap="2.5" tau="0.5" minGapLat="2.5"  probability="0.95"/>        
+    </vTypeDistribution>
+    <vTypeDistribution id="typedist2">
+        <vType id="lane_free_bicycle" vClass="bicycle" lcStrategic="-1." lcCooperative="-1." lcKeepRight="0." lcSpeedGain="0."/>
+    </vTypeDistribution>
+	<vTypeDistribution id="typedist3">
+        <vType id="lane_free_pedestrian" vClass="pedestrian" jmIgnoreFoeSpeed="100" jmIgnoreFoeProb="1." impatience="10." lcAssertive="1" lcImpatience="1" lcTimeToImpatience="1"/>
+    </vTypeDistribution>
+	
+    
+    <route edges="EN0 EX3" color="blue" id="origin0_left"/>
+    <route edges="EN0 EX2" color="green" id="origin0_straight"/>
+    <route edges="EN0 EX1" color="red" id="origin0_right"/>
+   
+    <route edges="EN1 EX0" color="yellow" id="origin1_left"/>
+    <route edges="EN1 EX3" color="blue" id="origin1_straight"/>
+    <route edges="EN1 EX2" color="green" id="origin1_right"/>
+
+
+    <route edges="EN2 EX1" color="red" id="origin2_left"/>
+    <route edges="EN2 EX0" color="yellow" id="origin2_straight"/>
+    <route edges="EN2 EX3" color="blue" id="origin2_right"/>
+
+
+    <route edges="EN3 EX2" color="green" id="origin3_left"/>
+    <route edges="EN3 EX1" color="red" id="origin3_straight"/>
+    <route edges="EN3 EX0" color="yellow" id="origin3_right"/>
+
+
+
+    <!-- latLow, latHigh example for origin0 -->
+    <flow id="normal_flow_0_left" type="typedist1" begin="0" end="150" number="149" route="origin1_straight" departSpeed="10" departPos="0" departSpeedLimitDownstream="false" latLow="0.0" latHigh="1"/>
+    <flow id="normal_flow_1_left" type="typedist1" begin="0" end="150" number="149" route="origin0_straight" departSpeed="10" departPos="0" departSpeedLimitDownstream="false" latLow="0.0" latHigh="1"/>
+	<flow id="normal_flow_0_straight" type="typedist2" begin="0" end="30" number="60" route="origin1_straight" departSpeed="3" departPos="0"/>
+
+	<personFlow id="p" type="lane_free_pedestrian" begin="1" end="30" period="2">
+       <walk from="EN0" to="EX2"/>
+   </personFlow>
+
+
+</routes>

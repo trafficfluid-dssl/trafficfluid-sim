@@ -1,0 +1,19 @@
+<configuration>
+   <input>
+       <net-file value="ramps.net.xml"/>
+       <route-files value="ramps.rou.xml"/>
+       <gui-settings-file value="custom-gui-settings.xml"/>
+       <additional-files value="additionals.add.xml"/>
+   </input>
+	<processing>
+		   <step-method.ballistic value="true"/>
+		   <collision.action value="none"/>
+		   <step-length value="0.2"/>		   
+		   <seed value="10"/>
+	           <exclude-edges-from-metrics value="warm_up,warm_up_opp"/>
+	</processing>	
+   <output>
+   	<tripinfo-output value="trip_info.xml"/>
+   	<statistic-output value="avg_stats.xml"/>
+   </output>
+</configuration>

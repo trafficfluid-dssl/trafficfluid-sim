@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<routes>
+    <vTypeDistribution id="typedist1">
+        <vType id="lane_free_car1" vClass="passenger" maxSpeed="25" carFollowModel="LaneFree" carMovementDynamics="Bicycle" length="4.50" width="1.70" minGap="2.5" tau="0.5" minGapLat="2.5"  probability="0.95"/>
+        <vType id="lane_free_car2" vClass="passenger" maxSpeed="25" carFollowModel="LaneFree" carMovementDynamics="Bicycle" length="4.50" width="1.70" minGap="2.5" tau="0.5" minGapLat="2.5"  probability="0.95"/>
+        <vType id="lane_free_car3" vClass="passenger" maxSpeed="25" carFollowModel="LaneFree" carMovementDynamics="Bicycle" length="4.50" width="1.70" minGap="2.5" tau="0.5" minGapLat="2.5"  probability="0.95"/>
+        <vType id="lane_free_car4" vClass="passenger" maxSpeed="25" carFollowModel="LaneFree" carMovementDynamics="Bicycle" length="4.50" width="1.70" minGap="2.5" tau="0.5" minGapLat="2.5"  probability="0.95"/>
+        <vType id="lane_free_car5" vClass="passenger" maxSpeed="25" carFollowModel="LaneFree" carMovementDynamics="Bicycle" length="4.50" width="1.70" minGap="2.5" tau="0.5" minGapLat="2.5"  probability="0.95"/>
+        <vType id="lane_free_car6" vClass="passenger" maxSpeed="25" carFollowModel="LaneFree" carMovementDynamics="Bicycle" length="4.50" width="1.70" minGap="2.5" tau="0.5" minGapLat="2.5"  probability="0.95"/>
+        <vType id="lane_free_car7" vClass="passenger" maxSpeed="25" carFollowModel="LaneFree" carMovementDynamics="Bicycle" length="4.50" width="1.70" minGap="2.5" tau="0.5" minGapLat="2.5"  probability="0.95"/>
+        <vType id="lane_free_car8" vClass="passenger" maxSpeed="25" carFollowModel="LaneFree" carMovementDynamics="Bicycle" length="4.50" width="1.70" minGap="2.5" tau="0.5" minGapLat="2.5"  probability="0.95"/>
+        <vType id="lane_free_car9" vClass="passenger" maxSpeed="25" carFollowModel="LaneFree" carMovementDynamics="Bicycle" length="4.50" width="1.70" minGap="2.5" tau="0.5" minGapLat="2.5"  probability="0.95"/>
+        <vType id="lane_free_car10" vClass="passenger" maxSpeed="25" carFollowModel="LaneFree" carMovementDynamics="Bicycle" length="4.50" width="1.70" minGap="2.5" tau="0.5" minGapLat="2.5"  probability="0.95"/>
+        <vType id="lane_free_car11" vClass="passenger" maxSpeed="25" carFollowModel="LaneFree" carMovementDynamics="Bicycle" length="4.50" width="1.70" minGap="2.5" tau="0.5" minGapLat="2.5"  probability="0.95"/>
+        <vType id="lane_free_car12" vClass="passenger" maxSpeed="25" carFollowModel="LaneFree" carMovementDynamics="Bicycle" length="4.50" width="1.70" minGap="2.5" tau="0.5" minGapLat="2.5"  probability="0.95"/>        
+    </vTypeDistribution>
+    
+    <route edges="EN0 EX3" color="blue" id="origin0_left"/>
+    <route edges="EN0 EX2" color="red" id="origin0_straight"/>
+    <route edges="EN0 EX2" color="green" id="origin0_straight_platoon"/>
+    <route edges="EN0 EX1" color="red" id="origin0_right"/>
+
+    <route edges="EN1 EX0" color="yellow" id="origin1_left"/>
+    <route edges="EN1 EX3" color="blue" id="origin1_straight"/>
+    <route edges="EN1 EX2" color="green" id="origin1_right"/>
+
+
+    <route edges="EN2 EX1" color="red" id="origin2_left"/>
+    <route edges="EN2 EX0" color="yellow" id="origin2_straight"/>
+    <route edges="EN2 EX3" color="blue" id="origin2_right"/>
+
+
+    <route edges="EN3 EX2" color="green" id="origin3_left"/>
+    <route edges="EN3 EX1" color="red" id="origin3_straight"/>
+    <route edges="EN3 EX0" color="yellow" id="origin3_right"/>
+
+
+
+    <!-- latLow, latHigh example for origin0 -->
+	<flow id="normal_flow_0_left" type="typedist1" begin="0" end="55" number="5" route="origin0_straight_platoon" departSpeed="10" departPos="0" departSpeedLimitDownstream="false" latLow="0.0" latHigh="1" insertionPolicy="platoon" platoonSize="5" platoonTimeStepDistance="4"/>
+    <flow id="normal_flow_0_left1" type="typedist1" begin="4" end="55" number="7" route="origin0_straight_platoon" departSpeed="10" departPos="0" departSpeedLimitDownstream="false" latLow="0.0" latHigh="1" insertionPolicy="platoon" platoonSize="3" platoonTimeStepDistance="4"/>/>
+    <flow id="normal_flow_0_right" type="typedist1" begin="3" end="55" number="5" route="origin0_straight" departSpeed="8" departPos="0" departSpeedLimitDownstream="false" latLow="0" latHigh="0.5"/>
+	<flow id="normal_flow_1_right" type="typedist1" begin="4" end="55" number="5" route="origin1_straight" departSpeed="8" departPos="0" departSpeedLimitDownstream="false" latLow="0.0" latHigh="0.5" />
+	<flow id="normal_flow_2_straight" type="typedist1" begin="6" end="55" number="10" route="origin2_straight" departSpeed="12" departPos="0" departSpeedLimitDownstream="false" latLow="0.0" latHigh="1" />
+    <flow id="normal_flow_0_straight" type="typedist1" begin="8" end="55" number="10" route="origin0_straight" departSpeed="12" departPos="0" departSpeedLimitDownstream="false" latLow="0" latHigh="1"/> 
+    <flow id="normal_flow_3_right" type="typedist1" begin="9" end="55" number="5" route="origin3_straight" departSpeed="8" departPos="0" departSpeedLimitDownstream="false" latLow="0.0" latHigh="0.5" />
+    
+</routes>

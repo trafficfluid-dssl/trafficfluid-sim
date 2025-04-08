@@ -1,0 +1,21 @@
+<configuration>
+   <input>
+       <net-file value="roundabout.net.xml"/>
+       <route-files value="roundabout.rou.xml"/>
+       <gui-settings-file value="custom_gui_settings.xml"/>
+       <additional-files value="detectors.add.xml"/>
+   </input>
+	<processing>
+		   <step-method.ballistic value="true"/>
+		   <collision.action value="none"/>
+		   <step-length value="0.1"/>		   
+		   <seed value="10"/>
+		   <video-record-or-replay value="replay"/>
+	</processing>
+	<output>
+   	<tripinfo-output value="trip_info.xml"/>
+   	<statistic-output value="avg_stats.xml"/>
+   	<video-logfile value="recording.log"/>
+   	<netstate-dump value="traj.log"/>
+   </output>
+</configuration>

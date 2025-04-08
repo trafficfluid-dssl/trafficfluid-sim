@@ -1,0 +1,25 @@
+<routes>
+
+    <vType id="lane_free_car_example" vClass="passenger" maxSpeed="40" carFollowModel="LaneFree" length="3.20" width="1.60" minGap="0" tau="0.4" minGapLat="0.3" color = "yellow"/>
+
+    <vType id="lane_free_car_bicycle_model_example" vClass="passenger" maxSpeed="40" carFollowModel="LaneFree"  carMovementDynamics="Bicycle" length="3.20" width="1.60" minGap="0" tau="0.4" minGapLat="0.3" color = "yellow"/>
+        
+    <vTypeDistribution id="typedist1">
+        <vType id="lane_free_car11" vClass="passenger" maxSpeed="40" carFollowModel="LaneFree" length="3.20" width="1.60" minGap="0" tau="0.4" minGapLat="0.3" color = "blue"  probability="0.1666"/>
+        <vType id="lane_free_car22" vClass="passenger" maxSpeed="40" carFollowModel="LaneFree" length="3.90" width="1.70" minGap="0" tau="0.4" minGapLat="0.3" color = "green"  probability="0.1666"/>
+        <vType id="lane_free_car33" vClass="passenger" maxSpeed="40" carFollowModel="LaneFree" length="4.25" width="1.80" minGap="0" tau="0.4" minGapLat="0.3" color = "magenta"  probability="0.1666"/>
+        <vType id="lane_free_car44" vClass="passenger" maxSpeed="40" carFollowModel="LaneFree" length="4.55" width="1.82" minGap="0" tau="0.4" minGapLat="0.3" color = "orange"  probability="0.1666"/>
+        <vType id="lane_free_car55" vClass="passenger" maxSpeed="40" carFollowModel="LaneFree" length="4.60" width="1.77" minGap="0" tau="0.4" minGapLat="0.3" color = "yellow"  probability="0.1666"/>
+        <vType id="lane_free_car66" vClass="passenger" maxSpeed="40" carFollowModel="LaneFree" length="5.15" width="1.84" minGap="0" tau="0.4" minGapLat="0.3" color = "white"  probability="0.1666"/>
+    </vTypeDistribution>
+    
+    <route id="route0"  edges="long_edge" leftBoundaryLevelPoints="10.2 10.2" leftBoundaryOffsets="100" leftBoundarySlopes="0.045" rightBoundaryLevelPoints="0 0" rightBoundaryOffsets="100" rightBoundarySlopes="0.05" rightBoundaryConstant="0" leftBoundaryVisualizerColor="red" rightBoundaryVisualizerColor="red"/>
+
+    <flow id="flow1" type="typedist1" begin="0" end="20" number="60" route="route0" departSpeed="25" departPos="0" />
+    <flow id="flow2" type="typedist1" begin="20" end="30" number="30" latLow="0.2" latHigh="0.7" route="route0" departSpeed="25" departPos="0" />
+    <flow id="flow3" type="typedist1" begin="30" end="40" number="30" departSpeedLimitFrontDist="50" route="route0" departSpeed="25" departPos="0" />
+    <flow id="flow4" type="typedist1" begin="40" end="50" number="20" insertionPolicy="desSpeedAlign" desSpeedLow="25" desSpeedHigh="35" route="route0" departSpeed="25" departPos="0" />
+    <flow id="flow5" type="typedist1" begin="50" end="60" number="10" insertionPolicy="center" route="route0" departSpeed="25" departPos="0" />
+    <flow id="flow6" type="typedist1" begin="60" end="70" number="10" insertionPolicy="platoon" platoonSize="4" platoonTimeStepDistance="3" route="route0" departSpeed="25" departPos="0" />
+    
+</routes>

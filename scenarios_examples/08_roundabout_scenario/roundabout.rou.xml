@@ -1,0 +1,320 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<routes>
+    <vTypeDistribution id="typedist1">
+        <vType id="lane_free_car1" vClass="passenger" maxSpeed="25" carFollowModel="LaneFree" carMovementDynamics="Bicycle" length="4.20" width="1.70" minGap="2" tau="2" minGapLat="1.5" color = "blue"  probability="0.95"/>
+        <vType id="lane_free_car2" vClass="passenger" maxSpeed="25" carFollowModel="LaneFree" carMovementDynamics="Bicycle" length="4.20" width="1.70" minGap="2" tau="2" minGapLat="1.5" color = "yellow"  probability="0.95"/>
+        <vType id="lane_free_car3" vClass="passenger" maxSpeed="25" carFollowModel="LaneFree" carMovementDynamics="Bicycle" length="4.20" width="1.70" minGap="2" tau="2" minGapLat="1.5" color = "green"  probability="0.95"/>
+        <vType id="lane_free_car4" vClass="passenger" maxSpeed="25" carFollowModel="LaneFree" carMovementDynamics="Bicycle" length="4.20" width="1.70" minGap="2" tau="2" minGapLat="1.5" color = "red"  probability="0.95"/>
+        <vType id="lane_free_car5" vClass="passenger" maxSpeed="25" carFollowModel="LaneFree" carMovementDynamics="Bicycle" length="4.20" width="1.70" minGap="2" tau="2" minGapLat="1.5" color = "orange"  probability="0.95"/>
+        <vType id="lane_free_car6" vClass="passenger" maxSpeed="25" carFollowModel="LaneFree" carMovementDynamics="Bicycle" length="4.20" width="1.70" minGap="2" tau="2" minGapLat="1.5" color = "white"  probability="0.95"/>
+        <vType id="lane_free_car7" vClass="passenger" maxSpeed="25" carFollowModel="LaneFree" carMovementDynamics="Bicycle" length="4.20" width="1.70" minGap="2" tau="2" minGapLat="1.5" color = "#ff00ff"  probability="0.95"/>
+        <vType id="lane_free_car8" vClass="passenger" maxSpeed="25" carFollowModel="LaneFree" carMovementDynamics="Bicycle" length="4.20" width="1.70" minGap="2" tau="2" minGapLat="1.5" color = "#0dd1ba"  probability="0.95"/>
+        <vType id="lane_free_car9" vClass="passenger" maxSpeed="25" carFollowModel="LaneFree" carMovementDynamics="Bicycle" length="4.20" width="1.70" minGap="2" tau="2" minGapLat="1.5" color = "#a8a3a3"  probability="0.95"/>
+        <vType id="lane_free_car10" vClass="passenger" maxSpeed="25" carFollowModel="LaneFree" carMovementDynamics="Bicycle" length="4.20" width="1.70" minGap="2" tau="2" minGapLat="1.5" color = "#fc86b3"  probability="0.95"/>
+        <vType id="lane_free_car11" vClass="passenger" maxSpeed="25" carFollowModel="LaneFree" carMovementDynamics="Bicycle" length="4.20" width="1.70" minGap="2" tau="2" minGapLat="1.5" color = "#98e1f5"  probability="0.95"/>
+        <vType id="lane_free_car12" vClass="passenger" maxSpeed="25" carFollowModel="LaneFree" carMovementDynamics="Bicycle" length="4.20" width="1.70" minGap="2" tau="2" minGapLat="1.5" color = "#0597ff"  probability="0.95"/>        
+    </vTypeDistribution>
+    
+    <route edges="EN1 LR01 LR02 EX2" color="yellow" id="route_1_2"/>
+    <route edges="EN1 LR01 LR02 LR03 LR04 EX3" color="yellow" id="route_1_3"/>
+    <route edges="EN1 LR01 LR02 LR03 LR04 LR05 LR06 EX4" color="yellow" id="route_1_4"/>
+    <route edges="EN1 LR01 LR02 LR03 LR04 LR05 LR06 LR07 LR08 EX5" color="yellow" id="route_1_5"/>
+    <route edges="EN1 LR01 LR02 LR03 LR04 LR05 LR06 LR07 LR08 LR09 LR10 EX6" color="yellow" id="route_1_6"/>
+	<route edges="EN1 LR01 LR02 LR03 LR04 LR05 LR06 LR07 LR08 LR09 LR10 LR11 LR12 EX7" color="yellow" id="route_1_7"/>
+    <route edges="EN1 LR01 LR02 LR03 LR04 LR05 LR06 LR07 LR08 LR09 LR10 LR11 LR12 LR13 LR14 EX8" color="yellow" id="route_1_8"/>
+    <route edges="EN1 LR01 LR02 LR03 LR04 LR05 LR06 LR07 LR08 LR09 LR10 LR11 LR12 LR13 LR14 LR15 LR16 EX9" color="yellow" id="route_1_9"/>
+    <route edges="EN1 LR01 LR02 LR03 LR04 LR05 LR06 LR07 LR08 LR09 LR10 LR11 LR12 LR13 LR14 LR15 LR16 LR17 LR18 EX10" color="yellow" id="route_1_10"/>
+    <route edges="EN1 LR01 LR02 LR03 LR04 LR05 LR06 LR07 LR08 LR09 LR10 LR11 LR12 LR13 LR14 LR15 LR16 LR17 LR18 LR19 LR20 EX11" color="yellow" id="route_1_11"/>
+    <route edges="EN1 LR01 LR02 LR03 LR04 LR05 LR06 LR07 LR08 LR09 LR10 LR11 LR12 LR13 LR14 LR15 LR16 LR17 LR18 LR19 LR20 LR21 LR22 EX12" color="yellow" id="route_1_12"/>
+    <route edges="EN1 LR01 LR02 LR03 LR04 LR05 LR06 LR07 LR08 LR09 LR10 LR11 LR12 LR13 LR14 LR15 LR16 LR17 LR18 LR19 LR20 LR21 LR22 LR23 LR24 EX1" color="yellow" id="route_1_1"/>
+
+    <route edges="EN2 LR03 LR04 EX3" color="yellow" id="route_2_3"/>
+    <route edges="EN2 LR03 LR04 LR05 LR06 EX4" color="yellow" id="route_2_4"/>
+    <route edges="EN2 LR03 LR04 LR05 LR06 LR07 LR08 EX5" color="yellow" id="route_2_5"/>
+    <route edges="EN2 LR03 LR04 LR05 LR06 LR07 LR08 LR09 LR10 EX6" color="yellow" id="route_2_6"/>
+	<route edges="EN2 LR03 LR04 LR05 LR06 LR07 LR08 LR09 LR10 LR11 LR12 EX7" color="yellow" id="route_2_7"/>
+    <route edges="EN2 LR03 LR04 LR05 LR06 LR07 LR08 LR09 LR10 LR11 LR12 LR13 LR14 EX8" color="yellow" id="route_2_8"/>
+    <route edges="EN2 LR03 LR04 LR05 LR06 LR07 LR08 LR09 LR10 LR11 LR12 LR13 LR14 LR15 LR16 EX9" color="yellow" id="route_2_9"/>
+    <route edges="EN2 LR03 LR04 LR05 LR06 LR07 LR08 LR09 LR10 LR11 LR12 LR13 LR14 LR15 LR16 LR17 LR18 EX10" color="yellow" id="route_2_10"/>
+    <route edges="EN2 LR03 LR04 LR05 LR06 LR07 LR08 LR09 LR10 LR11 LR12 LR13 LR14 LR15 LR16 LR17 LR18 LR19 LR20 EX11" color="yellow" id="route_2_11"/>
+    <route edges="EN2 LR03 LR04 LR05 LR06 LR07 LR08 LR09 LR10 LR11 LR12 LR13 LR14 LR15 LR16 LR17 LR18 LR19 LR20 LR21 LR22 EX12" color="yellow" id="route_2_12"/>
+    <route edges="EN2 LR03 LR04 LR05 LR06 LR07 LR08 LR09 LR10 LR11 LR12 LR13 LR14 LR15 LR16 LR17 LR18 LR19 LR20 LR21 LR22 LR23 LR24 EX1" color="yellow" id="route_2_1"/>
+    <route edges="EN2 LR03 LR04 LR05 LR06 LR07 LR08 LR09 LR10 LR11 LR12 LR13 LR14 LR15 LR16 LR17 LR18 LR19 LR20 LR21 LR22 LR23 LR24 LR01 LR02 EX2" color="yellow" id="route_2_2"/>
+
+	<route edges="EN3 LR05 LR06 EX4" color="yellow" id="route_3_4"/>
+    <route edges="EN3 LR05 LR06 LR07 LR08 EX5" color="yellow" id="route_3_5"/>
+    <route edges="EN3 LR05 LR06 LR07 LR08 LR09 LR10 EX6" color="yellow" id="route_3_6"/>
+	<route edges="EN3 LR05 LR06 LR07 LR08 LR09 LR10 LR11 LR12 EX7" color="yellow" id="route_3_7"/>
+    <route edges="EN3 LR05 LR06 LR07 LR08 LR09 LR10 LR11 LR12 LR13 LR14 EX8" color="yellow" id="route_3_8"/>
+    <route edges="EN3 LR05 LR06 LR07 LR08 LR09 LR10 LR11 LR12 LR13 LR14 LR15 LR16 EX9" color="yellow" id="route_3_9"/>
+    <route edges="EN3 LR05 LR06 LR07 LR08 LR09 LR10 LR11 LR12 LR13 LR14 LR15 LR16 LR17 LR18 EX10" color="yellow" id="route_3_10"/>
+    <route edges="EN3 LR05 LR06 LR07 LR08 LR09 LR10 LR11 LR12 LR13 LR14 LR15 LR16 LR17 LR18 LR19 LR20 EX11" color="yellow" id="route_3_11"/>
+    <route edges="EN3 LR05 LR06 LR07 LR08 LR09 LR10 LR11 LR12 LR13 LR14 LR15 LR16 LR17 LR18 LR19 LR20 LR21 LR22 EX12" color="yellow" id="route_3_12"/>
+    <route edges="EN3 LR05 LR06 LR07 LR08 LR09 LR10 LR11 LR12 LR13 LR14 LR15 LR16 LR17 LR18 LR19 LR20 LR21 LR22 LR23 LR24 EX1" color="yellow" id="route_3_1"/>
+    <route edges="EN3 LR05 LR06 LR07 LR08 LR09 LR10 LR11 LR12 LR13 LR14 LR15 LR16 LR17 LR18 LR19 LR20 LR21 LR22 LR23 LR24 LR01 LR02 EX2" color="yellow" id="route_3_2"/>
+    <route edges="EN3 LR05 LR06 LR07 LR08 LR09 LR10 LR11 LR12 LR13 LR14 LR15 LR16 LR17 LR18 LR19 LR20 LR21 LR22 LR23 LR24 LR01 LR02 LR03 LR04 EX3" color="yellow" id="route_3_3"/>
+	
+	<route edges="EN4 LR07 LR08 EX5" color="yellow" id="route_4_5"/>
+    <route edges="EN4 LR07 LR08 LR09 LR10 EX6" color="yellow" id="route_4_6"/>
+	<route edges="EN4 LR07 LR08 LR09 LR10 LR11 LR12 EX7" color="yellow" id="route_4_7"/>
+    <route edges="EN4 LR07 LR08 LR09 LR10 LR11 LR12 LR13 LR14 EX8" color="yellow" id="route_4_8"/>
+    <route edges="EN4 LR07 LR08 LR09 LR10 LR11 LR12 LR13 LR14 LR15 LR16 EX9" color="yellow" id="route_4_9"/>
+    <route edges="EN4 LR07 LR08 LR09 LR10 LR11 LR12 LR13 LR14 LR15 LR16 LR17 LR18 EX10" color="yellow" id="route_4_10"/>
+    <route edges="EN4 LR07 LR08 LR09 LR10 LR11 LR12 LR13 LR14 LR15 LR16 LR17 LR18 LR19 LR20 EX11" color="yellow" id="route_4_11"/>
+    <route edges="EN4 LR07 LR08 LR09 LR10 LR11 LR12 LR13 LR14 LR15 LR16 LR17 LR18 LR19 LR20 LR21 LR22 EX12" color="yellow" id="route_4_12"/>
+    <route edges="EN4 LR07 LR08 LR09 LR10 LR11 LR12 LR13 LR14 LR15 LR16 LR17 LR18 LR19 LR20 LR21 LR22 LR23 LR24 EX1" color="yellow" id="route_4_1"/>
+    <route edges="EN4 LR07 LR08 LR09 LR10 LR11 LR12 LR13 LR14 LR15 LR16 LR17 LR18 LR19 LR20 LR21 LR22 LR23 LR24 LR01 LR02 EX2" color="yellow" id="route_4_2"/>
+    <route edges="EN4 LR07 LR08 LR09 LR10 LR11 LR12 LR13 LR14 LR15 LR16 LR17 LR18 LR19 LR20 LR21 LR22 LR23 LR24 LR01 LR02 LR03 LR04 EX3" color="yellow" id="route_4_3"/>
+    <route edges="EN4 LR07 LR08 LR09 LR10 LR11 LR12 LR13 LR14 LR15 LR16 LR17 LR18 LR19 LR20 LR21 LR22 LR23 LR24 LR01 LR02 LR03 LR04 LR05 LR06 EX4" color="yellow" id="route_4_4"/>
+
+	<route edges="EN5 LR09 LR10 EX6" color="yellow" id="route_5_6"/>
+	<route edges="EN5 LR09 LR10 LR11 LR12 EX7" color="yellow" id="route_5_7"/>
+    <route edges="EN5 LR09 LR10 LR11 LR12 LR13 LR14 EX8" color="yellow" id="route_5_8"/>
+    <route edges="EN5 LR09 LR10 LR11 LR12 LR13 LR14 LR15 LR16 EX9" color="yellow" id="route_5_9"/>
+    <route edges="EN5 LR09 LR10 LR11 LR12 LR13 LR14 LR15 LR16 LR17 LR18 EX10" color="yellow" id="route_5_10"/>
+    <route edges="EN5 LR09 LR10 LR11 LR12 LR13 LR14 LR15 LR16 LR17 LR18 LR19 LR20 EX11" color="yellow" id="route_5_11"/>
+    <route edges="EN5 LR09 LR10 LR11 LR12 LR13 LR14 LR15 LR16 LR17 LR18 LR19 LR20 LR21 LR22 EX12" color="yellow" id="route_5_12"/>
+    <route edges="EN5 LR09 LR10 LR11 LR12 LR13 LR14 LR15 LR16 LR17 LR18 LR19 LR20 LR21 LR22 LR23 LR24 EX1" color="yellow" id="route_5_1"/>
+    <route edges="EN5 LR09 LR10 LR11 LR12 LR13 LR14 LR15 LR16 LR17 LR18 LR19 LR20 LR21 LR22 LR23 LR24 LR01 LR02 EX2" color="yellow" id="route_5_2"/>
+    <route edges="EN5 LR09 LR10 LR11 LR12 LR13 LR14 LR15 LR16 LR17 LR18 LR19 LR20 LR21 LR22 LR23 LR24 LR01 LR02 LR03 LR04 EX3" color="yellow" id="route_5_3"/>
+    <route edges="EN5 LR09 LR10 LR11 LR12 LR13 LR14 LR15 LR16 LR17 LR18 LR19 LR20 LR21 LR22 LR23 LR24 LR01 LR02 LR03 LR04 LR05 LR06 EX4" color="yellow" id="route_5_4"/>
+    <route edges="EN5 LR09 LR10 LR11 LR12 LR13 LR14 LR15 LR16 LR17 LR18 LR19 LR20 LR21 LR22 LR23 LR24 LR01 LR02 LR03 LR04 LR05 LR06 LR07 LR08 EX5" color="yellow" id="route_5_5"/>
+
+	<route edges="EN6 LR11 LR12 EX7" color="yellow" id="route_6_7"/>
+    <route edges="EN6 LR11 LR12 LR13 LR14 EX8" color="yellow" id="route_6_8"/>
+    <route edges="EN6 LR11 LR12 LR13 LR14 LR15 LR16 EX9" color="yellow" id="route_6_9"/>
+    <route edges="EN6 LR11 LR12 LR13 LR14 LR15 LR16 LR17 LR18 EX10" color="yellow" id="route_6_10"/>
+    <route edges="EN6 LR11 LR12 LR13 LR14 LR15 LR16 LR17 LR18 LR19 LR20 EX11" color="yellow" id="route_6_11"/>
+    <route edges="EN6 LR11 LR12 LR13 LR14 LR15 LR16 LR17 LR18 LR19 LR20 LR21 LR22 EX12" color="yellow" id="route_6_12"/>
+    <route edges="EN6 LR11 LR12 LR13 LR14 LR15 LR16 LR17 LR18 LR19 LR20 LR21 LR22 LR23 LR24 EX1" color="yellow" id="route_6_1"/>
+    <route edges="EN6 LR11 LR12 LR13 LR14 LR15 LR16 LR17 LR18 LR19 LR20 LR21 LR22 LR23 LR24 LR01 LR02 EX2" color="yellow" id="route_6_2"/>
+    <route edges="EN6 LR11 LR12 LR13 LR14 LR15 LR16 LR17 LR18 LR19 LR20 LR21 LR22 LR23 LR24 LR01 LR02 LR03 LR04 EX3" color="yellow" id="route_6_3"/>
+    <route edges="EN6 LR11 LR12 LR13 LR14 LR15 LR16 LR17 LR18 LR19 LR20 LR21 LR22 LR23 LR24 LR01 LR02 LR03 LR04 LR05 LR06 EX4" color="yellow" id="route_6_4"/>
+    <route edges="EN6 LR11 LR12 LR13 LR14 LR15 LR16 LR17 LR18 LR19 LR20 LR21 LR22 LR23 LR24 LR01 LR02 LR03 LR04 LR05 LR06 LR07 LR08 EX5" color="yellow" id="route_6_5"/>
+    <route edges="EN6 LR11 LR12 LR13 LR14 LR15 LR16 LR17 LR18 LR19 LR20 LR21 LR22 LR23 LR24 LR01 LR02 LR03 LR04 LR05 LR06 LR07 LR08 LR09 LR10 EX6" color="yellow" id="route_6_6"/>
+
+    <route edges="EN7 LR13 LR14 EX8" color="yellow" id="route_7_8"/>
+    <route edges="EN7 LR13 LR14 LR15 LR16 EX9" color="yellow" id="route_7_9"/>
+    <route edges="EN7 LR13 LR14 LR15 LR16 LR17 LR18 EX10" color="yellow" id="route_7_10"/>
+    <route edges="EN7 LR13 LR14 LR15 LR16 LR17 LR18 LR19 LR20 EX11" color="yellow" id="route_7_11"/>
+    <route edges="EN7 LR13 LR14 LR15 LR16 LR17 LR18 LR19 LR20 LR21 LR22 EX12" color="yellow" id="route_7_12"/>
+    <route edges="EN7 LR13 LR14 LR15 LR16 LR17 LR18 LR19 LR20 LR21 LR22 LR23 LR24 EX1" color="yellow" id="route_7_1"/>
+    <route edges="EN7 LR13 LR14 LR15 LR16 LR17 LR18 LR19 LR20 LR21 LR22 LR23 LR24 LR01 LR02 EX2" color="yellow" id="route_7_2"/>
+    <route edges="EN7 LR13 LR14 LR15 LR16 LR17 LR18 LR19 LR20 LR21 LR22 LR23 LR24 LR01 LR02 LR03 LR04 EX3" color="yellow" id="route_7_3"/>
+    <route edges="EN7 LR13 LR14 LR15 LR16 LR17 LR18 LR19 LR20 LR21 LR22 LR23 LR24 LR01 LR02 LR03 LR04 LR05 LR06 EX4" color="yellow" id="route_7_4"/>
+    <route edges="EN7 LR13 LR14 LR15 LR16 LR17 LR18 LR19 LR20 LR21 LR22 LR23 LR24 LR01 LR02 LR03 LR04 LR05 LR06 LR07 LR08 EX5" color="yellow" id="route_7_5"/>
+    <route edges="EN7 LR13 LR14 LR15 LR16 LR17 LR18 LR19 LR20 LR21 LR22 LR23 LR24 LR01 LR02 LR03 LR04 LR05 LR06 LR07 LR08 LR09 LR10 EX6" color="yellow" id="route_7_6"/>
+    <route edges="EN7 LR13 LR14 LR15 LR16 LR17 LR18 LR19 LR20 LR21 LR22 LR23 LR24 LR01 LR02 LR03 LR04 LR05 LR06 LR07 LR08 LR09 LR10 LR11 LR12 EX7" color="yellow" id="route_7_7"/>
+
+    <route edges="EN8 LR15 LR16 EX9" color="yellow" id="route_8_9"/>
+    <route edges="EN8 LR15 LR16 LR17 LR18 EX10" color="yellow" id="route_8_10"/>
+    <route edges="EN8 LR15 LR16 LR17 LR18 LR19 LR20 EX11" color="yellow" id="route_8_11"/>
+    <route edges="EN8 LR15 LR16 LR17 LR18 LR19 LR20 LR21 LR22 EX12" color="yellow" id="route_8_12"/>
+    <route edges="EN8 LR15 LR16 LR17 LR18 LR19 LR20 LR21 LR22 LR23 LR24 EX1" color="yellow" id="route_8_1"/>
+    <route edges="EN8 LR15 LR16 LR17 LR18 LR19 LR20 LR21 LR22 LR23 LR24 LR01 LR02 EX2" color="yellow" id="route_8_2"/>
+    <route edges="EN8 LR15 LR16 LR17 LR18 LR19 LR20 LR21 LR22 LR23 LR24 LR01 LR02 LR03 LR04 EX3" color="yellow" id="route_8_3"/>
+    <route edges="EN8 LR15 LR16 LR17 LR18 LR19 LR20 LR21 LR22 LR23 LR24 LR01 LR02 LR03 LR04 LR05 LR06 EX4" color="yellow" id="route_8_4"/>
+    <route edges="EN8 LR15 LR16 LR17 LR18 LR19 LR20 LR21 LR22 LR23 LR24 LR01 LR02 LR03 LR04 LR05 LR06 LR07 LR08 EX5" color="yellow" id="route_8_5"/>
+    <route edges="EN8 LR15 LR16 LR17 LR18 LR19 LR20 LR21 LR22 LR23 LR24 LR01 LR02 LR03 LR04 LR05 LR06 LR07 LR08 LR09 LR10 EX6" color="yellow" id="route_8_6"/>
+    <route edges="EN8 LR15 LR16 LR17 LR18 LR19 LR20 LR21 LR22 LR23 LR24 LR01 LR02 LR03 LR04 LR05 LR06 LR07 LR08 LR09 LR10 LR11 LR12 EX6" color="yellow" id="route_8_7"/>
+    <route edges="EN8 LR15 LR16 LR17 LR18 LR19 LR20 LR21 LR22 LR23 LR24 LR01 LR02 LR03 LR04 LR05 LR06 LR07 LR08 LR09 LR10 LR11 LR12 LR13 LR14 EX8" color="yellow" id="route_8_8"/>
+
+    <route edges="EN9 LR17 LR18 EX10" color="yellow" id="route_9_10"/>
+    <route edges="EN9 LR17 LR18 LR19 LR20 EX11" color="yellow" id="route_9_11"/>
+    <route edges="EN9 LR17 LR18 LR19 LR20 LR21 LR22 EX12" color="yellow" id="route_9_12"/>
+    <route edges="EN9 LR17 LR18 LR19 LR20 LR21 LR22 LR23 LR24 EX1" color="yellow" id="route_9_1"/>
+    <route edges="EN9 LR17 LR18 LR19 LR20 LR21 LR22 LR23 LR24 LR01 LR02 EX2" color="yellow" id="route_9_2"/>
+    <route edges="EN9 LR17 LR18 LR19 LR20 LR21 LR22 LR23 LR24 LR01 LR02 LR03 LR04 EX3" color="yellow" id="route_9_3"/>
+    <route edges="EN9 LR17 LR18 LR19 LR20 LR21 LR22 LR23 LR24 LR01 LR02 LR03 LR04 LR05 LR06 EX4" color="yellow" id="route_9_4"/>
+    <route edges="EN9 LR17 LR18 LR19 LR20 LR21 LR22 LR23 LR24 LR01 LR02 LR03 LR04 LR05 LR06 LR07 LR08 EX5" color="yellow" id="route_9_5"/>
+    <route edges="EN9 LR17 LR18 LR19 LR20 LR21 LR22 LR23 LR24 LR01 LR02 LR03 LR04 LR05 LR06 LR07 LR08 LR09 LR10 EX6" color="yellow" id="route_9_6"/>
+    <route edges="EN9 LR17 LR18 LR19 LR20 LR21 LR22 LR23 LR24 LR01 LR02 LR03 LR04 LR05 LR06 LR07 LR08 LR09 LR10 LR11 LR12 EX6" color="yellow" id="route_9_7"/>
+    <route edges="EN9 LR17 LR18 LR19 LR20 LR21 LR22 LR23 LR24 LR01 LR02 LR03 LR04 LR05 LR06 LR07 LR08 LR09 LR10 LR11 LR12 LR13 LR14 EX8" color="yellow" id="route_9_8"/>
+    <route edges="EN9 LR17 LR18 LR19 LR20 LR21 LR22 LR23 LR24 LR01 LR02 LR03 LR04 LR05 LR06 LR07 LR08 LR09 LR10 LR11 LR12 LR13 LR14 LR15 LR16 EX9" color="yellow" id="route_9_9"/>
+
+    <route edges="EN10 LR19 LR20 EX11" color="yellow" id="route_10_11"/>
+    <route edges="EN10 LR19 LR20 LR21 LR22 EX12" color="yellow" id="route_10_12"/>
+    <route edges="EN10 LR19 LR20 LR21 LR22 LR23 LR24 EX1" color="yellow" id="route_10_1"/>
+    <route edges="EN10 LR19 LR20 LR21 LR22 LR23 LR24 LR01 LR02 EX2" color="yellow" id="route_10_2"/>
+    <route edges="EN10 LR19 LR20 LR21 LR22 LR23 LR24 LR01 LR02 LR03 LR04 EX3" color="yellow" id="route_10_3"/>
+    <route edges="EN10 LR19 LR20 LR21 LR22 LR23 LR24 LR01 LR02 LR03 LR04 LR05 LR06 EX4" color="yellow" id="route_10_4"/>
+    <route edges="EN10 LR19 LR20 LR21 LR22 LR23 LR24 LR01 LR02 LR03 LR04 LR05 LR06 LR07 LR08 EX5" color="yellow" id="route_10_5"/>
+    <route edges="EN10 LR19 LR20 LR21 LR22 LR23 LR24 LR01 LR02 LR03 LR04 LR05 LR06 LR07 LR08 LR09 LR10 EX6" color="yellow" id="route_10_6"/>
+    <route edges="EN10 LR19 LR20 LR21 LR22 LR23 LR24 LR01 LR02 LR03 LR04 LR05 LR06 LR07 LR08 LR09 LR10 LR11 LR12 EX6" color="yellow" id="route_10_7"/>
+    <route edges="EN10 LR19 LR20 LR21 LR22 LR23 LR24 LR01 LR02 LR03 LR04 LR05 LR06 LR07 LR08 LR09 LR10 LR11 LR12 LR13 LR14 EX8" color="yellow" id="route_10_8"/>
+    <route edges="EN10 LR19 LR20 LR21 LR22 LR23 LR24 LR01 LR02 LR03 LR04 LR05 LR06 LR07 LR08 LR09 LR10 LR11 LR12 LR13 LR14 LR15 LR16 EX9" color="yellow" id="route_10_9"/>
+    <route edges="EN10 LR19 LR20 LR21 LR22 LR23 LR24 LR01 LR02 LR03 LR04 LR05 LR06 LR07 LR08 LR09 LR10 LR11 LR12 LR13 LR14 LR15 LR16 LR17 LR18 EX10" color="yellow" id="route_10_10"/>
+
+    <route edges="EN11 LR21 LR22 EX12" color="yellow" id="route_11_12"/>
+    <route edges="EN11 LR21 LR22 LR23 LR24 EX1" color="yellow" id="route_11_1"/>
+    <route edges="EN11 LR21 LR22 LR23 LR24 LR01 LR02 EX2" color="yellow" id="route_11_2"/>
+    <route edges="EN11 LR21 LR22 LR23 LR24 LR01 LR02 LR03 LR04 EX3" color="yellow" id="route_11_3"/>
+    <route edges="EN11 LR21 LR22 LR23 LR24 LR01 LR02 LR03 LR04 LR05 LR06 EX4" color="yellow" id="route_11_4"/>
+    <route edges="EN11 LR21 LR22 LR23 LR24 LR01 LR02 LR03 LR04 LR05 LR06 LR07 LR08 EX5" color="yellow" id="route_11_5"/>
+    <route edges="EN11 LR21 LR22 LR23 LR24 LR01 LR02 LR03 LR04 LR05 LR06 LR07 LR08 LR09 LR10 EX6" color="yellow" id="route_11_6"/>
+    <route edges="EN11 LR21 LR22 LR23 LR24 LR01 LR02 LR03 LR04 LR05 LR06 LR07 LR08 LR09 LR10 LR11 LR12 EX6" color="yellow" id="route_11_7"/>
+    <route edges="EN11 LR21 LR22 LR23 LR24 LR01 LR02 LR03 LR04 LR05 LR06 LR07 LR08 LR09 LR10 LR11 LR12 LR13 LR14 EX8" color="yellow" id="route_11_8"/>
+    <route edges="EN11 LR21 LR22 LR23 LR24 LR01 LR02 LR03 LR04 LR05 LR06 LR07 LR08 LR09 LR10 LR11 LR12 LR13 LR14 LR15 LR16 EX9" color="yellow" id="route_11_9"/>
+    <route edges="EN11 LR21 LR22 LR23 LR24 LR01 LR02 LR03 LR04 LR05 LR06 LR07 LR08 LR09 LR10 LR11 LR12 LR13 LR14 LR15 LR16 LR17 LR18 EX10" color="yellow" id="route_11_10"/>
+    <route edges="EN11 LR21 LR22 LR23 LR24 LR01 LR02 LR03 LR04 LR05 LR06 LR07 LR08 LR09 LR10 LR11 LR12 LR13 LR14 LR15 LR16 LR17 LR18 LR19 LR20 EX11" color="yellow" id="route_11_11"/>
+
+    <route edges="EN12 LR23 LR24 EX1" color="yellow" id="route_12_1"/>
+    <route edges="EN12 LR23 LR24 LR01 LR02 EX2" color="yellow" id="route_12_2"/>
+    <route edges="EN12 LR23 LR24 LR01 LR02 LR03 LR04 EX3" color="yellow" id="route_12_3"/>
+    <route edges="EN12 LR23 LR24 LR01 LR02 LR03 LR04 LR05 LR06 EX4" color="yellow" id="route_12_4"/>
+    <route edges="EN12 LR23 LR24 LR01 LR02 LR03 LR04 LR05 LR06 LR07 LR08 EX5" color="yellow" id="route_12_5"/>
+    <route edges="EN12 LR23 LR24 LR01 LR02 LR03 LR04 LR05 LR06 LR07 LR08 LR09 LR10 EX6" color="yellow" id="route_12_6"/>
+    <route edges="EN12 LR23 LR24 LR01 LR02 LR03 LR04 LR05 LR06 LR07 LR08 LR09 LR10 LR11 LR12 EX6" color="yellow" id="route_12_7"/>
+    <route edges="EN12 LR23 LR24 LR01 LR02 LR03 LR04 LR05 LR06 LR07 LR08 LR09 LR10 LR11 LR12 LR13 LR14 EX8" color="yellow" id="route_12_8"/>
+    <route edges="EN12 LR23 LR24 LR01 LR02 LR03 LR04 LR05 LR06 LR07 LR08 LR09 LR10 LR11 LR12 LR13 LR14 LR15 LR16 EX9" color="yellow" id="route_12_9"/>
+    <route edges="EN12 LR23 LR24 LR01 LR02 LR03 LR04 LR05 LR06 LR07 LR08 LR09 LR10 LR11 LR12 LR13 LR14 LR15 LR16 LR17 LR18 EX10" color="yellow" id="route_12_10"/>
+    <route edges="EN12 LR23 LR24 LR01 LR02 LR03 LR04 LR05 LR06 LR07 LR08 LR09 LR10 LR11 LR12 LR13 LR14 LR15 LR16 LR17 LR18 LR19 LR20 EX11" color="yellow" id="route_12_11"/>
+    <route edges="EN12 LR23 LR24 LR01 LR02 LR03 LR04 LR05 LR06 LR07 LR08 LR09 LR10 LR11 LR12 LR13 LR14 LR15 LR16 LR17 LR18 LR19 LR20 LR21 LR22 EX12" color="yellow" id="route_12_12"/>
+	<route edges="LR01 LR02 LR03 LR04 LR05 LR06 LR07 LR08 LR09 LR10 LR11 LR12 LR13 LR14 LR15 LR16 LR17 LR18 EX10" color="yellow" id="ro_1_1"/>
+
+	<flow id="normal_flow_1_1" type="lane_free_car1" begin="0" end="1000" number="45" from="EN1" to="EX1" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_1_8" type="lane_free_car8" begin="2" end="1002" number="19" from="EN1" to="EX8" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_3_10" type="lane_free_car10" begin="4" end="1004" number="18" from="EN3" to="EX10" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_5_5" type="lane_free_car5" begin="6" end="1006" number="4" from="EN5" to="EX5" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_2_1" type="lane_free_car1" begin="8" end="1008" number="19" from="EN2" to="EX1" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_6_4" type="lane_free_car4" begin="10" end="1010" number="19" from="EN6" to="EX4" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_5_1" type="lane_free_car1" begin="12" end="1012" number="30" from="EN5" to="EX1" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_4_9" type="lane_free_car9" begin="14" end="1014" number="19" from="EN4" to="EX9" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_7_11" type="lane_free_car11" begin="16" end="1016" number="5" from="EN7" to="EX11" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_6_1" type="lane_free_car1" begin="18" end="1018" number="25" from="EN6" to="EX1" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_11_10" type="lane_free_car10" begin="20" end="1020" number="19" from="EN11" to="EX10" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_1_11" type="lane_free_car11" begin="22" end="1022" number="6" from="EN1" to="EX11" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_3_5" type="lane_free_car5" begin="24" end="1024" number="3" from="EN3" to="EX5" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_3_8" type="lane_free_car8" begin="26" end="1026" number="10" from="EN3" to="EX8" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_7_1" type="lane_free_car1" begin="28" end="1028" number="37" from="EN7" to="EX1" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_8_6" type="lane_free_car6" begin="30" end="1030" number="10" from="EN8" to="EX6" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_3_7" type="lane_free_car7" begin="32" end="1032" number="19" from="EN3" to="EX7" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_4_6" type="lane_free_car6" begin="34" end="1034" number="19" from="EN4" to="EX6" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_12_7" type="lane_free_car7" begin="36" end="1036" number="19" from="EN12" to="EX7" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_2_8" type="lane_free_car8" begin="38" end="1038" number="9" from="EN2" to="EX8" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_8_1" type="lane_free_car1" begin="40" end="1040" number="19" from="EN8" to="EX1" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_7_5" type="lane_free_car5" begin="42" end="1042" number="5" from="EN7" to="EX5" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_11_6" type="lane_free_car6" begin="44" end="1044" number="15" from="EN11" to="EX6" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_10_8" type="lane_free_car8" begin="46" end="1046" number="15" from="EN10" to="EX8" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_12_9" type="lane_free_car9" begin="48" end="1048" number="14" from="EN12" to="EX9" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_7_12" type="lane_free_car12" begin="50" end="1050" number="19" from="EN7" to="EX12" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_9_1" type="lane_free_car1" begin="52" end="1052" number="24" from="EN9" to="EX1" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_8_12" type="lane_free_car12" begin="54" end="1054" number="10" from="EN8" to="EX12" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_5_3" type="lane_free_car3" begin="56" end="1056" number="15" from="EN5" to="EX3" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_6_2" type="lane_free_car2" begin="58" end="1058" number="10" from="EN6" to="EX2" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_3_4" type="lane_free_car4" begin="60" end="1060" number="19" from="EN3" to="EX4" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_8_7" type="lane_free_car7" begin="62" end="1062" number="18" from="EN8" to="EX7" departSpeed="4" departPos="0" />		
+	<flow id="normal_flow_6_3" type="lane_free_car3" begin="64" end="1064" number="13" from="EN6" to="EX3" departSpeed="4" departPos="0" />	
+	<flow id="normal_flow_10_1" type="lane_free_car1" begin="66" end="1066" number="33" from="EN10" to="EX1" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_12_11" type="lane_free_car11" begin="68" end="1068" number="3" from="EN12" to="EX11" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_5_7" type="lane_free_car7" begin="70" end="1070" number="24" from="EN5" to="EX7" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_11_1" type="lane_free_car1" begin="72" end="1072" number="27" from="EN11" to="EX1" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_2_2" type="lane_free_car2" begin="74" end="1074" number="9" from="EN2" to="EX2" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_8_4" type="lane_free_car4" begin="76" end="1076" number="18" from="EN8" to="EX4" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_1_12" type="lane_free_car12" begin="78" end="1078" number="24" from="EN1" to="EX12" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_10_9" type="lane_free_car9" begin="80" end="1080" number="18" from="EN10" to="EX9" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_9_6" type="lane_free_car6" begin="82" end="1082" number="13" from="EN9" to="EX6" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_12_1" type="lane_free_car1" begin="84" end="1084" number="24" from="EN12" to="EX1" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_2_12" type="lane_free_car12" begin="86" end="1086" number="10" from="EN2" to="EX12" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_3_9" type="lane_free_car9" begin="88" end="1088" number="13" from="EN3" to="EX9" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_9_3" type="lane_free_car3" begin="90" end="1090" number="13" from="EN9" to="EX3" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_4_4" type="lane_free_car4" begin="92" end="1092" number="31" from="EN4" to="EX4" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_6_7" type="lane_free_car7" begin="94" end="1094" number="19" from="EN6" to="EX7" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_7_9" type="lane_free_car9" begin="96" end="1096" number="19" from="EN7" to="EX9" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_8_10" type="lane_free_car10" begin="98" end="1098" number="15" from="EN8" to="EX10" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_5_11" type="lane_free_car11" begin="100" end="1100" number="4" from="EN5" to="EX11" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_10_12" type="lane_free_car12" begin="102" end="1102" number="18" from="EN10" to="EX12" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_5_2" type="lane_free_car2" begin="104" end="1104" number="13" from="EN5" to="EX2" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_10_2" type="lane_free_car2" begin="106" end="1106" number="15" from="EN10" to="EX2" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_11_8" type="lane_free_car8" begin="108" end="1108" number="13" from="EN11" to="EX8" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_9_11" type="lane_free_car11" begin="110" end="1110" number="3" from="EN9" to="EX11" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_4_10" type="lane_free_car10" begin="112" end="1112" number="27" from="EN4" to="EX10" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_9_5" type="lane_free_car5" begin="114" end="1114" number="3" from="EN9" to="EX5" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_7_4" type="lane_free_car4" begin="116" end="1116" number="31" from="EN7" to="EX4" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_1_3" type="lane_free_car3" begin="118" end="1118" number="24" from="EN1" to="EX3" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_12_2" type="lane_free_car2" begin="120" end="1120" number="10" from="EN12" to="EX2" departSpeed="4" departPos="0" />	
+	<flow id="normal_flow_2_3" type="lane_free_car3" begin="122" end="1122" number="10" from="EN2" to="EX3" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_1_10" type="lane_free_car10" begin="124" end="1124" number="33" from="EN1" to="EX10" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_12_12" type="lane_free_car12" begin="126" end="1126" number="14" from="EN12" to="EX12" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_3_3" type="lane_free_car3" begin="128" end="1128" number="14" from="EN3" to="EX3" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_1_2" type="lane_free_car2" begin="130" end="1130" number="19" from="EN1" to="EX2" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_5_4" type="lane_free_car4" begin="132" end="1132" number="24" from="EN5" to="EX4" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_5_9" type="lane_free_car9" begin="134" end="1134" number="15" from="EN5" to="EX9" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_2_10" type="lane_free_car10" begin="136" end="1136" number="15" from="EN2" to="EX10" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_7_8" type="lane_free_car8" begin="138" end="1138" number="18" from="EN7" to="EX8" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_6_6" type="lane_free_car6" begin="140" end="1140" number="13" from="EN6" to="EX6" departSpeed="4" departPos="0" />	
+	<flow id="normal_flow_4_5" type="lane_free_car5" begin="142" end="1142" number="5" from="EN4" to="EX5" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_12_6" type="lane_free_car6" begin="144" end="1144" number="13" from="EN12" to="EX6" departSpeed="4" departPos="0" />	
+	<flow id="normal_flow_9_7" type="lane_free_car7" begin="146" end="1146" number="19" from="EN9" to="EX7" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_8_2" type="lane_free_car2" begin="148" end="1148" number="9" from="EN8" to="EX2" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_4_12" type="lane_free_car12" begin="150" end="1150" number="19" from="EN4" to="EX12" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_12_10" type="lane_free_car10" begin="152" end="1152" number="18" from="EN12" to="EX10" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_9_8" type="lane_free_car8" begin="154" end="1154" number="10" from="EN9" to="EX8" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_4_3" type="lane_free_car3" begin="156" end="1156" number="21" from="EN4" to="EX3" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_4_1" type="lane_free_car1" begin="158" end="1158" number="37" from="EN4" to="EX1" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_7_7" type="lane_free_car7" begin="160" end="1160" number="31" from="EN7" to="EX7" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_8_11" type="lane_free_car11" begin="162" end="1162" number="3" from="EN8" to="EX11" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_9_12" type="lane_free_car12" begin="164" end="1164" number="13" from="EN9" to="EX12" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_3_11" type="lane_free_car11" begin="166" end="1166" number="3" from="EN3" to="EX11" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_5_12" type="lane_free_car12" begin="168" end="1168" number="15" from="EN5" to="EX12" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_7_3" type="lane_free_car3" begin="170" end="1170" number="19" from="EN7" to="EX3" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_6_5" type="lane_free_car5" begin="172" end="1172" number="3" from="EN6" to="EX5" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_8_3" type="lane_free_car3" begin="174" end="1174" number="12" from="EN8" to="EX3" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_10_3" type="lane_free_car3" begin="176" end="1176" number="18" from="EN10" to="EX3" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_8_8" type="lane_free_car8" begin="178" end="1178" number="9" from="EN8" to="EX8" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_2_9" type="lane_free_car9" begin="180" end="1180" number="10" from="EN2" to="EX9" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_9_2" type="lane_free_car2" begin="182" end="1182" number="10" from="EN9" to="EX2" departSpeed="4" departPos="0" />	
+	<flow id="normal_flow_6_12" type="lane_free_car12" begin="184" end="1184" number="13" from="EN6" to="EX12" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_1_6" type="lane_free_car6" begin="186" end="1186" number="24" from="EN1" to="EX6" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_11_3" type="lane_free_car3" begin="188" end="1188" number="15" from="EN11" to="EX3" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_11_4" type="lane_free_car4" begin="190" end="1190" number="25" from="EN11" to="EX4" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_7_6" type="lane_free_car6" begin="192" end="1192" number="21" from="EN7" to="EX6" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_7_10" type="lane_free_car10" begin="194" end="1194" number="27" from="EN7" to="EX10" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_12_3" type="lane_free_car3" begin="196" end="1196" number="13" from="EN12" to="EX3" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_1_4" type="lane_free_car4" begin="198" end="1198" number="37" from="EN1" to="EX4" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_3_2" type="lane_free_car2" begin="200" end="1200" number="10" from="EN3" to="EX2" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_4_11" type="lane_free_car11" begin="202" end="1202" number="5" from="EN4" to="EX11" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_8_9" type="lane_free_car9" begin="204" end="1204" number="10" from="EN8" to="EX9" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_11_7" type="lane_free_car7" begin="206" end="1206" number="25" from="EN11" to="EX7" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_10_6" type="lane_free_car6" begin="208" end="1208" number="18" from="EN10" to="EX6" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_4_8" type="lane_free_car8" begin="210" end="1210" number="18" from="EN4" to="EX8" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_10_5" type="lane_free_car5" begin="212" end="1212" number="5" from="EN10" to="EX5" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_2_4" type="lane_free_car4" begin="214" end="1214" number="18" from="EN2" to="EX4" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_11_5" type="lane_free_car5" begin="216" end="1216" number="4" from="EN11" to="EX5" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_6_8" type="lane_free_car8" begin="218" end="1218" number="7" from="EN6" to="EX8" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_7_2" type="lane_free_car2" begin="220" end="1220" number="18" from="EN7" to="EX2" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_5_8" type="lane_free_car8" begin="222" end="1222" number="13" from="EN5" to="EX8" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_10_10" type="lane_free_car10" begin="224" end="1224" number="24" from="EN10" to="EX10" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_2_11" type="lane_free_car11" begin="226" end="1226" number="3" from="EN2" to="EX11" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_4_7" type="lane_free_car7" begin="228" end="1228" number="31" from="EN4" to="EX7" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_9_4" type="lane_free_car4" begin="230" end="1230" number="19" from="EN9" to="EX4" departSpeed="4" departPos="0" />	
+	<flow id="normal_flow_6_11" type="lane_free_car11" begin="232" end="1232" number="3" from="EN6" to="EX11" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_4_2" type="lane_free_car2" begin="234" end="1234" number="18" from="EN4" to="EX2" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_3_1" type="lane_free_car1" begin="236" end="1236" number="25" from="EN3" to="EX1" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_9_10" type="lane_free_car10" begin="238" end="1238" number="18" from="EN9" to="EX10" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_2_7" type="lane_free_car7" begin="240" end="1240" number="18" from="EN2" to="EX7" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_3_6" type="lane_free_car6" begin="242" end="1242" number="13" from="EN3" to="EX6" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_12_4" type="lane_free_car4" begin="244" end="1244" number="21" from="EN12" to="EX4" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_1_5" type="lane_free_car5" begin="246" end="1246" number="6" from="EN1" to="EX5" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_11_12" type="lane_free_car12" begin="248" end="1248" number="15" from="EN11" to="EX12" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_6_9" type="lane_free_car9" begin="250" end="1250" number="13" from="EN6" to="EX9" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_1_7" type="lane_free_car7" begin="252" end="1252" number="37" from="EN1" to="EX7" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_2_5" type="lane_free_car5" begin="254" end="1254" number="3" from="EN2" to="EX5" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_8_5" type="lane_free_car5" begin="256" end="1256" number="3" from="EN8" to="EX5" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_2_6" type="lane_free_car6" begin="258" end="1258" number="10" from="EN2" to="EX6" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_1_9" type="lane_free_car9" begin="270" end="1270" number="24" from="EN1" to="EX9" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_6_10" type="lane_free_car10" begin="272" end="1272" number="18" from="EN6" to="EX10" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_5_6" type="lane_free_car6" begin="274" end="1274" number="15" from="EN5" to="EX6" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_11_11" type="lane_free_car11" begin="276" end="1276" number="4" from="EN11" to="EX11" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_9_9" type="lane_free_car9" begin="278" end="1278" number="13" from="EN9" to="EX9" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_10_7" type="lane_free_car7" begin="280" end="1280" number="27" from="EN10" to="EX7" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_12_8" type="lane_free_car8" begin="282" end="1282" number="10" from="EN12" to="EX8" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_12_5" type="lane_free_car5" begin="284" end="1284" number="3" from="EN12" to="EX5" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_5_10" type="lane_free_car10" begin="286" end="1286" number="14" from="EN5" to="EX10" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_11_2" type="lane_free_car2" begin="288" end="1288" number="13" from="EN11" to="EX2" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_3_12" type="lane_free_car12" begin="290" end="1290" number="13" from="EN3" to="EX12" departSpeed="4" departPos="0" />
+	<flow id="normal_flow_10_11" type="lane_free_car11" begin="292" end="1292" number="5" from="EN10" to="EX11" departSpeed="4" departPos="0" />
+	
+
+</routes>

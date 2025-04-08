@@ -1,0 +1,20 @@
+<configuration>
+   <input>
+       <net-file value="platoons.net.xml"/>
+       <route-files value="platoons.rou.xml"/>
+       <gui-settings-file value="gui-settings.cfg"/>
+	   
+   </input>
+	<processing>
+		   <step-method.ballistic value="true"/>
+		   <collision.action value="none"/>
+		   <step-length value="0.2"/>
+		   <seed value="111"/>
+		   <video-record-or-replay value="nothing"/>
+	</processing>
+	<output>
+   	<tripinfo-output value="trip_info.xml"/>
+   	<statistic-output value="avg_stats.xml"/>
+   	<video-logfile value="recording.log"/>
+   </output>
+</configuration>
