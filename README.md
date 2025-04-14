@@ -43,7 +43,7 @@ Build and Installation
 ----------------------
 
 You can download pre-compiled versions of TrafficFluid-Sim for both Windows 10/11 and Ubuntu 22.04 LTS 
-via our [downloads site](https://www.trafficfluid.tuc.gr/en/trafficfluid-sim).
+through our [website](https://www.trafficfluid.tuc.gr/en/trafficfluid-sim).
 
 If you want to work with the source code for custom enhancements under Windows environments, as prerequisite for SUMO, please 
 consult our [user manual](https://www.trafficfluid.tuc.gr/fileadmin/users_data/project_trafficfluid/_uploads/TrafficFluid_Sim_User_Manual.pdf) (Section 1.3) and make sure all suggested libraries are installed under the correct versions.
