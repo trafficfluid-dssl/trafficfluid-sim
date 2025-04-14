@@ -3,7 +3,7 @@
 TrafficFluid-Sim
 ================
 
-[TrafficFluid-Sim](https://www.trafficfluid.tuc.gr/en/home) is an open source, microscopic simulation tool for lane-free traffic environments in the era of Connected and Automated Vehicles.
+[TrafficFluid-Sim](https://www.trafficfluid.tuc.gr/en/trafficfluid-sim) is an open source, microscopic simulation tool for lane-free traffic environments in the era of Connected and Automated Vehicles.
 This project is a fork of [Eclipse SUMO - Simulation of Urban MObility](https://github.com/eclipse-sumo/sumo) and serves as an extension of SUMO that explicitly targets the lane-free traffic paradigm.
 
 Highlighted Features:
@@ -43,15 +43,15 @@ Build and Installation
 ----------------------
 
 You can download pre-compiled versions of TrafficFluid-Sim for both Windows 10/11 and Ubuntu 22.04 LTS 
-via our [downloads site](https://www.trafficfluid.tuc.gr/en/home).
+via our [downloads site](https://www.trafficfluid.tuc.gr/en/trafficfluid-sim).
 
 If you want to work with the source code for custom enhancements under Windows environments, as prerequisite for SUMO, please 
-consult our [user manual](https://www.trafficfluid.tuc.gr/en/home) (Section 1.3) and make sure all suggested libraries are installed under the correct versions.
+consult our [user manual](https://www.trafficfluid.tuc.gr/fileadmin/users_data/project_trafficfluid/_uploads/TrafficFluid_Sim_User_Manual.pdf) (Section 1.3) and make sure all suggested libraries are installed under the correct versions.
 
 Getting started
 ---------------
 
-To get started with TrafficFluid-Sim, we provide a complete [user manual](https://www.trafficfluid.tuc.gr/en/home), including technical information, 
+To get started with TrafficFluid-Sim, we provide a complete [user manual](https://www.trafficfluid.tuc.gr/fileadmin/users_data/project_trafficfluid/_uploads/TrafficFluid_Sim_User_Manual.pdf), including technical information, 
 installation and setup instructions, design guidelines for lane-free traffic scenarios and vehicle movement strategies and more.
 
 Additionally, since this work is an extension of SUMO, we encourage consulting the official [SUMO documentation](https://sumo.dlr.de/docs) for basic features of the simulator.
