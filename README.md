@@ -67,19 +67,21 @@ Citation
 --------
 TrafficFluid-Sim can be cited as: 
 
-	D. Troullinos, I. Chrysomallis, I. Papamichail, and M. Papageorgiou. 
-	Trafficfluid-Sim: Extending SUMO for Microscopic Simulation in Lane-Free Traffic. 
-	Dynamic Systems and Simulation Laboratory, Technical University of Crete, User manual, 2025.
+	Troullinos, D., Chrysomallis, I., Papamichail, I., Papageorgiou, M.
+	TrafficFluid-Sim: Extending SUMO for Microscopic Simulation in Lane-Free Traffic -- User Manual.
+	Internal Report No. 2025-27, 
+	Dynamic Systems and Simulation Laboratory, Technical University of Crete, Chania, Greece, May 2025.
 
 
 For convenience, the following BIB format can be used:
 ```
-@manual{trafficfluidsim,
-author={Troullinos, Dimitrios and Chrysomallis, Iason and Papamichail, Ioannis and Papageorgiou, Markos},
-title={TrafficFluid-Sim: Extending SUMO for Microscopic Simulation in Lane-Free Traffic},
-organization={Dynamic Systems and Simulation Laboratory, Technical University of Crete},
-edition={User manual},
-year={2025},
-location = {Chania, Greece}
+@techreport{trafficfluidsim_manual,
+	author={Troullinos, Dimitrios and Chrysomallis, Iason and Papamichail, Ioannis and Papageorgiou, Markos},
+	title={TrafficFluid-Sim: Extending SUMO for Microscopic Simulation in Lane-Free Traffic--User Manual},
+	institution={Dynamic Systems and Simulation Laboratory, Technical University of Crete},
+	number={Internal Report No. 2025-27},
+	year={2025},
+	month={May},
+	location = {Chania, Greece}
 }
 ```
