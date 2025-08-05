@@ -3650,6 +3650,7 @@ MSVehicle::processLaneAdvances(std::vector<MSLane*>& passedLanes, bool& moved, s
     }
     // move on lane(s)
     if (myState.myPos > myLane->getLength()) {
+        //std::cout << "veh " << getID() << "is beyond the lane limit\n";
         // The vehicle has moved at least to the next lane (maybe it passed even more than one)
         if (myCurrEdge != myRoute->end() - 1) {
             MSLane* approachedLane = myLane;
@@ -4656,10 +4657,10 @@ MSVehicle::enterLaneAtMove(MSLane* enteredLane, bool onTeleporting) {
         // LFPlugin Begin        
         if (getVehicleType().getParameter().cmdModel == SUMO_TAG_LF_CMD_BICYCLE && global_coordinates) {
             double new_x, new_y;
-            LaneFreeSimulationPlugin::getInstance()->convert_to_local_coordinates(&new_x, &new_y, cachedGlobalPos, myLane);
+            LaneFreeSimulationPlugin::getInstance()->convert_to_local_coordinates(&new_x, &new_y, cachedGlobalPos, myLane, myAngleRelative);
             myState.myPos = new_x;
-            myState.myPosLat = new_y;            
-            //std::cout << "veh:" << getID() << " proceeds to lane:" << myLane->getID() << " with new pos:" << cachedGlobalPos.x() << "," << cachedGlobalPos.y() << "\n";
+            myState.myPosLat = new_y;
+            //std::cout << "veh:" << getID() << " proceeds to lane:" << myLane->getID() << " with new (cached) pos:" << cachedGlobalPos.x() << "," << cachedGlobalPos.y() << " and internal: "<< new_x << ","<<new_y << "\n";
         }
         // LFPlugin End
         

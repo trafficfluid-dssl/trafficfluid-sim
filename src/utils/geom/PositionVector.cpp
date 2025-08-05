@@ -916,7 +916,9 @@ PositionVector::nearest_offset_to_point25D(const Position& p, bool perpendicular
         // original code on line below
         double pos =
             GeomHelper::nearest_offset_on_line_to_point2D(*i, *(i + 1), p, perpendicular || last_element, first_element);
-        
+        if ((*i).distanceTo(*(i + 1)) == 0) {
+            return 0;
+        }
         if (first_element) { // flag is useful only for command above, should be false for the remaining line segments
             if (pos < 0) {
                 return pos;

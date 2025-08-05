@@ -1,21 +1,16 @@
 /****************************************************************************/
-// Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
-// This program and the accompanying materials are made available under the
-// terms of the Eclipse Public License 2.0 which is available at
-// https://www.eclipse.org/legal/epl-2.0/
-// This Source Code may also be made available under the following Secondary
+// This Source Code may be made available under the following 
 // Licenses when the conditions for such availability set forth in the Eclipse
 // Public License 2.0 are satisfied: GNU General Public License, version 2
 // or later which is available at
 // https://www.gnu.org/licenses/old-licenses/gpl-2.0-standalone.html
 // SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 /****************************************************************************/
-/// @file    MSCFModel_LaneFree.h
-/// @author
+/// @file    MSCFModel_LaneFree.cpp
+/// @authors  Dimitrios Troullinos, Iason Chrysomallis
 /// @date    Thu, 29 Oct 2020
 ///
-// LaneFree model
+// LaneFree Plugin model.
 /****************************************************************************/
 #pragma once
 #include <config.h>
@@ -30,17 +25,8 @@
 #include <random>
 #include <chrono>
 
-//#ifdef __unix__
-//#include "LaneFree_linux.h"
-//#elif defined(WIN32)
-//#include "LaneFree_win.h"
-//#endif
 
-//#include <tgmath.h> 
-#define MAX_ITERS 5
-//#define UPDATE_PRINT_MS 5
 // TODO check consistency with https://sumo.dlr.de/docs/Developer/CodeStyle.html (use the suggested object instead of unordered_map & modify for loops with iterators)
-// TODO check if we can just include LaneFree.h file, so as to not define NumericalID again here
 
 //TODO convert enum to enum class
 typedef enum {
@@ -74,18 +60,10 @@ typedef struct ArrayMem arrayMemStruct;
 typedef std::unordered_map<NumericalID, std::array<double, 2>> LastVehicleStatus;
 
 
-
-//declare here the api functions ("C compatible", in terms if arguments, and return value) (maybe implement them directly, or inside the cpp file alternatively)
-
-// NumericalID* lf_sim_get_all_ids();
-
-// NumericalID lf_sim_get_all_ids_size();
-
 // our LaneFree vehicle contains a pointer to the corresponding SUMO vehicle, while also containing information regarding the lateral speed and the desired (longitudinal) speed.
 class MSLaneFreeVehicle{
 public:
-    //static double last_init_pos_y; //use the last vehicle status
-    //static double last_v_width;
+    
     static LastVehicleStatus last_veh_status;
 
     MSLaneFreeVehicle(MSVehicle* veh) : collided_with_cur{}, collided_with_prev{}{
@@ -142,7 +120,6 @@ public:
     }
 
     void set_angle_relative(double new_angle_theta) {
-        // std::cout << "initial angle:" << new_angle_theta << "\n";
         myveh->setAngleRelative(new_angle_theta);
     }
     void set_speed_x(double new_speed_x){
@@ -151,7 +128,7 @@ public:
     void set_speed_y(double new_speed_y){
         speed_y = new_speed_y;
     }
-    MSVehicle* get_vehicle(){
+    inline MSVehicle* get_vehicle(){
         return myveh;
     }
 
@@ -159,11 +136,11 @@ public:
         ring_road = circular;
     }
 
-    bool is_circular(){
+    inline bool is_circular(){
         return ring_road;
     }
 
-    double get_desired_speed(){
+    inline double get_desired_speed(){
         return speed_x_desired;
     }
 
@@ -176,20 +153,20 @@ public:
     //    platoon_follower = flag;
     //}
     
-    double get_speed_x(){
+    inline double get_speed_x(){
         return myveh->getSpeed();
     }
 
 
-    double get_speed_y(){
+    inline double get_speed_y(){
         return speed_y;
     }
 
-    double get_acceleration_x(){
+    inline double get_acceleration_x(){
         return accel_x;
     }
     
-    double get_acceleration_y(){
+    inline double get_acceleration_y(){
         return accel_y;
     }
 
@@ -200,21 +177,14 @@ public:
         double cos_angle = (myveh->getVehicleType().getParameter().cmdModel != SUMO_TAG_LF_CMD_BICYCLE)  ? 1 : cos(myveh->getAngleRelativeAlways());
 
         double pos_x = myveh->getPositionOnLane() - (myveh->getLength() / 2)* cos_angle;
-
-        //avoid negative positions when circular movement
-        
-        //if (is_circular() && pos_x < 0) { // This creates issues when checking the order of vehicles
-        //    return myveh->getLane()->getEdge().getLength() + pos_x;
-        //}
-        //
-        
+       
 
         return pos_x;
     }
 
 
 
-    double get_position_y(){ // generalize here for angle!
+    double get_position_y(){ 
         double latOffset = 0;
         MSLane *mylane = myveh->getLane();
         MSEdge *myedge = &(mylane->getEdge());
@@ -225,7 +195,7 @@ public:
 
         // consider non-zero orientation only for the bicycle model
         double sin_angle = (myveh->getVehicleType().getParameter().cmdModel != SUMO_TAG_LF_CMD_BICYCLE) ? 0 : sin(myveh->getAngleRelativeAlways());
-        //std::cout << "angle:" << myveh->getAngleRelative() << "\n";
+        
         return myveh->getLateralPositionOnLane() + ((myveh->getLane()->getWidth()) / 2) + latOffset - (myveh->getLength() / 2) * sin_angle;
     }
 
@@ -269,11 +239,11 @@ public:
         return platoon_follower;
     }*/
 
-    bool is_lanefree(){
+    inline bool is_lanefree(){
         return ((myveh->getCarFollowModel().getModelID())==SUMO_TAG_CF_LANEFREE);
     }
 
-    NumericalID get_edge_id() {
+    inline NumericalID get_edge_id() {
         return (myveh->getEdge()->getNumericalID());
     }
 
@@ -360,15 +330,29 @@ protected:
 
     
 
-    
+    //need to remove either this or the duplicate one in the lanefreesimplugin instance
     void convert_to_local_coordinates(double* x_pos_local, double* y_pos_local, Position& pos, const MSLane* mylane) {
 
-
+        // corner case for when an internal lane/junction point with no actual dimensions connects two consecutive edges in a highway
+        if (mylane->isInternal() && mylane->getShape().size() == 2 && mylane->getShape()[0] == mylane->getShape()[1]) {
+            /*std::cout << "Edge case in lane:" << mylane->getID() << "\n";*/
+            PositionVector laneShape = mylane->getShape();
+            if (laneShape.size() != 2) {
+                std::cout << "Error in conversion to local coordinates for internal lane that connects two edges in a highway!\n";
+                return;
+            }
+            Position pos_l = laneShape[0]; // just get the position
+            *x_pos_local = pos.x() - pos_l.x();
+            *y_pos_local = pos.y() - pos_l.y();
+            return;
+        }
         //*x_pos_local = std::max(0., std::min(double(mylane->getLength() - POSITION_EPS),
         //    mylane->interpolateGeometryPosToLanePos(
         //        mylane->getShape().nearest_offset_to_point25D(pos, false))));
-        *x_pos_local = mylane->interpolateGeometryPosToLanePos(mylane->getShape().nearest_offset_to_point25D(pos, false)); //mylane->interpolateGeometryPosToLanePos(mylane->getShape().nearest_offset_to_point25D(pos, false));
-
+        double x_point = mylane->getShape().nearest_offset_to_point25D(pos, false);
+        //std::cout << " x point:" << x_point << "\n";
+        *x_pos_local = mylane->interpolateGeometryPosToLanePos(x_point); //mylane->interpolateGeometryPosToLanePos(mylane->getShape().nearest_offset_to_point25D(pos, false));
+        //std::cout << " x pos local:" << *x_pos_local<< "\n";
         //double angle_lane = mylane->getShape().beginEndAngle();
         //std::cout << *x_pos_local << " and angle:" << angle_lane << "\n";
         //std::cout << *x_pos_local << ", length:" << mylane->getLength() << "\n";
@@ -616,65 +600,71 @@ public:
 
     void boundary_value(double mid_height, double direction, std::vector<double>& lim, std::vector<double>& slope, std::vector<double>& offset, double long_pos, double veh_speed_x, double* boundary_distance, double* boundary_speed);
 
-    arrayMemStruct* get_all_ids_mem() {
+    inline arrayMemStruct* get_all_ids_mem() {
         return &all_ids;
     }
 
-    arrayMemStruct* get_lane_free_ids_mem() {
+    inline arrayMemStruct* get_lane_free_ids_mem() {
         return &lane_free_ids;
     }
 
-    arrayMemStruct* get_all_bike_ids_mem() {
+    inline arrayMemStruct* get_all_bike_ids_mem() {
         return &all_bike_ids;
     }
 
-    arrayMemStruct* get_vehicle_name_mem() {
+    inline arrayMemStruct* get_vehicle_name_mem() {
         return &vehicle_name;
     }
 
-    arrayMemStruct* get_all_edges_mem() {
+    inline arrayMemStruct* get_all_edges_mem() {
         return &all_edges;
     }
 
-    arrayMemStruct* get_edge_name_mem() {
+    inline arrayMemStruct* get_edge_name_mem() {
         return &edge_name;
     }
 
-    arrayMemStruct* get_all_ids_in_edge_mem() {
+    inline arrayMemStruct* get_all_ids_in_edge_mem() {
         return &all_ids_in_edge;
     }
-    arrayMemStruct* get_veh_type_name_mem() {
+
+    inline arrayMemStruct* get_veh_type_name_mem() {
         return &veh_type_name;
     }
-    arrayMemStruct* get_detector_ids_mem() {
+    
+    inline arrayMemStruct* get_detector_ids_mem() {
         return &detector_ids;
     }
-    arrayMemStruct* get_detector_name_mem() {
+
+    inline arrayMemStruct* get_detector_name_mem() {
         return &detector_name;
     }
-    arrayMemStruct* get_detector_values_mem() {
+
+    inline arrayMemStruct* get_detector_values_mem() {
         return &detector_values;
     }
-    arrayMemStruct* get_density_per_segment_per_edge_mem() {
+
+    inline arrayMemStruct* get_density_per_segment_per_edge_mem() {
         return &density_per_segment_per_edge;
     }
 
-    arrayMemStruct* get_density_array_left_boundary_mem() {
+    inline arrayMemStruct* get_density_array_left_boundary_mem() {
         return &density_array_left_boundary;
     }
 
-    arrayMemStruct* get_all_neighbor_ids_front_mem() {
+    inline arrayMemStruct* get_all_neighbor_ids_front_mem() {
         return &all_neighbor_ids_front;
     }
 
-    arrayMemStruct* get_all_neighbor_ids_back_mem() {
+    inline arrayMemStruct* get_all_neighbor_ids_back_mem() {
         return &all_neighbor_ids_back;
     }
 
-    arrayMemStruct* get_all_platoon_ids_mem() {
+    inline arrayMemStruct* get_all_platoon_ids_mem() {
         return &all_platoon_ids;
     }
-    arrayMemStruct* get_platoon_vehicles_ids_mem() {
+
+    inline arrayMemStruct* get_platoon_vehicles_ids_mem() {
         return &platoon_vehicles_ids;
     }
 
@@ -690,7 +680,7 @@ public:
 
     SortedVehiclesVector* get_sorted_vehicles_in_edge(NumericalID edge_id);
 
-    double get_max_vehicle_length() {
+    inline double get_max_vehicle_length() {
         return max_vehicle_length;
     }
 
@@ -699,15 +689,15 @@ public:
 
 
     // properly adapt existing codebase here, in order to convert global coordinates to local
-    void convert_to_local_coordinates(double* x_pos_local, double* y_pos_local, Position& pos, const MSLane* mylane);
+    void convert_to_local_coordinates(double* x_pos_local, double* y_pos_local, Position& pos, const MSLane* mylane, double angle=0.);
 
     // returns the execution time (in seconds) of the previous call for the simulation_step function 
-    double get_last_step_exec_time() {
+    inline double get_last_step_exec_time() {
         return step_timer_seconds;
     }
 
     // returns the execution time (in seconds) of the previous step (disregarding the execution time for the simulation_step function, i.e., execution time for the SUMO application)
-    double get_last_step_app_exec_time() {
+    inline double get_last_step_app_exec_time() {
         return rest_app_timer_seconds;
     }
     void get_all_neighbors_ring_road_internal(MSLaneFreeVehicle* lfveh, const MSEdge* current_edge, SortedVehiclesVector* current_edge_sorted_vehs, size_t veh_index, double distance, bool front, int cross_edge, std::vector<std::pair<double, MSVehicle*>>& neighbors_with_distance);
@@ -716,11 +706,11 @@ public:
     void addRouteForBoundariesVisualizer(MSRoute* route);
     void updateBoundariesVisualizer();
 
-    bool isReplayMode() {
+    inline bool isReplayMode() {
         return replay_flag;
     }
 
-    long long getmyTotalVehicleCountWithExcluded(){
+    inline long long getmyTotalVehicleCountWithExcluded(){
         return myTotalVehicleCountWithExcluded;
     }
 
@@ -872,6 +862,7 @@ protected:
 
     std::default_random_engine random_engine;
     std::uniform_real_distribution<double> uniform_real_dis;
+
     //Deprecated print
     //std::vector<std::string> msgBufferVector;
 
@@ -909,7 +900,7 @@ protected:
 // ===========================================================================
 // class definitions
 // ===========================================================================
-/** @class MSCFModel_LaneFree
+/** @class MSCFModel_LaneFree (we copied the IDM model source code, and replaced accordingly)
  * @brief The Intelligent Driver Model (IDM) car-following model
  * @see MSCFModel
  */

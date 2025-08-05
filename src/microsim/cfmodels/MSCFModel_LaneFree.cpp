@@ -1,10 +1,5 @@
 /****************************************************************************/
-// Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
-// Copyright (C) 2001-2020 German Aerospace Center (DLR) and others.
-// This program and the accompanying materials are made available under the
-// terms of the Eclipse Public License 2.0 which is available at
-// https://www.eclipse.org/legal/epl-2.0/
-// This Source Code may also be made available under the following Secondary
+// This Source Code may be made available under the following 
 // Licenses when the conditions for such availability set forth in the Eclipse
 // Public License 2.0 are satisfied: GNU General Public License, version 2
 // or later which is available at
@@ -12,7 +7,7 @@
 // SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-or-later
 /****************************************************************************/
 /// @file    MSCFModel_LaneFree.cpp
-/// @author  
+/// @authors  Dimitrios Troullinos, Iason Chrysomallis
 /// @date    Thu, 29 Oct 2020
 ///
 // LaneFree Plugin model.
@@ -4341,7 +4336,10 @@ LaneFreeSimulationPlugin::investigate_two_vehicles_collision(MSVehicle* veh1, MS
 	}
 	return false;
 }
-// This code calculates the boundary's values and is based from Karteek's implementation. This is an internal function
+
+
+
+// This code calculates the boundary's values and is an internal function
 void
 LaneFreeSimulationPlugin::boundary_value(double mid_height, double direction, std::vector<double>& lim, std::vector<double>& slope, std::vector<double>& offset, double long_pos, double veh_speed_x, double* boundary_distance, double* boundary_speed) {
 	double boundary_distance_tmp = 0;
@@ -4533,6 +4531,12 @@ LaneFreeSimulationPlugin::find_edge(NumericalID veh_id){
 		vm = it->second;
 		
 		it_v =  vm->find(veh_id);
+		//test
+		MSLaneFreeVehicle* veh = find_vehicle(veh_id);
+		NumericalID edge_ID =  veh->get_edge_id();
+		MSVehicle* s_veh = veh->get_vehicle();
+		s_veh->getLane()->getEdge().getID();
+		//std::cout << " test veh at edge:" << get_edge_name(edge_ID)<<" lane:"<< s_veh->getLane()->getID() <<"\n";
 		if(it_v!=vm->end()){			
 			return it->first;
 		}
@@ -4745,11 +4749,29 @@ LaneFreeSimulationPlugin::get_sorted_vehicles_in_edge(NumericalID edge_id) {
 
 // properly adapt existing codebase here, in order to convert global coordinates to local
 void 
-LaneFreeSimulationPlugin::convert_to_local_coordinates(double* x_pos_local, double* y_pos_local, Position& pos, const MSLane* mylane) {
+LaneFreeSimulationPlugin::convert_to_local_coordinates(double* x_pos_local, double* y_pos_local, Position& pos, const MSLane* mylane, double angle) {
 
-
-	*x_pos_local = mylane->interpolateGeometryPosToLanePos(mylane->getShape().nearest_offset_to_point25D(pos, false));
+	// corner case for when an internal lane/junction point with no actual dimensions connects two consecutive edges in a straight highway
+	if (mylane->isInternal() && mylane->getShape().size()==2 && mylane->getShape()[0]==mylane->getShape()[1]) {
+		//std::cout << "Edge case in lane:" << mylane->getID() << "\n";
+		PositionVector laneShape = mylane->getShape();
+		if (laneShape.size() != 2) {
+			std::cout << "Error in conversion to local coordinates for internal lane that connects two edges in a highway!\n";
+			return;
+		}
+		Position pos_l = laneShape[0]; // just get the position
+		*x_pos_local = cos(angle) * (pos.x() - pos_l.x()) + sin(angle) * (pos.y() - pos_l.y());
+		*y_pos_local = sin(angle) * (pos.x() - pos_l.x()) + cos(angle) * (pos.y() - pos_l.y());
+		//std::cout << "local x:" << *x_pos_local << ", y:" << *y_pos_local << "\n";
+		return;
+	}
 	
+	
+	double x_point = mylane->getShape().nearest_offset_to_point25D(pos, false);
+	//std::cout << " x point:" << x_point << "\n";
+	*x_pos_local = mylane->interpolateGeometryPosToLanePos(x_point); //mylane->interpolateGeometryPosToLanePos(mylane->getShape().nearest_offset_to_point25D(pos, false));
+	//std::cout << " x pos local:" << *x_pos_local << "\n";
+
 	double angle_lane = mylane->getShape().beginEndAngle();	
 	const double perpDist = mylane->getShape().distance2D(pos, false);	
 	*y_pos_local = perpDist;// std::min(perpDist, 0.5 * (mylane->getWidth() + myveh->getVehicleType().getWidth() - MSGlobals::gLateralResolution));	
@@ -4877,21 +4899,7 @@ MSCFModel_LaneFree::~MSCFModel_LaneFree() {}
 double
 MSCFModel_LaneFree::finalizeSpeed(MSVehicle* const veh, double vPos) const {
     
-	/*
-	double vNext = MSCFModel::finalizeSpeed(veh, vPos);
-    if (myAdaptationFactor != 1.) {
-        VehicleVariables* vars = (VehicleVariables*)veh->getCarFollowVariables();
-        vars->levelOfService += (vNext / veh->getLane()->getVehicleMaxSpeed(veh) - vars->levelOfService) / myAdaptationTime * TS;
-    }
-	*/
-
-    // if(vNext>25){
-    // 	vNext = 25;
-    // }
-    // vNext = 25;
-    // double v_lf_model = LaneFreeSimulationPlugin::getInstance()->get_veh_speed(veh->getNumericalID());
-    // MSLaneFreeVehicle *lfveh =  LaneFreeSimulationPlugin::getInstance()->find_vehicle_in_edge(veh->getLane()->getEdge().getNumericalID(),veh->getNumericalID());
-
+	
 
 	double vNext(0);
     MSLaneFreeVehicle *lfveh =  LaneFreeSimulationPlugin::getInstance()->find_vehicle(veh->getNumericalID());
@@ -4900,36 +4908,15 @@ MSCFModel_LaneFree::finalizeSpeed(MSVehicle* const veh, double vPos) const {
     	return vNext;
     }
     
-    
+    // compute based on the obtained acceleration from the dynamic library
     vNext = lfveh->apply_acceleration_internal();
     
-    // long long int vid_i = veh->getNumericalID();
-    // std::string vid = std::to_string(vid_i);
-    // veh->setID(vid);
-    // Position vcpos = veh->getPosition();
-    // MSEdge *vedge = &(veh->getLane())->getEdge();
-    
-    // double posy = lfveh->get_position_y();
-
-    // std::cout << "vid:" << veh->getID() << " at lateral pos: "<< posy<<"\n";        
-    // std::cout << "vid num: " << veh->getNumericalID() << "\n";
-    // std::cout << "vlatPos: " <<std::setprecision(4)<< veh->getLateralPositionOnLane() << "\n";
-    // std::cout << "vlongPos: " <<std::setprecision(4)<< veh->getPositionOnLane() << "\n";
-    // std::cout << "vlane: " << veh->getLane()->getID() << "\n";
-    // std::cout << "vedge: " << (vedge)->getNumericalID() << "\n";
-    // std::cout << "vedge dist: " << (vedge)->getDistance() << "\n";
-    // std::cout << "v global pos: x:" << vcpos.x() << "y:" << vcpos.y() << "\n";        
-    // veh->setLateralPositionOnLane(veh->getLateralPositionOnLane()+0.01);
-    // Student s("Joe");
-    // s.display();
-    // foo_example_2 = &foo_example_2_t;
-    // double r_ex = foo_example(4);
-    // std::cout << "foo func: " << r_ex << "\n";
-    // veh->setLateralPositionOnLane(veh->getLateralPositionOnLane()+0.001);
     
     return vNext;
 }
 
+
+// Remaining functions below are left intact from existing lane-based implementation in SUMO
 
 double
 MSCFModel_LaneFree::freeSpeed(const MSVehicle* const veh, double speed, double seen, double maxSpeed, const bool /*onInsertion*/) const {
